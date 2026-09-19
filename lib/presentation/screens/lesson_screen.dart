@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:brainbox/presentation/providers/app_provider.dart';
 import 'package:brainbox/data/repositories/lesson_repository.dart' as lr;
+import 'package:brainbox/data/repositories/lesson_progress_repository.dart';
 import 'package:brainbox/data/repositories/course_repository.dart';
 import 'package:brainbox/data/models/course_models.dart';
 import 'package:brainbox/core/constants/app_colors.dart';
@@ -40,6 +41,9 @@ class _LessonScreenState extends State<LessonScreen> with TickerProviderStateMix
   bool _stepAnswered = false;
   bool _stepCorrect = false;
   Map<int, bool> _lessonStepCompleted = {};
+
+  // Persistence: track answered steps for resume
+  Map<int, int> _answeredSteps = {}; // stepIndex -> selectedAnswerIndex
 
   @override
   void initState() {
@@ -89,13 +93,23 @@ class _LessonScreenState extends State<LessonScreen> with TickerProviderStateMix
     }
   }
 
-  void _loadLessonProgress() {
-    // Load completed steps for current lesson
+  void _loadLessonProgress() async {
     final lesson = _getCurrentLesson();
     if (lesson != null) {
-      _lessonStepCompleted = {};
-      for (int i = 0; i < lesson.steps.length; i++) {
-        _lessonStepCompleted[i] = false; // Would load from storage
+      final progress = await LessonProgressRepository.loadProgress(
+        widget.courseId,
+        lesson.id,
+      );
+      if (progress != null) {
+        setState(() {
+          _currentStepIndex = progress.currentStepIndex;
+          _answeredSteps = progress.answeredSteps;
+          // Restore answer state for current step
+          if (progress.answeredSteps.containsKey(_currentStepIndex)) {
+            _selectedAnswer = progress.answeredSteps[_currentStepIndex];
+            _stepAnswered = true;
+          }
+        });
       }
     }
   }
@@ -466,7 +480,9 @@ Widget _buildAppBar(BuildContext context) {
     setState(() {
       _stepAnswered = true;
       _stepCorrect = correct;
+      _answeredSteps[_currentStepIndex] = correct ? 1 : 0;
     });
+    _saveProgress();
   }
 
   Widget _buildCodeOrderingStep(lr.LessonStep step) {
@@ -628,7 +644,9 @@ Widget _buildAppBar(BuildContext context) {
       _selectedAnswer = index;
       _stepAnswered = true;
       _stepCorrect = isCorrect;
+      _answeredSteps[_currentStepIndex] = index;
     });
+    _saveProgress();
   }
 
   Widget _buildBottomAction() {
@@ -705,6 +723,7 @@ Widget _buildAppBar(BuildContext context) {
         _stepCorrect = false;
       });
       _progressController.forward(from: 0);
+      _saveProgress();
     } else {
       _completeLesson();
     }
@@ -737,6 +756,19 @@ Widget _buildAppBar(BuildContext context) {
   Future<void> _awardXp(int amount) async {
     final provider = context.read<AppProvider>();
     await provider.addXp(amount);
+  }
+
+  Future<void> _saveProgress() async {
+    final lesson = _getCurrentLesson();
+    if (lesson == null) return;
+
+    await LessonProgressRepository.saveProgress(
+      courseId: widget.courseId,
+      lessonId: lesson.id,
+      currentStepIndex: _currentStepIndex,
+      answeredSteps: _answeredSteps,
+      isFinished: _isCompleted,
+    );
   }
 
   void _showCompletionDialog() {
