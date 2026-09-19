@@ -49,11 +49,13 @@ class AppProvider extends ChangeNotifier {
       completedCourseIds: [],
       enrolledCourseIds: ['frontend-foundations'],
       bookmarkedLessonIds: [],
+      completedLessonIds: [],
       achievements: _defaultAchievements(),
       stats: UserStats.empty(),
       preferences: UserPreferences(),
       joinedAt: DateTime.now(),
       lastActiveAt: DateTime.now(),
+      lastLessonCompletedAt: null,
     );
 
     await StorageService.saveUserProfile(newProfile);
@@ -115,11 +117,20 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> completeLesson(String courseId) async {
+  Future<void> completeLesson(String courseId, {String? lessonId}) async {
     if (_profile == null) return;
+
+    final lessonIdKey = lessonId != null ? '$courseId:$lessonId' : null;
+    
+    // Check if lesson was already completed
+    if (lessonIdKey != null && _profile!.completedLessonIds.contains(lessonIdKey)) {
+      return; // Already completed, don't award XP again
+    }
 
     final courseProgress = StorageService.getCourseProgress(courseId);
     final now = DateTime.now();
+    final nowUtc = now.toUtc();
+    final todayUtc = DateTime(nowUtc.year, nowUtc.month, nowUtc.day);
 
     final updatedProgress = (courseProgress ?? CourseProgress(
       courseId: courseId,
@@ -144,21 +155,106 @@ class AppProvider extends ChangeNotifier {
 
     await StorageService.saveCourseProgress(updatedProgress);
 
+    // Update completed lesson IDs
+    final completedLessonIds = List<String>.from(_profile!.completedLessonIds);
+    if (lessonIdKey != null && !completedLessonIds.contains(lessonIdKey)) {
+      completedLessonIds.add(lessonIdKey);
+    }
+
+    // Update enrolled course IDs
     final enrolledIds = List<String>.from(_profile!.enrolledCourseIds);
     if (!enrolledIds.contains(courseId)) {
       enrolledIds.add(courseId);
+    }
+
+    // Calculate streak
+    int newStreak = _profile!.stats.currentStreakDays;
+    int newLongestStreak = _profile!.stats.longestStreakDays;
+    DateTime? lastLessonDate = _profile!.lastLessonCompletedAt;
+
+    if (lastLessonDate != null) {
+      final lastLessonUtc = lastLessonDate.toUtc();
+      final lastLessonDay = DateTime(lastLessonUtc.year, lastLessonUtc.month, lastLessonUtc.day);
+      final yesterdayUtc = todayUtc.subtract(const Duration(days: 1));
+
+      if (lastLessonDay == yesterdayUtc) {
+        // Consecutive day - increment streak
+        newStreak += 1;
+      } else if (lastLessonDay == todayUtc) {
+        // Same day - streak unchanged
+      } else {
+        // Streak broken
+        newStreak = 1;
+      }
+    } else {
+      // First lesson ever
+      newStreak = 1;
+    }
+
+if (newStreak > newLongestStreak) {
+      newLongestStreak = newStreak;
     }
 
     final updatedProfile = _profile!.copyWith(
       xp: _profile!.xp + 25,
       totalXp: _profile!.totalXp + 25,
       enrolledCourseIds: enrolledIds,
-      lastActiveAt: now,
+      completedLessonIds: completedLessonIds,
+      lastActiveAt: DateTime.now(),
+      lastLessonCompletedAt: DateTime.now(),
+      stats: _profile!.stats.copyWith(
+        totalLessonsCompleted: _profile!.stats.totalLessonsCompleted + 1,
+        currentStreakDays: newStreak,
+        longestStreakDays: newLongestStreak > _profile!.stats.longestStreakDays
+            ? newStreak : _profile!.stats.longestStreakDays,
+        totalStudyMinutes: _profile!.stats.totalStudyMinutes + 10,
+      ),
+      achievements: _updateAchievementProgress(
+        _profile!.achievements,
+        lessonsCompleted: _profile!.stats.totalLessonsCompleted + 1,
+        streakDays: newStreak,
+      ),
     );
 
     _profile = updatedProfile;
     await StorageService.saveUserProfile(updatedProfile);
     notifyListeners();
+  }
+
+  List<Achievement> _updateAchievementProgress(
+    List<Achievement> achievements, {
+    required int lessonsCompleted,
+    required int streakDays,
+  }) {
+    return achievements.map((achievement) {
+      int newProgress = achievement.progress;
+      bool isUnlocked = achievement.isUnlocked;
+
+      switch (achievement.type) {
+        case AchievementType.lessonsCompleted:
+          newProgress = lessonsCompleted;
+          break;
+        case AchievementType.streakDays:
+          newProgress = streakDays;
+          break;
+        case AchievementType.coursesCompleted:
+          // Would need course completion tracking
+          break;
+        default:
+          break;
+      }
+
+      if (newProgress >= achievement.target && !achievement.isUnlocked) {
+        isUnlocked = true;
+        // Could trigger achievement unlock notification here
+      }
+
+      return achievement.copyWith(
+        progress: newProgress.clamp(0, achievement.target),
+        isUnlocked: isUnlocked,
+        unlockedAt: isUnlocked && achievement.unlockedAt == null ? DateTime.now() : achievement.unlockedAt,
+      );
+    }).toList();
   }
 
   Future<void> completeChallenge() async {

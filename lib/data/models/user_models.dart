@@ -14,11 +14,13 @@ class UserProfile {
   final List<String> completedCourseIds;
   final List<String> enrolledCourseIds;
   final List<String> bookmarkedLessonIds;
+  final List<String> completedLessonIds;
   final List<Achievement> achievements;
   final UserStats stats;
   final UserPreferences preferences;
   final DateTime joinedAt;
   final DateTime lastActiveAt;
+  final DateTime? lastLessonCompletedAt;
 
   const UserProfile({
     required this.id,
@@ -32,11 +34,13 @@ class UserProfile {
     required this.completedCourseIds,
     required this.enrolledCourseIds,
     required this.bookmarkedLessonIds,
+    required this.completedLessonIds,
     required this.achievements,
     required this.stats,
     required this.preferences,
     required this.joinedAt,
     required this.lastActiveAt,
+    this.lastLessonCompletedAt,
   });
 
   int get xpToNextLevel => (UserLevel.getNextLevel(level)?.xpRequired ?? xp) - xp;
@@ -60,11 +64,13 @@ class UserProfile {
         'completedCourseIds': completedCourseIds,
         'enrolledCourseIds': enrolledCourseIds,
         'bookmarkedLessonIds': bookmarkedLessonIds,
+        'completedLessonIds': completedLessonIds,
         'achievements': achievements.map((a) => a.toJson()).toList(),
         'stats': stats.toJson(),
         'preferences': preferences.toJson(),
         'joinedAt': joinedAt.toIso8601String(),
         'lastActiveAt': lastActiveAt.toIso8601String(),
+        'lastLessonCompletedAt': lastLessonCompletedAt?.toIso8601String(),
       };
 
   factory UserProfile.fromJson(Map<String, dynamic> json) => UserProfile(
@@ -82,12 +88,17 @@ class UserProfile {
             List<String>.from(json['enrolledCourseIds'] ?? []),
         bookmarkedLessonIds:
             List<String>.from(json['bookmarkedLessonIds'] ?? []),
+        completedLessonIds:
+            List<String>.from(json['completedLessonIds'] ?? []),
         achievements: List<Achievement>.from(
             json['achievements']?.map((a) => Achievement.fromJson(a)) ?? []),
         stats: UserStats.fromJson(json['stats']),
         preferences: UserPreferences.fromJson(json['preferences']),
         joinedAt: DateTime.parse(json['joinedAt']),
         lastActiveAt: DateTime.parse(json['lastActiveAt']),
+        lastLessonCompletedAt: json['lastLessonCompletedAt'] != null
+            ? DateTime.parse(json['lastLessonCompletedAt'])
+            : null,
       );
 
   UserProfile copyWith({
@@ -102,11 +113,13 @@ class UserProfile {
     List<String>? completedCourseIds,
     List<String>? enrolledCourseIds,
     List<String>? bookmarkedLessonIds,
+    List<String>? completedLessonIds,
     List<Achievement>? achievements,
     UserStats? stats,
     UserPreferences? preferences,
     DateTime? joinedAt,
     DateTime? lastActiveAt,
+    DateTime? lastLessonCompletedAt,
   }) {
     return UserProfile(
       id: id ?? this.id,
@@ -122,11 +135,14 @@ class UserProfile {
       enrolledCourseIds: enrolledCourseIds ?? this.enrolledCourseIds,
       bookmarkedLessonIds:
           bookmarkedLessonIds ?? this.bookmarkedLessonIds,
+      completedLessonIds:
+          completedLessonIds ?? this.completedLessonIds,
       achievements: achievements ?? this.achievements,
       stats: stats ?? this.stats,
       preferences: preferences ?? this.preferences,
       joinedAt: joinedAt ?? this.joinedAt,
       lastActiveAt: lastActiveAt ?? this.lastActiveAt,
+      lastLessonCompletedAt: lastLessonCompletedAt ?? this.lastLessonCompletedAt,
     );
   }
 }
@@ -327,6 +343,30 @@ class UserStats {
       difficultyBreakdown: {},
     );
   }
+
+  UserStats copyWith({
+    int? totalCoursesCompleted,
+    int? totalLessonsCompleted,
+    int? totalQuizzesPassed,
+    int? totalProjectsCompleted,
+    int? totalStudyMinutes,
+    int? currentStreakDays,
+    int? longestStreakDays,
+    Map<LearningCategory, int>? categoryProgress,
+    Map<DifficultyLevel, int>? difficultyBreakdown,
+  }) {
+    return UserStats(
+      totalCoursesCompleted: totalCoursesCompleted ?? this.totalCoursesCompleted,
+      totalLessonsCompleted: totalLessonsCompleted ?? this.totalLessonsCompleted,
+      totalQuizzesPassed: totalQuizzesPassed ?? this.totalQuizzesPassed,
+      totalProjectsCompleted: totalProjectsCompleted ?? this.totalProjectsCompleted,
+      totalStudyMinutes: totalStudyMinutes ?? this.totalStudyMinutes,
+      currentStreakDays: currentStreakDays ?? this.currentStreakDays,
+      longestStreakDays: longestStreakDays ?? this.longestStreakDays,
+      categoryProgress: categoryProgress ?? this.categoryProgress,
+      difficultyBreakdown: difficultyBreakdown ?? this.difficultyBreakdown,
+    );
+  }
 }
 
 class Achievement {
@@ -386,6 +426,32 @@ class Achievement {
         progress: json['progress'],
         target: json['target'],
       );
+
+  Achievement copyWith({
+    String? id,
+    String? title,
+    String? description,
+    String? iconAsset,
+    AchievementType? type,
+    int? xpReward,
+    bool? isUnlocked,
+    DateTime? unlockedAt,
+    int? progress,
+    int? target,
+  }) {
+    return Achievement(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      iconAsset: iconAsset ?? this.iconAsset,
+      type: type ?? this.type,
+      xpReward: xpReward ?? this.xpReward,
+      isUnlocked: isUnlocked ?? this.isUnlocked,
+      unlockedAt: unlockedAt ?? this.unlockedAt,
+      progress: progress ?? this.progress,
+      target: target ?? this.target,
+    );
+  }
 }
 
 enum AchievementType {
