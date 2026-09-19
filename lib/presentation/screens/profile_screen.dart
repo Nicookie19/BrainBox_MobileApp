@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import 'package:brainbox/presentation/providers/app_provider.dart';
 import 'package:brainbox/presentation/widgets/profile_header.dart';
 import 'package:brainbox/presentation/widgets/profile_stats.dart';
@@ -8,6 +9,7 @@ import 'package:brainbox/presentation/widgets/week_activity.dart';
 import 'package:brainbox/presentation/widgets/achievement_card.dart';
 import 'package:brainbox/presentation/widgets/menu_row.dart';
 import 'package:brainbox/data/models/user_models.dart';
+import 'package:brainbox/data/services/storage_service.dart';
 import 'package:brainbox/core/constants/app_colors.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -45,7 +47,7 @@ class ProfileScreen extends StatelessWidget {
                     const SizedBox(height: 28),
                     _buildSectionTitle(context, 'Account'),
                     const SizedBox(height: 16),
-                    _buildMenuItems(),
+                    _buildMenuItems(context, provider),
                     const SizedBox(height: 32),
                   ],
                 ),
@@ -91,14 +93,14 @@ class ProfileScreen extends StatelessWidget {
     ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.2, end: 0);
   }
 
-  Widget _buildMenuItems() {
+  Widget _buildMenuItems(BuildContext context, AppProvider provider) {
     return Column(
       children: [
         MenuRow(
           icon: Icons.bookmark_outline_rounded,
           title: 'Saved Lessons',
           subtitle: 'Access your bookmarked content',
-          onTap: () {},
+          onTap: () => context.push('/bookmarks'),
         ),
         MenuRow(
           icon: Icons.download_outlined,
@@ -110,13 +112,13 @@ class ProfileScreen extends StatelessWidget {
           icon: Icons.dark_mode_outlined,
           title: 'Appearance',
           subtitle: 'Customize theme and display',
-          onTap: () {},
+          onTap: () => context.push('/settings'),
         ),
         MenuRow(
           icon: Icons.notifications_outlined,
           title: 'Notifications',
           subtitle: 'Manage reminders and alerts',
-          onTap: () {},
+          onTap: () => context.push('/settings'),
         ),
         MenuRow(
           icon: Icons.help_outline_rounded,
@@ -128,7 +130,7 @@ class ProfileScreen extends StatelessWidget {
           icon: Icons.logout_rounded,
           title: 'Sign Out',
           subtitle: 'Log out of your account',
-          onTap: () {},
+          onTap: () => _showSignOutDialog(context, provider),
           isDestructive: true,
         ),
       ],
@@ -158,6 +160,39 @@ class ProfileScreen extends StatelessWidget {
         return AppColors.accentSecondary;
       default:
         return AppColors.accentPrimary;
+    }
+  }
+
+  Future<void> _showSignOutDialog(BuildContext context, AppProvider provider) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.bgCard,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Sign Out?'),
+        content: const Text('Are you sure you want to sign out? Your progress will be saved locally.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.accentError,
+            ),
+            child: const Text('Sign Out'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      await StorageService.clearAll();
+      provider.initialize();
+      if (context.mounted) {
+        context.go('/');
+      }
     }
   }
 }

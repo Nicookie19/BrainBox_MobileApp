@@ -111,6 +111,7 @@ class CommunityPost {
   CommunityPost copyWith({
     int? upvoteCount,
     int? downvoteCount,
+    int? replyCount,
     bool? isReported,
     DateTime? updatedAt,
     Object? currentUserVote = _notProvided,
@@ -126,7 +127,7 @@ class CommunityPost {
         courseIds: courseIds,
         upvoteCount: upvoteCount ?? this.upvoteCount,
         downvoteCount: downvoteCount ?? this.downvoteCount,
-        replyCount: replyCount,
+        replyCount: replyCount ?? this.replyCount,
         viewCount: viewCount,
         isPinned: isPinned,
         isLocked: isLocked,
@@ -240,6 +241,42 @@ class PostReply {
         replies: List<PostReply>.from(
             json['replies']?.map((r) => PostReply.fromJson(r)) ?? []),
       );
+
+  PostReply copyWith({
+    String? id,
+    String? postId,
+    String? authorId,
+    String? authorName,
+    String? authorPhotoUrl,
+    String? content,
+    String? parentReplyId,
+    int? upvoteCount,
+    int? downvoteCount,
+    bool? isAcceptedAnswer,
+    bool? isReported,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    UserVote? currentUserVote,
+    List<PostReply>? replies,
+  }) {
+    return PostReply(
+      id: id ?? this.id,
+      postId: postId ?? this.postId,
+      authorId: authorId ?? this.authorId,
+      authorName: authorName ?? this.authorName,
+      authorPhotoUrl: authorPhotoUrl ?? this.authorPhotoUrl,
+      content: content ?? this.content,
+      parentReplyId: parentReplyId ?? this.parentReplyId,
+      upvoteCount: upvoteCount ?? this.upvoteCount,
+      downvoteCount: downvoteCount ?? this.downvoteCount,
+      isAcceptedAnswer: isAcceptedAnswer ?? this.isAcceptedAnswer,
+      isReported: isReported ?? this.isReported,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      currentUserVote: currentUserVote ?? this.currentUserVote,
+      replies: replies ?? this.replies,
+    );
+  }
 }
 
 class CommunityCategory {

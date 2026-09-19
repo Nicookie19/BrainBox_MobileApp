@@ -13,6 +13,8 @@ import 'presentation/screens/profile_screen.dart';
 import 'presentation/screens/lesson_screen.dart';
 import 'presentation/screens/daily_challenge_screen.dart';
 import 'presentation/screens/course_detail_screen.dart';
+import 'presentation/screens/settings_screen.dart';
+import 'presentation/screens/bookmarks_screen.dart';
 import 'presentation/widgets/app_shell.dart';
 import 'presentation/providers/app_provider.dart';
 
@@ -66,6 +68,14 @@ final _router = GoRouter(
       builder: (context, state) => CourseDetailScreen(
         courseId: state.pathParameters['courseId']!,
       ),
+    ),
+    GoRoute(
+      path: '/settings',
+      builder: (_, _) => const SettingsScreen(),
+    ),
+    GoRoute(
+      path: '/bookmarks',
+      builder: (_, _) => const BookmarksScreen(),
     ),
   ],
 );

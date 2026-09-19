@@ -284,4 +284,48 @@ if (newStreak > newLongestStreak) {
       notifyListeners();
     }
   }
+
+  Future<PostReply> createReply(String postId, String content, {String? parentReplyId}) async {
+    final reply = await CommunityRepository.createReply(
+      postId: postId,
+      content: content,
+      parentReplyId: parentReplyId,
+    );
+    // Refresh posts to get updated reply count
+    _posts = await CommunityRepository.getPosts();
+    notifyListeners();
+    return reply;
+  }
+
+  Future<List<PostReply>> getReplies(String postId) async {
+    return await CommunityRepository.getReplies(postId);
+  }
+
+  Future<void> toggleReplyVote(String postId, String replyId, UserVote vote) async {
+    await CommunityRepository.toggleReplyVote(postId, replyId, vote);
+    // Update in local state if needed
+    notifyListeners();
+  }
+
+  Future<void> toggleBookmark(String lessonId) async {
+    if (_profile == null) return;
+
+    final bookmarkedLessonIds = List<String>.from(_profile!.bookmarkedLessonIds);
+    if (bookmarkedLessonIds.contains(lessonId)) {
+      bookmarkedLessonIds.remove(lessonId);
+    } else {
+      bookmarkedLessonIds.add(lessonId);
+    }
+
+    final updatedProfile = _profile!.copyWith(bookmarkedLessonIds: bookmarkedLessonIds);
+    _profile = updatedProfile;
+    await StorageService.saveUserProfile(updatedProfile);
+    notifyListeners();
+  }
+
+  bool isBookmarked(String lessonId) {
+    return _profile?.bookmarkedLessonIds.contains(lessonId) ?? false;
+  }
+
+  List<String> get bookmarkedLessonIds => _profile?.bookmarkedLessonIds ?? [];
 }

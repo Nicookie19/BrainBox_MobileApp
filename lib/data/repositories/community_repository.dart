@@ -5,6 +5,7 @@ import '../services/storage_service.dart';
 
 class CommunityRepository {
   static const _postsKey = 'community_posts';
+  static const _repliesKey = 'community_replies';
 
   static Future<List<CommunityPost>> getPosts() async {
     final encoded = StorageService.getString(_postsKey);
@@ -112,6 +113,163 @@ class CommunityRepository {
     posts[index] = updated;
     await savePosts(posts);
     return updated;
+  }
+
+  static Future<List<PostReply>> getReplies(String postId) async {
+    final encoded = StorageService.getString('$_repliesKey$postId');
+    if (encoded == null || encoded.isEmpty) {
+      return [];
+    }
+
+    try {
+      final decoded = jsonDecode(encoded) as List<dynamic>;
+      return decoded
+          .map((item) => PostReply.fromJson(
+                Map<String, dynamic>.from(item as Map),
+              ))
+          .toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  static Future<void> saveReplies(String postId, List<PostReply> replies) async {
+    await StorageService.setString(
+      '$_repliesKey$postId',
+      jsonEncode(replies.map((reply) => reply.toJson()).toList()),
+    );
+  }
+
+  static Future<PostReply> createReply({
+    required String postId,
+    required String content,
+    String? parentReplyId,
+  }) async {
+    final trimmedContent = content.trim();
+    if (trimmedContent.length < 3) {
+      throw const FormatException('Reply must be at least 3 characters.');
+    }
+
+    final now = DateTime.now();
+    final reply = PostReply(
+      id: 'reply_${now.microsecondsSinceEpoch}',
+      postId: postId,
+      authorId: 'current_user',
+      authorName: 'Alex Rivera',
+      content: trimmedContent,
+      parentReplyId: parentReplyId,
+      createdAt: now,
+      updatedAt: now,
+    );
+
+    final replies = await getReplies(postId);
+    if (parentReplyId != null) {
+      // Find parent and add as nested reply
+      final updatedReplies = _addNestedReply(replies, parentReplyId, reply);
+      await saveReplies(postId, updatedReplies);
+    } else {
+      replies.add(reply);
+      await saveReplies(postId, replies);
+    }
+
+    // Update post reply count
+    final posts = await getPosts();
+    final postIndex = posts.indexWhere((p) => p.id == postId);
+    if (postIndex != -1) {
+      final updatedPost = posts[postIndex].copyWith(
+        replyCount: posts[postIndex].replyCount + 1,
+        updatedAt: now,
+      );
+      posts[postIndex] = updatedPost;
+      await savePosts(posts);
+    }
+
+    return reply;
+  }
+
+  static Future<PostReply> toggleReplyVote(
+    String postId,
+    String replyId,
+    UserVote vote,
+  ) async {
+    final replies = await getReplies(postId);
+    final updatedReplies = _toggleReplyVoteRecursive(replies, replyId, vote);
+    await saveReplies(postId, updatedReplies);
+    
+    // Find and return the updated reply
+    final updated = _findReplyById(updatedReplies, replyId);
+    if (updated == null) throw StateError('Reply not found: $replyId');
+    return updated;
+  }
+
+  static List<PostReply> _addNestedReply(List<PostReply> replies, String parentId, PostReply newReply) {
+    return replies.map((reply) {
+      if (reply.id == parentId) {
+        return reply.copyWith(replies: [...reply.replies, newReply]);
+      }
+      if (reply.replies.isNotEmpty) {
+        return reply.copyWith(replies: _addNestedReply(reply.replies, parentId, newReply));
+      }
+      return reply;
+    }).toList();
+  }
+
+  static List<PostReply> _toggleReplyVoteRecursive(List<PostReply> replies, String replyId, UserVote vote) {
+    return replies.map((reply) {
+      if (reply.id == replyId) {
+        final nextVote = reply.currentUserVote == vote ? null : vote;
+        var upvotes = reply.upvoteCount;
+        var downvotes = reply.downvoteCount;
+        if (reply.currentUserVote == UserVote.upvote) upvotes--;
+        if (reply.currentUserVote == UserVote.downvote) downvotes--;
+        if (nextVote == UserVote.upvote) upvotes++;
+        if (nextVote == UserVote.downvote) downvotes++;
+        
+        return reply.copyWith(
+          upvoteCount: upvotes,
+          downvoteCount: downvotes,
+          currentUserVote: nextVote,
+          updatedAt: DateTime.now(),
+        );
+      }
+      if (reply.replies.isNotEmpty) {
+        return reply.copyWith(replies: _toggleReplyVoteRecursive(reply.replies, replyId, vote));
+      }
+      return reply;
+    }).toList();
+  }
+
+  static PostReply? _findReplyById(List<PostReply> replies, String replyId) {
+    for (final reply in replies) {
+      if (reply.id == replyId) return reply;
+      if (reply.replies.isNotEmpty) {
+        final found = _findReplyById(reply.replies, replyId);
+        if (found != null) return found;
+      }
+    }
+    return null;
+  }
+
+  static Future<PostReply> acceptAnswer(String postId, String replyId) async {
+    final replies = await getReplies(postId);
+    final updatedReplies = _acceptAnswerRecursive(replies, replyId);
+    await saveReplies(postId, updatedReplies);
+    
+    final updated = _findReplyById(updatedReplies, replyId);
+    if (updated == null) throw StateError('Reply not found: $replyId');
+    return updated;
+  }
+
+  static List<PostReply> _acceptAnswerRecursive(List<PostReply> replies, String replyId) {
+    return replies.map((reply) {
+      if (reply.id == replyId) {
+        return reply.copyWith(isAcceptedAnswer: true);
+      }
+      if (reply.replies.isNotEmpty) {
+        return reply.copyWith(replies: _acceptAnswerRecursive(reply.replies, replyId));
+      }
+      return reply;
+    }).toList();
   }
 
   static List<CommunityPost> _seedPosts() {

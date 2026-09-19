@@ -40,7 +40,6 @@ class _LessonScreenState extends State<LessonScreen> with TickerProviderStateMix
   List<int>? _codeOrderAnswer;
   bool _stepAnswered = false;
   bool _stepCorrect = false;
-  Map<int, bool> _lessonStepCompleted = {};
 
   // Persistence: track answered steps for resume
   Map<int, int> _answeredSteps = {}; // stepIndex -> selectedAnswerIndex
@@ -222,6 +221,7 @@ Widget _buildErrorScreen(String title, String message) {
   }
 
 Widget _buildAppBar(BuildContext context) {
+    final lesson = _getCurrentLesson();
     final backButton = IconButton(
       onPressed: () => context.pop(),
       icon: const Icon(Icons.arrow_back_rounded),
@@ -244,6 +244,9 @@ Widget _buildAppBar(BuildContext context) {
         ),
       ],
     );
+
+    final isBookmarked = lesson != null && context.read<AppProvider>().isBookmarked('${widget.courseId}:${lesson.id}');
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
       child: Row(
@@ -251,9 +254,23 @@ Widget _buildAppBar(BuildContext context) {
           backButton,
           const SizedBox(width: 12),
           Expanded(child: titleColumn),
-          IconButton(onPressed: () {}, icon: const Icon(Icons.bookmark_outline_rounded), style: IconButton.styleFrom(backgroundColor: AppColors.bgCard, foregroundColor: AppColors.textSecondary)),
+          IconButton(
+            onPressed: lesson != null ? () => context.read<AppProvider>().toggleBookmark('${widget.courseId}:${lesson.id}') : null,
+            icon: Icon(isBookmarked ? Icons.bookmark_rounded : Icons.bookmark_outline_rounded),
+            style: IconButton.styleFrom(
+              backgroundColor: AppColors.bgCard,
+              foregroundColor: isBookmarked ? AppColors.accentPrimary : AppColors.textSecondary,
+            ),
+          ),
           const SizedBox(width: 8),
-          IconButton(onPressed: () {}, icon: const Icon(Icons.download_outlined), style: IconButton.styleFrom(backgroundColor: AppColors.bgCard, foregroundColor: AppColors.textSecondary)),
+          IconButton(
+            onPressed: () {},
+            icon: const Icon(Icons.download_outlined),
+            style: IconButton.styleFrom(
+              backgroundColor: AppColors.bgCard,
+              foregroundColor: AppColors.textSecondary,
+            ),
+          ),
         ],
       ),
     );
