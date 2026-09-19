@@ -1,0 +1,33 @@
+name: brainbox
+description: "A new Flutter project."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.12.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  shared_preferences: ^2.5.4
+  google_fonts: ^6.2.1
+  flutter_animate: ^4.5.0
+  go_router: ^14.2.0
+  provider: ^6.1.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+
+  fonts:
+    - family: Space Grotesk
+      fonts:
+        - asset: fonts/SpaceGrotesk-VariableFont_wght.ttf
+        - asset: fonts/SpaceGrotesk-VariableFont_wght.ttf
+          weight: 700
