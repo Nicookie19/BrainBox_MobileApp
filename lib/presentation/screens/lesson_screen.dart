@@ -3,14 +3,20 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:brainbox/presentation/providers/app_provider.dart';
+import 'package:brainbox/data/repositories/lesson_repository.dart' as lr;
 import 'package:brainbox/data/repositories/course_repository.dart';
 import 'package:brainbox/data/models/course_models.dart';
 import 'package:brainbox/core/constants/app_colors.dart';
 
 class LessonScreen extends StatefulWidget {
   final String courseId;
+  final String? initialLessonId;
 
-  const LessonScreen({required this.courseId, super.key});
+  const LessonScreen({
+    required this.courseId,
+    this.initialLessonId,
+    super.key,
+  });
 
   @override
   State<LessonScreen> createState() => _LessonScreenState();
@@ -18,10 +24,22 @@ class LessonScreen extends StatefulWidget {
 
 class _LessonScreenState extends State<LessonScreen> with TickerProviderStateMixin {
   Course? _course;
+  lr.LessonModuleData? _lessonData;
+  List<lr.Lesson> _allLessons = [];
   int _currentLessonIndex = 0;
+  int _currentStepIndex = 0;
   late AnimationController _progressController;
   bool _isCompleted = false;
   bool _courseNotFound = false;
+  bool _lessonNotFound = false;
+
+  // Answer state for interactive steps
+  int? _selectedAnswer;
+  String? _fillInBlankAnswer;
+  List<int>? _codeOrderAnswer;
+  bool _stepAnswered = false;
+  bool _stepCorrect = false;
+  Map<int, bool> _lessonStepCompleted = {};
 
   @override
   void initState() {
@@ -30,7 +48,7 @@ class _LessonScreenState extends State<LessonScreen> with TickerProviderStateMix
       duration: const Duration(milliseconds: 500),
       vsync: this,
     );
-    _loadCourse();
+    _loadData();
   }
 
   @override
@@ -39,64 +57,92 @@ class _LessonScreenState extends State<LessonScreen> with TickerProviderStateMix
     super.dispose();
   }
 
-  Future<void> _loadCourse() async {
+  Future<void> _loadData() async {
     final course = await CourseRepository.getCourseById(widget.courseId);
+    final lessonData = await lr.LessonRepository.getCourseLessons(widget.courseId);
+
     if (mounted) {
       setState(() {
         _course = course;
+        _lessonData = lessonData;
         _courseNotFound = course == null;
+        _lessonNotFound = lessonData == null || lessonData.modules.isEmpty;
+
+        if (course != null && lessonData != null) {
+          _allLessons = lessonData.modules
+              .expand((m) => m.lessons)
+              .toList();
+
+          // Find initial lesson index
+          if (widget.initialLessonId != null) {
+            _currentLessonIndex = _allLessons.indexWhere(
+              (l) => l.id == widget.initialLessonId,
+            );
+            if (_currentLessonIndex == -1) _currentLessonIndex = 0;
+          }
+
+          // Load progress
+          _loadLessonProgress();
+          _progressController.forward();
+        }
       });
-      if (course != null) {
-        _progressController.forward();
+    }
+  }
+
+  void _loadLessonProgress() {
+    // Load completed steps for current lesson
+    final lesson = _getCurrentLesson();
+    if (lesson != null) {
+      _lessonStepCompleted = {};
+      for (int i = 0; i < lesson.steps.length; i++) {
+        _lessonStepCompleted[i] = false; // Would load from storage
       }
     }
+  }
+
+  lr.Lesson? _getCurrentLesson() {
+    if (_allLessons.isEmpty || _currentLessonIndex >= _allLessons.length) {
+      return null;
+    }
+    return _allLessons[_currentLessonIndex];
+  }
+
+  lr.LessonStep? _getCurrentStep() {
+    final lesson = _getCurrentLesson();
+    if (lesson == null || _currentStepIndex >= lesson.steps.length) {
+      return null;
+    }
+    return lesson.steps[_currentStepIndex];
+  }
+
+  double get _lessonProgress {
+    final lesson = _getCurrentLesson();
+    if (lesson == null || lesson.steps.isEmpty) return 0.0;
+    return (_currentStepIndex + 1) / lesson.steps.length;
+  }
+
+  double get _courseProgress {
+    if (_allLessons.isEmpty) return 0.0;
+    return (_currentLessonIndex + _lessonProgress) / _allLessons.length;
   }
 
   @override
   Widget build(BuildContext context) {
     if (_courseNotFound) {
-      return Scaffold(
-        backgroundColor: AppColors.bgPrimary,
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.error_outline_rounded, size: 64, color: AppColors.accentError),
-                const SizedBox(height: 16),
-                Text(
-                  'Course Not Found',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'The course you\'re looking for doesn\'t exist or has been removed.',
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 24),
-                FilledButton.icon(
-                  onPressed: () => context.pop(),
-                  icon: const Icon(Icons.arrow_back_rounded),
-                  label: const Text('Go Back'),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.accentPrimary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
+      return _buildErrorScreen(
+        'Course Not Found',
+        'The course you\'re looking for doesn\'t exist or has been removed.',
       );
     }
 
-    if (_course == null) {
+    if (_lessonNotFound) {
+      return _buildErrorScreen(
+        'Lessons Not Available',
+        'Lesson content for this course is not available yet.',
+      );
+    }
+
+    if (_course == null || _lessonData == null) {
       return Scaffold(
         backgroundColor: AppColors.bgPrimary,
         body: const Center(child: CircularProgressIndicator(color: AppColors.accentPrimary)),
@@ -104,6 +150,11 @@ class _LessonScreenState extends State<LessonScreen> with TickerProviderStateMix
     }
 
     final lesson = _getCurrentLesson();
+    final step = _getCurrentStep();
+
+    if (lesson == null || step == null) {
+      return _buildCompletionScreen();
+    }
 
     return Scaffold(
       backgroundColor: AppColors.bgPrimary,
@@ -111,7 +162,7 @@ class _LessonScreenState extends State<LessonScreen> with TickerProviderStateMix
         child: Column(
           children: [
             _buildAppBar(context),
-            _buildProgressBar(),
+            _buildProgressBars(),
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
@@ -120,13 +171,7 @@ class _LessonScreenState extends State<LessonScreen> with TickerProviderStateMix
                   children: [
                     _buildLessonHeader(lesson),
                     const SizedBox(height: 24),
-                    _buildKeyIdea(),
-                    const SizedBox(height: 24),
-                    _buildConceptSection(),
-                    const SizedBox(height: 24),
-                    _buildCodeExample(),
-                    const SizedBox(height: 24),
-                    _buildInteractiveProblem(),
+                    _buildStepContent(step),
                     const SizedBox(height: 32),
                   ],
                 ),
@@ -139,150 +184,100 @@ class _LessonScreenState extends State<LessonScreen> with TickerProviderStateMix
     );
   }
 
-  Widget _buildAppBar(BuildContext context) {
+Widget _buildErrorScreen(String title, String message) {
+    return Scaffold(
+      backgroundColor: AppColors.bgPrimary,
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.error_outline_rounded, size: 64, color: AppColors.accentError),
+              const SizedBox(height: 16),
+              Text(title, style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+              const SizedBox(height: 8),
+              Text(message, style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: AppColors.textSecondary), textAlign: TextAlign.center),
+              const SizedBox(height: 24),
+              FilledButton.icon(onPressed: () => context.pop(), icon: const Icon(Icons.arrow_back_rounded), label: const Text('Go Back'), style: FilledButton.styleFrom(backgroundColor: AppColors.accentPrimary)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+Widget _buildAppBar(BuildContext context) {
+    final backButton = IconButton(
+      onPressed: () => context.pop(),
+      icon: const Icon(Icons.arrow_back_rounded),
+      style: IconButton.styleFrom(
+        backgroundColor: AppColors.bgCard,
+        foregroundColor: AppColors.textPrimary,
+      ),
+    );
+    final titleColumn = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          _course!.title,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+          overflow: TextOverflow.ellipsis,
+        ),
+        Text(
+          'Lesson ${_currentLessonIndex + 1} of ${_allLessons.length}',
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
+        ),
+      ],
+    );
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
       child: Row(
         children: [
-          IconButton(
-            onPressed: () => context.pop(),
-            icon: const Icon(Icons.arrow_back_rounded),
-            style: IconButton.styleFrom(
-              backgroundColor: AppColors.bgCard,
-              foregroundColor: AppColors.textPrimary,
-            ),
-          ),
+          backButton,
           const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              _course!.title,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.bookmark_outline_rounded),
-            style: IconButton.styleFrom(
-              backgroundColor: AppColors.bgCard,
-              foregroundColor: AppColors.textSecondary,
-            ),
-          ),
+          Expanded(child: titleColumn),
+          IconButton(onPressed: () {}, icon: const Icon(Icons.bookmark_outline_rounded), style: IconButton.styleFrom(backgroundColor: AppColors.bgCard, foregroundColor: AppColors.textSecondary)),
           const SizedBox(width: 8),
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.download_outlined),
-            style: IconButton.styleFrom(
-              backgroundColor: AppColors.bgCard,
-              foregroundColor: AppColors.textSecondary,
-            ),
-          ),
+          IconButton(onPressed: () {}, icon: const Icon(Icons.download_outlined), style: IconButton.styleFrom(backgroundColor: AppColors.bgCard, foregroundColor: AppColors.textSecondary)),
         ],
       ),
     );
   }
 
-  Widget _buildProgressBar() {
-    final progress = (_currentLessonIndex + 1) / _course!.lessonCount;
+  Widget _buildProgressBars() {
     return AnimatedBuilder(
       animation: _progressController,
       builder: (context, child) {
-        return LinearProgressIndicator(
-          value: progress * _progressController.value,
-          minHeight: 4,
-          backgroundColor: AppColors.bgTertiary,
-          color: AppColors.accentPrimary,
+        return Column(
+          children: [
+            // Course progress
+            LinearProgressIndicator(
+              value: _courseProgress * _progressController.value,
+              minHeight: 4,
+              backgroundColor: AppColors.bgTertiary,
+              color: AppColors.accentSecondary,
+            ),
+            const SizedBox(height: 8),
+            // Lesson progress
+            LinearProgressIndicator(
+              value: _lessonProgress * _progressController.value,
+              minHeight: 3,
+              backgroundColor: AppColors.bgTertiary,
+              color: AppColors.accentPrimary,
+            ),
+          ],
         );
       },
     );
   }
 
-  Lesson _getCurrentLesson() {
-    // Mock lesson data - in real app this would come from the course modules
-    return Lesson(
-      id: 'lesson_${_currentLessonIndex + 1}',
-      moduleId: 'module_1',
-      title: _getLessonTitle(_currentLessonIndex),
-      content: _getLessonContent(_currentLessonIndex),
-      codeSnippets: _getCodeSnippets(_currentLessonIndex),
-      keyTakeaways: _getKeyTakeaways(_currentLessonIndex),
-      estimatedMinutes: 10,
-      order: _currentLessonIndex + 1,
-    );
-  }
-
-  String _getLessonTitle(int index) {
-    const titles = [
-      'Introduction to Flexbox',
-      'Flex Direction & Axes',
-      'Justify Content',
-      'Align Items',
-      'Flex Wrap',
-      'Gap Property',
-      'Flex Grow & Shrink',
-      'Flex Basis',
-      'Align Self',
-      'Flexbox Patterns',
-    ];
-    return index < titles.length ? titles[index] : 'Lesson ${index + 1}';
-  }
-
-  String _getLessonContent(int index) {
-    const contents = [
-      'Flexbox is a one-dimensional layout method for arranging items in rows or columns. Items flex to fill additional space or shrink to fit into smaller spaces.',
-      'The main axis is defined by flex-direction. The cross axis runs perpendicular. Understanding both axes is key to mastering Flexbox.',
-      'justify-content aligns items along the main axis. Options include flex-start, flex-end, center, space-between, space-around, and space-evenly.',
-      'align-items aligns items along the cross axis. Options include flex-start, flex-end, center, stretch, and baseline.',
-      'flex-wrap controls whether items wrap to new lines. nowrap (default) forces all items on one line. wrap allows multiple lines.',
-      'The gap property creates space between flex items without using margins. It works with both row and column directions.',
-      'flex-grow defines how much an item grows relative to others. flex-shrink defines how much it shrinks. Both default to 0 and 1 respectively.',
-      'flex-basis sets the initial size before growing/shrinking. It can be a length, percentage, or auto (based on content).',
-      'align-self allows individual items to override the container\'s align-items value. Useful for special positioning.',
-      'Common patterns: Holy Grail layout, card grids, navigation bars, centered content, and sticky footers.',
-    ];
-    return index < contents.length ? contents[index] : 'Lesson content here.';
-  }
-
-  List<String> _getCodeSnippets(int index) {
-    const snippets = [
-      ['.container { display: flex; }'],
-      ['.container { flex-direction: row; }', '.container { flex-direction: column; }'],
-      ['.container { justify-content: space-between; }'],
-      ['.container { align-items: center; }'],
-      ['.container { flex-wrap: wrap; }'],
-      ['.container { gap: 16px; }'],
-      ['.item { flex-grow: 1; }', '.item { flex-shrink: 0; }'],
-      ['.item { flex-basis: 200px; }'],
-      ['.item { align-self: flex-end; }'],
-      ['.card { flex: 1 1 300px; }'],
-    ];
-    return index < snippets.length ? snippets[index] : ['/* Code example */'];
-  }
-
-  List<String> _getKeyTakeaways(int index) {
-    const takeaways = [
-      ['Flexbox is one-dimensional (row or column)', 'Parent controls child layout'],
-      ['Main axis = flex-direction', 'Cross axis = perpendicular'],
-      ['justify-content = main axis alignment', '6 values available'],
-      ['align-items = cross axis alignment', 'stretch is default'],
-      ['flex-wrap: wrap enables multi-line', 'wrap-reverse reverses order'],
-      ['gap replaces margin hacks', 'Works in both directions'],
-      ['flex-grow distributes extra space', 'flex-shrink prevents overflow'],
-      ['flex-basis sets initial size', 'auto uses content size'],
-      ['align-self overrides container', 'Per-item control'],
-      ['Combine properties for layouts', 'Flexbox is composable'],
-    ];
-    return index < takeaways.length ? takeaways[index] : ['Key takeaway here'];
-  }
-
-  Widget _buildLessonHeader(Lesson lesson) {
+  Widget _buildLessonHeader(lr.Lesson lesson) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'LESSON ${_currentLessonIndex + 1} OF ${_course!.lessonCount}',
+          'STEP ${_currentStepIndex + 1} OF ${lesson.steps.length}',
           style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.w700,
@@ -298,355 +293,450 @@ class _LessonScreenState extends State<LessonScreen> with TickerProviderStateMix
             letterSpacing: -0.5,
           ),
         ),
-        const SizedBox(height: 12),
-        Text(
-          lesson.content,
-          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-            color: AppColors.textSecondary,
-            height: 1.6,
-          ),
-        ),
       ],
     ).animate().fadeIn().slideY(begin: 0.2, end: 0);
   }
 
-  Widget _buildKeyIdea() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.accentPrimarySoft,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.accentPrimary.withValues(alpha: 0.3)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: AppColors.accentPrimary,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: const Icon(Icons.lightbulb_rounded, color: Colors.white, size: 20),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Key Idea',
-                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    color: AppColors.accentPrimary,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  _getCurrentLesson().keyTakeaways.first,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.accentPrimaryDark,
-                    fontWeight: FontWeight.w500,
-                    height: 1.5,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.2, end: 0);
+  Widget _buildStepContent(lr.LessonStep step) {
+    switch (step.type) {
+      case lr.LessonStepType.explanation:
+        return _buildExplanationStep(step);
+      case lr.LessonStepType.multipleChoice:
+        return _buildMultipleChoiceStep(step);
+      case lr.LessonStepType.fillInBlank:
+        return _buildFillInBlankStep(step);
+      case lr.LessonStepType.codeOrdering:
+        return _buildCodeOrderingStep(step);
+    }
   }
 
-  Widget _buildConceptSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'The Two Axes',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        const SizedBox(height: 12),
-        Text(
-          'Flexbox works with a main axis and a cross axis. By default, the main axis runs horizontally (left to right). You can change that direction with flex-direction.',
-          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-            color: AppColors.textSecondary,
-            height: 1.6,
-          ),
-        ),
-        const SizedBox(height: 16),
-        _buildAxisVisualization(),
-      ],
-    ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.2, end: 0);
-  }
-
-  Widget _buildAxisVisualization() {
+  Widget _buildExplanationStep(lr.LessonStep step) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: AppColors.bgCard,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(color: AppColors.borderDefault),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _buildAxisLabel('Main Axis', AppColors.accentPrimary, Icons.arrow_forward_rounded),
-              _buildAxisLabel('Cross Axis', AppColors.accentSecondary, Icons.arrow_upward_rounded),
-            ],
-          ),
-          const SizedBox(height: 20),
-          Container(
-            height: 120,
-            decoration: BoxDecoration(
-              color: AppColors.bgTertiary,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: CustomPaint(
-              painter: _AxisPainter(),
-              size: const Size(double.infinity, 120),
+          Text(
+            step.content ?? '',
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+              color: AppColors.textSecondary,
+              height: 1.7,
             ),
           ),
         ],
       ),
-    );
+    ).animate().fadeIn().slideY(begin: 0.2, end: 0);
   }
 
-  Widget _buildAxisLabel(String label, Color color, IconData icon) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, color: color, size: 18),
-        const SizedBox(width: 6),
-        Text(
-          label,
-          style: TextStyle(
-            color: color,
-            fontWeight: FontWeight.w600,
-            fontSize: 13,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildCodeExample() {
-    final lesson = _getCurrentLesson();
-
+  Widget _buildMultipleChoiceStep(lr.LessonStep step) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Try It Yourself',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+          step.question ?? '',
+          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
             fontWeight: FontWeight.w700,
+            height: 1.3,
           ),
         ),
-        const SizedBox(height: 12),
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: const Color(0xFF0D1117),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.borderDefault),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  _buildCodeTag('.container'),
-                  const SizedBox(width: 8),
-                  _buildCodeTag('{'),
-                ],
-              ),
-              const SizedBox(height: 8),
-              ...lesson.codeSnippets.map((snippet) => Padding(
-                padding: const EdgeInsets.only(left: 16, bottom: 6),
-                child: Text(
-                  snippet,
-                  style: const TextStyle(
-                    fontFamily: 'monospace',
-                    fontSize: 13,
-                    color: Color(0xFFC7F9CC),
-                    height: 1.6,
+        const SizedBox(height: 20),
+        ...step.options!.asMap().entries.map((entry) {
+          final index = entry.key;
+          final option = entry.value;
+          final isCorrect = index == step.correctAnswer;
+          final isSelected = index == _selectedAnswer;
+
+          Color borderColor = AppColors.borderDefault;
+          Color bgColor = AppColors.bgCard;
+          Color textColor = AppColors.textPrimary;
+          IconData? trailingIcon;
+
+          if (_stepAnswered) {
+            if (isCorrect) {
+              borderColor = AppColors.accentSuccess;
+              bgColor = AppColors.accentSuccessSoft;
+              textColor = AppColors.accentSuccess;
+              trailingIcon = Icons.check_circle_rounded;
+            } else if (isSelected) {
+              borderColor = AppColors.accentError;
+              bgColor = AppColors.accentErrorSoft;
+              textColor = AppColors.accentError;
+              trailingIcon = Icons.cancel_rounded;
+            }
+          } else if (isSelected) {
+            borderColor = AppColors.accentPrimary;
+          }
+
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: _stepAnswered ? null : () => _selectAnswer(index, isCorrect),
+                borderRadius: BorderRadius.circular(14),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(18),
+                  decoration: BoxDecoration(
+                    color: bgColor,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: borderColor, width: 2),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          option,
+                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                            color: textColor,
+                            fontWeight: isCorrect && _stepAnswered ? FontWeight.w600 : FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                      if (trailingIcon != null)
+                        Icon(trailingIcon, color: textColor, size: 24),
+                    ],
                   ),
                 ),
-              )),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  _buildCodeTag('}'),
-                ],
               ),
-            ],
-          ),
-        ),
+            ),
+          );
+        }),
+        if (_stepAnswered) ...[
+          const SizedBox(height: 16),
+          _buildExplanationCard(step),
+        ],
       ],
-    ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.2, end: 0);
+    ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.2, end: 0);
   }
 
-  Widget _buildCodeTag(String text) {
-    return Text(
-      text,
-      style: const TextStyle(
-        fontFamily: 'monospace',
-        fontSize: 13,
-        color: Color(0xFFD2A8FF),
-        fontWeight: FontWeight.w500,
-      ),
-    );
-  }
-
-  Widget _buildInteractiveProblem() {
+  Widget _buildFillInBlankStep(lr.LessonStep step) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Check Your Understanding',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+          step.question ?? '',
+          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
             fontWeight: FontWeight.w700,
+            height: 1.3,
+          ),
+        ),
+        const SizedBox(height: 20),
+        TextField(
+          onChanged: (value) => _fillInBlankAnswer = value.trim().toLowerCase(),
+          onSubmitted: _stepAnswered ? null : (_) => _checkFillInBlank(step),
+          decoration: InputDecoration(
+            hintText: 'Type your answer...',
+            hintStyle: TextStyle(color: AppColors.textMuted),
+            filled: true,
+            fillColor: AppColors.bgCard,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: BorderSide(
+                color: _stepAnswered
+                    ? (_stepCorrect ? AppColors.accentSuccess : AppColors.accentError)
+                    : AppColors.borderDefault,
+                width: 2,
+              ),
+            ),
+            enabled: !_stepAnswered,
+          ),
+          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+            color: AppColors.textPrimary,
+          ),
+        ),
+        if (_stepAnswered) ...[
+          const SizedBox(height: 16),
+          _buildExplanationCard(step),
+        ],
+      ],
+    ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.2, end: 0);
+  }
+
+  void _checkFillInBlank(lr.LessonStep step) {
+    final userAnswer = _fillInBlankAnswer?.trim().toLowerCase() ?? '';
+    final correct = userAnswer == step.answer?.toLowerCase();
+    setState(() {
+      _stepAnswered = true;
+      _stepCorrect = correct;
+    });
+  }
+
+  Widget _buildCodeOrderingStep(lr.LessonStep step) {
+    final snippets = step.snippets ?? [];
+    final currentOrder = _codeOrderAnswer ?? List.generate(snippets.length, (i) => i);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          step.question ?? '',
+          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+            fontWeight: FontWeight.w700,
+            height: 1.3,
           ),
         ),
         const SizedBox(height: 12),
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: AppColors.bgCard,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.borderDefault),
+        Text(
+          'Drag to reorder (tap to move up/down)',
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            color: AppColors.textMuted,
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'What happens when justify-content is set to space-between?',
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: AppColors.textPrimary,
-                  height: 1.5,
+        ),
+        const SizedBox(height: 16),
+        ...currentOrder.asMap().entries.map((entry) {
+          final displayIndex = entry.key;
+          final snippetIndex = entry.value;
+          final snippet = snippets[snippetIndex];
+
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: _stepAnswered ? null : () => _moveCodeSnippet(displayIndex, -1),
+                onLongPress: _stepAnswered ? null : () => _moveCodeSnippet(displayIndex, 1),
+                borderRadius: BorderRadius.circular(12),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF0D1117),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: _stepAnswered
+                          ? (_isCodeOrderCorrect(step) ? AppColors.accentSuccess : AppColors.accentError)
+                          : AppColors.borderDefault,
+                      width: 2,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Text(
+                        '${displayIndex + 1}.',
+                        style: const TextStyle(
+                          fontFamily: 'monospace',
+                          fontSize: 13,
+                          color: Color(0xFFD2A8FF),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          snippet,
+                          style: const TextStyle(
+                            fontFamily: 'monospace',
+                            fontSize: 13,
+                            color: Color(0xFFC7F9CC),
+                            height: 1.6,
+                          ),
+                        ),
+                      ),
+                      if (!_stepAnswered)
+                        Icon(
+                          Icons.drag_indicator_rounded,
+                          color: AppColors.textMuted,
+                          size: 20,
+                        ),
+                    ],
+                  ),
                 ),
               ),
-              const SizedBox(height: 16),
-              ..._buildAnswerOptions(),
-            ],
-          ),
-        ),
+            ),
+          );
+        }),
+        if (_stepAnswered) ...[
+          const SizedBox(height: 16),
+          _buildExplanationCard(step),
+        ],
       ],
-    ).animate().fadeIn(delay: 500.ms).slideY(begin: 0.2, end: 0);
+    ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.2, end: 0);
   }
 
-  List<Widget> _buildAnswerOptions() {
-    const options = [
-      'Items are evenly distributed with equal space around them',
-      'Items are spaced with equal gaps between them, first and last at edges',
-      'Items are centered with equal space on both sides',
-      'Items are packed at the start of the container',
-    ];
-
-    return options.asMap().entries.map((entry) {
-      final index = entry.key;
-      final option = entry.value;
-      return Padding(
-        padding: const EdgeInsets.only(bottom: 10),
-        child: _AnswerOption(
-          text: option,
-          isCorrect: index == 1,
-          onSelected: (correct) => _handleAnswer(correct),
-        ),
-      );
-    }).toList();
-  }
-
-  void _handleAnswer(bool correct) {
-    if (correct) {
-      _showCorrectDialog();
-    } else {
-      _showIncorrectDialog();
+  void _moveCodeSnippet(int index, int direction) {
+    final currentStep = _getCurrentStep();
+    if (currentStep == null) return;
+    final snippets = currentStep.snippets ?? [];
+    final newOrder = List<int>.from(_codeOrderAnswer ?? List.generate(
+      snippets.length, (i) => i));
+    final newIndex = index + direction;
+    if (newIndex >= 0 && newIndex < newOrder.length) {
+      final temp = newOrder[index];
+      newOrder[index] = newOrder[newIndex];
+      newOrder[newIndex] = temp;
+      setState(() => _codeOrderAnswer = newOrder);
     }
   }
 
-  void _showCorrectDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.bgCard,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: AppColors.accentSuccess,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Icon(Icons.check_rounded, color: Colors.white, size: 20),
-            ),
-            const SizedBox(width: 12),
-            const Text('Correct!'),
-          ],
+  bool _isCodeOrderCorrect(lr.LessonStep step) {
+    if (_codeOrderAnswer == null || step.correctOrder == null) return false;
+    if (_codeOrderAnswer!.length != step.correctOrder!.length) return false;
+    for (int i = 0; i < _codeOrderAnswer!.length; i++) {
+      if (_codeOrderAnswer![i] != step.correctOrder![i]) return false;
+    }
+    return true;
+  }
+
+  Widget _buildExplanationCard(lr.LessonStep step) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: _stepCorrect
+            ? AppColors.accentSuccessSoft
+            : AppColors.accentPrimarySoft,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: _stepCorrect
+              ? AppColors.accentSuccess.withValues(alpha: 0.3)
+              : AppColors.accentPrimary.withValues(alpha: 0.3),
         ),
-        content: const Text('Great job! Items are evenly distributed with the first item at the start and the last item at the end.'),
-        actions: [
-          FilledButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _completeLesson();
-            },
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.accentPrimary,
+      ),
+      child: Row(
+        children: [
+          Icon(
+            _stepCorrect ? Icons.check_circle_rounded : Icons.info_rounded,
+            color: _stepCorrect ? AppColors.accentSuccess : AppColors.accentPrimary,
+            size: 22,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              step.explanation ?? '',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: _stepCorrect ? AppColors.accentSuccess : AppColors.accentPrimary,
+                fontWeight: FontWeight.w500,
+              ),
             ),
-            child: const Text('Continue'),
           ),
         ],
+      ),
+    ).animate().fadeIn().scale();
+  }
+
+  void _selectAnswer(int index, bool isCorrect) {
+    setState(() {
+      _selectedAnswer = index;
+      _stepAnswered = true;
+      _stepCorrect = isCorrect;
+    });
+  }
+
+  Widget _buildBottomAction() {
+    final lesson = _getCurrentLesson();
+    final step = _getCurrentStep();
+
+    if (lesson == null || step == null) {
+      return _buildCompletionAction();
+    }
+
+    if (_isCompleted) {
+      return _buildCompletionAction();
+    }
+
+    final isLastStep = _currentStepIndex == lesson.steps.length - 1;
+    final isLastLesson = _currentLessonIndex == _allLessons.length - 1;
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+      decoration: BoxDecoration(
+        color: AppColors.bgCard,
+        border: Border(top: BorderSide(color: AppColors.borderDefault)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Column(
+          children: [
+            if (!_stepAnswered)
+              Text(
+                'Select an answer to continue',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: AppColors.textMuted,
+                ),
+              ),
+            const SizedBox(height: 12),
+            FilledButton.icon(
+              onPressed: _stepAnswered ? _nextStep : null,
+              icon: Icon(isLastStep ? Icons.check_circle_outline_rounded : Icons.arrow_forward_rounded),
+              label: Text(
+                isLastStep
+                    ? (isLastLesson ? 'Complete Course' : 'Next Lesson')
+                    : 'Next Step',
+              ),
+              style: FilledButton.styleFrom(
+                backgroundColor: _stepAnswered ? AppColors.accentPrimary : AppColors.bgTertiary,
+                foregroundColor: _stepAnswered ? AppColors.textOnAccent : AppColors.textMuted,
+                minimumSize: const Size(double.infinity, 52),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                textStyle: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  void _showIncorrectDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.bgCard,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: AppColors.accentError,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Icon(Icons.close_rounded, color: Colors.white, size: 20),
-            ),
-            const SizedBox(width: 12),
-            const Text('Not Quite'),
-          ],
-        ),
-        content: const Text('space-between places the first item at the start and the last item at the end, with equal spacing between the remaining items.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Try Again'),
-          ),
-        ],
-      ),
-    );
+  void _nextStep() {
+    final lesson = _getCurrentLesson();
+    if (lesson == null) return;
+
+    if (_currentStepIndex < lesson.steps.length - 1) {
+      setState(() {
+        _currentStepIndex++;
+        _selectedAnswer = null;
+        _fillInBlankAnswer = null;
+        _codeOrderAnswer = null;
+        _stepAnswered = false;
+        _stepCorrect = false;
+      });
+      _progressController.forward(from: 0);
+    } else {
+      _completeLesson();
+    }
   }
 
-  Future<void> _completeLesson() async {
-    final provider = context.read<AppProvider>();
-    await provider.completeLesson(widget.courseId);
+  void _completeLesson() {
+    final lesson = _getCurrentLesson();
+    if (lesson == null) return;
 
-    if (_currentLessonIndex < _course!.lessonCount - 1) {
-      setState(() => _currentLessonIndex++);
+    // Mark lesson as completed
+    if (_currentLessonIndex < _allLessons.length - 1) {
+      setState(() {
+        _currentLessonIndex++;
+        _currentStepIndex = 0;
+        _selectedAnswer = null;
+        _fillInBlankAnswer = null;
+        _codeOrderAnswer = null;
+        _stepAnswered = false;
+        _stepCorrect = false;
+      });
+      _progressController.forward(from: 0);
+      _awardXp(lesson.xpReward);
     } else {
       setState(() => _isCompleted = true);
+      _awardXp(lesson.xpReward);
       _showCompletionDialog();
     }
+  }
+
+  Future<void> _awardXp(int amount) async {
+    final provider = context.read<AppProvider>();
+    await provider.addXp(amount);
   }
 
   void _showCompletionDialog() {
@@ -667,14 +757,14 @@ class _LessonScreenState extends State<LessonScreen> with TickerProviderStateMix
               child: const Icon(Icons.celebration_rounded, color: Colors.white, size: 28),
             ),
             const SizedBox(width: 12),
-            const Expanded(child: Text('Lesson Complete!')),
+            const Expanded(child: Text('Course Complete!')),
           ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              '+25 XP earned',
+              '+${_allLessons.fold(0, (sum, l) => sum + l.xpReward)} XP earned',
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                 color: AppColors.accentPrimary,
                 fontWeight: FontWeight.w700,
@@ -707,25 +797,70 @@ class _LessonScreenState extends State<LessonScreen> with TickerProviderStateMix
     );
   }
 
-  Widget _buildBottomAction() {
-    if (_isCompleted) {
-      return const SizedBox.shrink();
-    }
+  Widget _buildCompletionScreen() {
+    return Scaffold(
+      backgroundColor: AppColors.bgPrimary,
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.celebration_rounded, color: Colors.white, size: 48),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  'Course Complete!',
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'You\'ve completed all lessons!',
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color: Colors.white.withValues(alpha: 0.9),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                FilledButton.icon(
+                  onPressed: () => context.pop(),
+                  icon: const Icon(Icons.arrow_back_rounded),
+                  label: const Text('Back to Home'),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: AppColors.accentPrimary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 
+  Widget _buildCompletionAction() {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
       decoration: BoxDecoration(
         color: AppColors.bgCard,
-        border: Border(
-          top: BorderSide(color: AppColors.borderDefault),
-        ),
+        border: Border(top: BorderSide(color: AppColors.borderDefault)),
       ),
       child: SafeArea(
         top: false,
         child: FilledButton.icon(
-          onPressed: _completeLesson,
-          icon: const Icon(Icons.check_circle_outline_rounded),
-          label: const Text('Mark as Complete'),
+          onPressed: () => context.pop(),
+          icon: const Icon(Icons.arrow_back_rounded),
+          label: const Text('Back to Home'),
           style: FilledButton.styleFrom(
             backgroundColor: AppColors.accentPrimary,
             foregroundColor: AppColors.textOnAccent,
@@ -737,153 +872,6 @@ class _LessonScreenState extends State<LessonScreen> with TickerProviderStateMix
               fontSize: 16,
               fontWeight: FontWeight.w600,
             ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _AxisPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2;
-
-    // Main axis
-    paint.color = AppColors.accentPrimary;
-    canvas.drawLine(
-      Offset(40, size.height / 2),
-      Offset(size.width - 40, size.height / 2),
-      paint,
-    );
-
-    // Cross axis
-    paint.color = AppColors.accentSecondary;
-    canvas.drawLine(
-      Offset(size.width / 2, 20),
-      Offset(size.width / 2, size.height - 20),
-      paint,
-    );
-
-    // Items on main axis
-    final itemPaint = Paint()..style = PaintingStyle.fill;
-    for (int i = 0; i < 5; i++) {
-      final x = 60 + (size.width - 120) / 4 * i;
-      itemPaint.color = AppColors.accentPrimary.withValues(alpha: 0.3);
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(
-          Rect.fromCenter(
-            center: Offset(x, size.height / 2),
-            width: 40,
-            height: 30,
-          ),
-          const Radius.circular(6),
-        ),
-        itemPaint,
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
-
-class _AnswerOption extends StatefulWidget {
-  final String text;
-  final bool isCorrect;
-  final ValueChanged<bool> onSelected;
-
-  const _AnswerOption({
-    required this.text,
-    required this.isCorrect,
-    required this.onSelected,
-  });
-
-  @override
-  State<_AnswerOption> createState() => _AnswerOptionState();
-}
-
-class _AnswerOptionState extends State<_AnswerOption> {
-  bool _selected = false;
-  bool _answered = false;
-
-  @override
-  Widget build(BuildContext context) {
-    Color borderColor = AppColors.borderDefault;
-    Color bgColor = AppColors.bgTertiary;
-
-    if (_answered) {
-      if (widget.isCorrect) {
-        borderColor = AppColors.accentSuccess;
-        bgColor = AppColors.accentSuccessSoft;
-      } else if (_selected) {
-        borderColor = AppColors.accentError;
-        bgColor = AppColors.accentErrorSoft;
-      }
-    } else if (_selected) {
-      borderColor = AppColors.accentPrimary;
-    }
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: _answered ? null : () {
-          setState(() {
-            _selected = true;
-            _answered = true;
-          });
-          widget.onSelected(widget.isCorrect);
-        },
-        borderRadius: BorderRadius.circular(12),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: bgColor,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: borderColor, width: 2),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 24,
-                height: 24,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: _answered
-                        ? (widget.isCorrect ? AppColors.accentSuccess : AppColors.accentError)
-                        : (_selected ? AppColors.accentPrimary : AppColors.borderDefault),
-                    width: 2,
-                  ),
-                  color: _answered && widget.isCorrect
-                      ? AppColors.accentSuccess
-                      : (_answered && _selected && !widget.isCorrect
-                          ? AppColors.accentError
-                          : Colors.transparent),
-                ),
-                child: _answered && widget.isCorrect
-                    ? const Icon(Icons.check_rounded, color: Colors.white, size: 14)
-                    : (_answered && _selected && !widget.isCorrect
-                        ? const Icon(Icons.close_rounded, color: Colors.white, size: 14)
-                        : null),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  widget.text,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: _answered && widget.isCorrect
-                        ? AppColors.accentSuccess
-                        : (_answered && _selected && !widget.isCorrect
-                            ? AppColors.accentError
-                            : AppColors.textPrimary),
-                  ),
-                ),
-              ),
-            ],
           ),
         ),
       ),

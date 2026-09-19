@@ -117,9 +117,69 @@ The app has a solid foundation with clean architecture (repository pattern, prov
 
 ---
 
-## Phase 1 Fix Plan
+## Phase 1 Fix Plan - COMPLETED ✓
 
-1. **Fix Analyzer Warnings** - Clean up all 28 issues
-2. **Fix Test Failures** - Update tests to match actual UI, fix `copyWith` bug
-3. **Fix Community Vote Toggle** - Fix `copyWith` in CommunityPost
-4. **Verify Build** - Run `flutter analyze` and `flutter test` to confirm clean state
+1. **Fix Analyzer Warnings** - Cleaned up all 28 issues ✓
+2. **Fix Test Failures** - Updated tests to match actual UI, fixed `copyWith` bug ✓
+3. **Fix Community Vote Toggle** - Fixed `copyWith` in CommunityPost using sentinel pattern ✓
+4. **Verify Build** - `flutter analyze` clean, all 10 tests pass ✓
+
+**Commit**: 1bed08c - "Phase 1: Fix analyzer warnings, CommunityPost.copyWith bug, and widget tests"
+
+---
+
+## Phase 2: Complete the Core Learning Loop
+
+### 2.1 Replace Hardcoded Lesson Engine with Data-Driven System
+- **Files to modify**: `lesson_screen.dart`, `course_models.dart`, `course_repository.dart`
+- **Create**: Lesson content JSON assets or expand Course model with modules/lessons
+- **Implement**: Multi-step lesson flow (explanation → multiple choice → fill-in-blank → code ordering)
+- **Add**: Immediate feedback, hints, progress bar per lesson
+- **Seed**: 3 learning paths × 3+ courses × 4+ lessons each (Git, Python basics, Data Structures, SQL, etc.)
+
+### 2.2 Lesson Completion & XP System
+- **Files**: `app_provider.dart`, `user_models.dart`, `storage_service.dart`
+- **Fix**: Award XP only once per lesson (track completed lesson IDs)
+- **Implement**: Level progression, streak updates, course progress, achievement unlocks
+- **Streak logic**: UTC day boundaries, timezone-aware day rollover
+
+### 2.3 Daily Challenge Rotation
+- **File**: `daily_challenge_screen.dart`
+- **Implement**: Date-based question rotation (seeded RNG per date)
+- **Track**: Completion per date (not just once ever)
+- **Persist**: Daily challenge state with date key
+
+### 2.4 Resume Where Left Off
+- **Persist**: Lesson index, answered questions, scroll position
+- **Restore**: On lesson screen re-entry
+
+---
+
+## Phase 3: Fix and Finish Existing Features
+
+### 3.1 Profile Menu Items
+- **File**: `profile_screen.dart`
+- **Implement**: Saved Lessons, Downloads, Appearance, Notifications, Help, Sign Out screens
+
+### 3.2 Community Replies
+- **File**: `community_screen.dart`, `community_repository.dart`
+- **Implement**: Reply dialog, nested replies, reply persistence
+
+### 3.3 Settings Screen
+- **Create**: `settings_screen.dart`
+- **Features**: Theme (light/dark/system), Reset Progress (confirm dialog), Notification toggle
+
+### 3.4 Bookmarks & Downloads
+- **Files**: `lesson_screen.dart`, `storage_service.dart`, `app_provider.dart`
+- **Implement**: Functional bookmark/download buttons, offline content access
+
+### 3.5 Course Progress Tracking
+- **Files**: `app_provider.dart`, `course_repository.dart`
+- **Track**: Modules, lessons, quizzes, projects completion
+
+### 3.6 Achievement System
+- **Files**: `app_provider.dart`, `user_models.dart`
+- **Update**: Progress tracking, auto-unlock on criteria met
+
+### 3.7 Error/Empty/Loading States
+- **All screens**: Consistent error boundaries, empty states, loading skeletons

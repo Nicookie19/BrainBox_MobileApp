@@ -1,0 +1,211 @@
+{
+  "courseId": "data-structures",
+  "modules": [
+    {
+      "id": "module_1",
+      "title": "Arrays & Lists",
+      "description": "Fundamental data structures: arrays, dynamic arrays, lists",
+      "order": 1,
+      "lessons": [
+        {
+          "id": "lesson_1",
+          "title": "Introduction to Arrays",
+          "steps": [
+            {
+              "type": "explanation",
+              "content": "An array is a collection of elements stored at contiguous memory locations. Each element can be accessed directly by its index (0-based). Arrays have fixed size in many languages, but dynamic arrays (like Python lists, Java ArrayList) can grow and shrink."
+            },
+            {
+              "type": "explanation",
+              "content": "Key operations: access by index O(1), search O(n), insert/delete at end O(1) amortized, insert/delete at beginning/middle O(n). Arrays are ideal when you need fast random access and know the approximate size."
+            },
+            {
+              "type": "multiple_choice",
+              "question": "What is the time complexity to access an element by index in an array?",
+              "options": ["O(1)", "O(log n)", "O(n)", "O(n log n)"],
+              "correctAnswer": 0,
+              "explanation": "Arrays provide constant-time O(1) random access because elements are stored contiguously - the memory address is base_address + index * element_size."
+            },
+            {
+              "type": "fill_in_blank",
+              "question": "Arrays store elements in ______ memory locations.",
+              "answer": "contiguous",
+              "explanation": "Contiguous memory means elements are stored next to each other, enabling O(1) index access via pointer arithmetic."
+            },
+            {
+              "type": "code_ordering",
+              "question": "Order to create an array/list of first 5 squares in Python",
+              "snippets": [
+                "squares = []",
+                "for i in range(1, 6):",
+                "    squares.append(i * i)",
+                "print(squares)"
+              ],
+              "correctOrder": [0, 1, 2, 3],
+              "explanation": "Initialize empty list, loop 1-5, append square, print result: [1, 4, 9, 16, 25]."
+            },
+            {
+              "type": "multiple_choice",
+              "question": "What is the cost of inserting at the beginning of a dynamic array of size n?",
+              "options": ["O(1)", "O(log n)", "O(n)", "O(n²)"],
+              "correctAnswer": 2,
+              "explanation": "Inserting at index 0 requires shifting all n existing elements right by one position, taking O(n) time."
+            }
+          ],
+          "estimatedMinutes": 12,
+          "xpReward": 25
+        },
+        {
+          "id": "lesson_2",
+          "title": "Linked Lists",
+          "steps": [
+            {
+              "type": "explanation",
+              "content": "A linked list is a linear collection of nodes where each node contains data and a reference (pointer) to the next node. Unlike arrays, elements are NOT stored contiguously. Types: singly linked (next pointer), doubly linked (next + prev), circular (last points to first)."
+            },
+            {
+              "type": "explanation",
+              "content": "Operations: access by index O(n), search O(n), insert/delete at head O(1), insert/delete at tail O(1) with tail pointer, insert/delete in middle O(n) to find + O(1) to link. Linked lists excel at frequent insertions/deletions at ends."
+            },
+            {
+              "type": "multiple_choice",
+              "question": "What is the time complexity to access the k-th element in a singly linked list?",
+              "options": ["O(1)", "O(log n)", "O(k)", "O(n)"],
+              "correctAnswer": 2,
+              "explanation": "Must traverse from head through k nodes. No random access - must follow next pointers sequentially."
+            },
+            {
+              "type": "fill_in_blank",
+              "question": "Each node in a singly linked list contains data and a ______ to the next node.",
+              "answer": "pointer",
+              "explanation": "The pointer (or reference) links nodes together. In doubly linked lists, there are two pointers: next and prev."
+            },
+            {
+              "type": "code_ordering",
+              "question": "Order to define a simple Node class for a singly linked list in Python",
+              "snippets": [
+                "class Node:",
+                "    def __init__(self, data):",
+                "        self.data = data",
+                "        self.next = None"
+              ],
+              "correctOrder": [0, 1, 2, 3],
+              "explanation": "Node stores data and a reference to the next node (initially None)."
+            },
+            {
+              "type": "multiple_choice",
+              "question": "When is a linked list preferred over an array?",
+              "options": [
+                "When you need fast random access",
+                "When you need frequent insertions/deletions at the beginning",
+                "When memory is extremely limited",
+                "When you need cache-friendly iteration"
+              ],
+              "correctAnswer": 1,
+              "explanation": "Linked lists provide O(1) insertion/deletion at head without shifting elements, unlike arrays which need O(n) shifting."
+            }
+          ],
+          "estimatedMinutes": 15,
+          "xpReward": 25
+        },
+        {
+          "id": "lesson_3",
+          "title": "Stacks & Queues",
+          "steps": [
+            {
+              "type": "explanation",
+              "content": "Stack: LIFO (Last In, First Out) - like a stack of plates. Operations: push (add to top), pop (remove from top), peek (view top). Queue: FIFO (First In, First Out) - like a line. Operations: enqueue (add to rear), dequeue (remove from front), peek (view front)."
+            },
+            {
+              "type": "explanation",
+              "content": "Both can be implemented with arrays or linked lists. Stack: push/pop at same end. Queue: enqueue at rear, dequeue at front. Circular buffer optimizes queue array implementation. Deque (double-ended queue) allows both ends."
+            },
+            {
+              "type": "multiple_choice",
+              "question": "What order are elements removed from a stack?",
+              "options": ["FIFO", "LIFO", "Random", "Sorted"],
+              "correctAnswer": 1,
+              "explanation": "LIFO - Last In, First Out. The most recently added element is removed first."
+            },
+            {
+              "type": "fill_in_blank",
+              "question": "The operation to add an element to a stack is called ______.",
+              "answer": "push",
+              "explanation": "push adds to the top of the stack. pop removes from the top."
+            },
+            {
+              "type": "code_ordering",
+              "question": "Order to implement a stack using Python list",
+              "snippets": [
+                "stack = []",
+                "stack.append(1)  # push",
+                "stack.append(2)",
+                "top = stack.pop()  # pop returns 2",
+                "print(top)"
+              ],
+              "correctOrder": [0, 1, 2, 3, 4],
+              "explanation": "Python list append/pop at end = O(1) stack operations."
+            },
+            {
+              "type": "multiple_choice",
+              "question": "Which data structure is best for implementing BFS (Breadth-First Search)?",
+              "options": ["Stack", "Queue", "Array", "Linked List"],
+              "correctAnswer": 1,
+              "explanation": "BFS explores level by level - queue's FIFO order processes nodes in the order they're discovered."
+            }
+          ],
+          "estimatedMinutes": 12,
+          "xpReward": 25
+        },
+        {
+          "id": "lesson_4",
+          "title": "Hash Maps (Dictionaries)",
+          "steps": [
+            {
+              "type": "explanation",
+              "content": "A hash map (dict in Python, HashMap in Java, object in JS) stores key-value pairs. Keys are hashed to determine storage location, providing average O(1) for insert, lookup, delete. Collisions handled by chaining or open addressing."
+            },
+            {
+              "type": "explanation",
+              "content": "Keys must be hashable (immutable in Python: strings, numbers, tuples). Values can be any type. Common operations: get(key), set(key, value), delete(key), contains(key). Average O(1), worst case O(n) with many collisions."
+            },
+            {
+              "type": "multiple_choice",
+              "question": "What is the average time complexity for dictionary lookup in Python?",
+              "options": ["O(1)", "O(log n)", "O(n)", "O(n log n)"],
+              "correctAnswer": 0,
+              "explanation": "Hash tables provide average O(1) lookup by computing hash(key) to find the bucket directly."
+            },
+            {
+              "type": "fill_in_blank",
+              "question": "In Python, dictionary keys must be ______ (immutable).",
+              "answer": "hashable",
+              "explanation": "Only hashable types (str, int, float, tuple of hashables) can be dict keys. Lists and dicts are not hashable."
+            },
+            {
+              "type": "code_ordering",
+              "question": "Order to count word frequencies in a list",
+              "snippets": [
+                "counts = {}",
+                "for word in words:",
+                "    counts[word] = counts.get(word, 0) + 1",
+                "print(counts)"
+              ],
+              "correctOrder": [0, 1, 2, 3],
+              "explanation": "get(key, default) returns 0 if key missing, enabling clean increment."
+            },
+            {
+              "type": "multiple_choice",
+              "question": "What happens when you access a missing key with dict[key]?",
+              "options": ["Returns None", "Returns empty string", "Raises KeyError", "Creates key with None"],
+              "correctAnswer": 2,
+              "explanation": "dict[key] raises KeyError for missing keys. Use dict.get(key) or dict.get(key, default) for safe access."
+            }
+          ],
+          "estimatedMinutes": 12,
+          "xpReward": 25
+        }
+      ]
+    }
+  ]
+}

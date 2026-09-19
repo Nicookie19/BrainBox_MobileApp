@@ -1,0 +1,221 @@
+{
+  "courseId": "sql-basics",
+  "modules": [
+    {
+      "id": "module_1",
+      "title": "SQL Fundamentals",
+      "description": "Learn to query and manipulate data with SQL",
+      "order": 1,
+      "lessons": [
+        {
+          "id": "lesson_1",
+          "title": "SELECT Basics",
+          "steps": [
+            {
+              "type": "explanation",
+              "content": "SQL (Structured Query Language) is used to communicate with relational databases. The SELECT statement retrieves data from tables. Basic syntax: SELECT column1, column2 FROM table_name; Use * to select all columns."
+            },
+            {
+              "type": "explanation",
+              "content": "Tables consist of rows (records) and columns (fields). Each column has a data type (INTEGER, TEXT, REAL, DATE, etc.). Primary keys uniquely identify each row."
+            },
+            {
+              "type": "multiple_choice",
+              "question": "What does SELECT * FROM users; return?",
+              "options": ["All columns from users table", "Only the first column", "Only the last row", "Error"],
+              "correctAnswer": 0,
+              "explanation": "* is a wildcard meaning 'all columns'. This returns every column for every row in the users table."
+            },
+            {
+              "type": "fill_in_blank",
+              "question": "The keyword to specify which table to query is ______.",
+              "answer": "FROM",
+              "explanation": "FROM table_name tells the database which table to select data from."
+            },
+            {
+              "type": "code_ordering",
+              "question": "Order to select name and email from users table",
+              "snippets": [
+                "SELECT name, email",
+                "FROM users;"
+              ],
+              "correctOrder": [0, 1],
+              "explanation": "List columns after SELECT, then specify table after FROM."
+            },
+            {
+              "type": "multiple_choice",
+              "question": "Which statement selects only the 'name' column from 'products' table?",
+              "options": [
+                "SELECT name FROM products;",
+                "SELECT * FROM products WHERE column = name;",
+                "GET name FROM products;",
+                "FIND name IN products;"
+              ],
+              "correctAnswer": 0,
+              "explanation": "Standard SQL syntax: SELECT column FROM table;"
+            }
+          ],
+          "estimatedMinutes": 10,
+          "xpReward": 25
+        },
+        {
+          "id": "lesson_2",
+          "title": "WHERE Clause",
+          "steps": [
+            {
+              "type": "explanation",
+              "content": "The WHERE clause filters rows based on conditions. Comparison operators: =, !=, <>, <, >, <=, >=. Logical operators: AND, OR, NOT. String patterns: LIKE (with % wildcard), ILIKE (case-insensitive)."
+            },
+            {
+              "type": "explanation",
+              "content": "WHERE goes after FROM. Example: SELECT * FROM users WHERE age > 18 AND country = 'USA'; Multiple conditions combined with AND/OR. Use parentheses for complex logic."
+            },
+            {
+              "type": "multiple_choice",
+              "question": "Which query finds users aged 18 to 25 inclusive?",
+              "options": [
+                "SELECT * FROM users WHERE age >= 18 AND age <= 25;",
+                "SELECT * FROM users WHERE age > 18 OR age < 25;",
+                "SELECT * FROM users WHERE age = 18 TO 25;",
+                "SELECT * FROM users WHERE age BETWEEN 18, 25;"
+              ],
+              "correctAnswer": 0,
+              "explanation": "AND combines conditions - both must be true. BETWEEN 18 AND 25 would also work."
+            },
+            {
+              "type": "fill_in_blank",
+              "question": "The operator for pattern matching in SQL is ______.",
+              "answer": "LIKE",
+              "explanation": "LIKE with % (any characters) and _ (single character) wildcards. Example: name LIKE 'A%' finds names starting with A."
+            },
+            {
+              "type": "code_ordering",
+              "question": "Order to find active users from USA",
+              "snippets": [
+                "SELECT * FROM users",
+                "WHERE is_active = true",
+                "AND country = 'USA';"
+              ],
+              "correctOrder": [0, 1, 2],
+              "explanation": "SELECT → FROM → WHERE with AND for multiple conditions."
+            },
+            {
+              "type": "multiple_choice",
+              "question": "What does WHERE name LIKE 'J%'; match?",
+              "options": [
+                "Names containing J anywhere",
+                "Names starting with J",
+                "Names ending with J",
+                "Names exactly equal to J"
+              ],
+              "correctAnswer": 1,
+              "explanation": "% is a wildcard for any characters. 'J%' means starts with J followed by anything."
+            }
+          ],
+          "estimatedMinutes": 12,
+          "xpReward": 25
+        },
+        {
+          "id": "lesson_3",
+          "title": "JOINs",
+          "steps": [
+            {
+              "type": "explanation",
+              "content": "JOIN combines rows from two or more tables based on a related column. INNER JOIN returns only matching rows. LEFT JOIN returns all rows from left table plus matches from right. RIGHT JOIN opposite. FULL OUTER JOIN returns all rows from both."
+            },
+            {
+              "type": "explanation",
+              "content": "Syntax: SELECT columns FROM table1 JOIN table2 ON table1.key = table2.key; The ON clause specifies the relationship. Aliases (AS) make queries readable: SELECT u.name, o.total FROM users u JOIN orders o ON u.id = o.user_id;"
+            },
+            {
+              "type": "multiple_choice",
+              "question": "Which JOIN returns all rows from the left table and matching rows from the right?",
+              "options": ["INNER JOIN", "LEFT JOIN", "RIGHT JOIN", "CROSS JOIN"],
+              "correctAnswer": 1,
+              "explanation": "LEFT JOIN keeps all left table rows, filling right side with NULL where no match exists."
+            },
+            {
+              "type": "fill_in_blank",
+              "question": "The clause that specifies how tables are related is ______.",
+              "answer": "ON",
+              "explanation": "ON table1.column = table2.column defines the join condition - which columns to match."
+            },
+            {
+              "type": "code_ordering",
+              "question": "Order to join users with their orders",
+              "snippets": [
+                "SELECT u.name, o.total",
+                "FROM users u",
+                "INNER JOIN orders o",
+                "ON u.id = o.user_id;"
+              ],
+              "correctOrder": [0, 1, 2, 3],
+              "explanation": "Select columns → from first table → join second table → on matching keys."
+            },
+            {
+              "type": "multiple_choice",
+              "question": "What does INNER JOIN return when there's no match?",
+              "options": ["All rows from both tables", "Only matching rows", "Left table rows with NULLs", "Right table rows with NULLs"],
+              "correctAnswer": 1,
+              "explanation": "INNER JOIN only returns rows where the join condition matches in BOTH tables."
+            }
+          ],
+          "estimatedMinutes": 15,
+          "xpReward": 25
+        },
+        {
+          "id": "lesson_4",
+          "title": "Aggregations & GROUP BY",
+          "steps": [
+            {
+              "type": "explanation",
+              "content": "Aggregate functions compute a single result from multiple rows: COUNT(), SUM(), AVG(), MIN(), MAX(). GROUP BY groups rows with same values in specified columns, then applies aggregates per group. HAVING filters groups (like WHERE for aggregates)."
+            },
+            {
+              "type": "explanation",
+              "content": "Example: SELECT department, COUNT(*) as employee_count, AVG(salary) as avg_salary FROM employees GROUP BY department HAVING COUNT(*) > 5; This finds departments with more than 5 employees and their average salary."
+            },
+            {
+              "type": "multiple_choice",
+              "question": "Which clause filters groups after aggregation?",
+              "options": ["WHERE", "HAVING", "FILTER", "GROUP BY"],
+              "correctAnswer": 1,
+              "explanation": "HAVING filters aggregated results. WHERE filters rows before grouping."
+            },
+            {
+              "type": "fill_in_blank",
+              "question": "The function to count rows in each group is ______.",
+              "answer": "COUNT(*)",
+              "explanation": "COUNT(*) counts all rows. COUNT(column) counts non-NULL values in that column."
+            },
+            {
+              "type": "code_ordering",
+              "question": "Order to find average salary by department",
+              "snippets": [
+                "SELECT department, AVG(salary)",
+                "FROM employees",
+                "GROUP BY department;"
+              ],
+              "correctOrder": [0, 1, 2],
+              "explanation": "Select aggregate → from table → group by the non-aggregated column."
+            },
+            {
+              "type": "multiple_choice",
+              "question": "What does SELECT COUNT(DISTINCT country) FROM users; return?",
+              "options": [
+                "Total number of users",
+                "Number of unique countries",
+                "Number of countries per user",
+                "Error"
+              ],
+              "correctAnswer": 1,
+              "explanation": "COUNT(DISTINCT column) counts unique non-NULL values in that column."
+            }
+          ],
+          "estimatedMinutes": 15,
+          "xpReward": 25
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,216 @@
+{
+  "courseId": "frontend-foundations",
+  "modules": [
+    {
+      "id": "module_1",
+      "title": "CSS Flexbox Fundamentals",
+      "description": "Master the fundamentals of CSS Flexbox for modern layout",
+      "order": 1,
+      "lessons": [
+        {
+          "id": "lesson_1",
+          "title": "Introduction to Flexbox",
+          "steps": [
+            {
+              "type": "explanation",
+              "content": "Flexbox is a one-dimensional layout method for arranging items in rows or columns. Items flex to fill additional space or shrink to fit into smaller spaces. Unlike traditional layout methods (floats, positioning), Flexbox gives you complete control over alignment, direction, and distribution of space."
+            },
+            {
+              "type": "explanation",
+              "content": "The key insight is that Flexbox works on a parent container (flex container) and its direct children (flex items). The parent defines the layout rules, and the items automatically adjust. This is a fundamental shift from positioning each element individually."
+            },
+            {
+              "type": "multiple_choice",
+              "question": "What does display: flex do to a container?",
+              "options": [
+                "Makes the container a flex container and its children flex items",
+                "Only affects the container's dimensions",
+                "Removes all children from the document flow",
+                "Creates a grid layout"
+              ],
+              "correctAnswer": 0,
+              "explanation": "display: flex makes the element a flex container, establishing a flex formatting context for its direct children which become flex items."
+            },
+            {
+              "type": "fill_in_blank",
+              "question": "The direct children of a flex container are called ______ items.",
+              "answer": "flex",
+              "explanation": "Flex items are the direct children of a flex container. They participate in the flex layout."
+            },
+            {
+              "type": "code_ordering",
+              "question": "Order these CSS properties to create a basic flex container with centered items",
+              "snippets": [
+                "display: flex;",
+                "justify-content: center;",
+                "align-items: center;",
+                ".container {",
+                "}"
+              ],
+              "correctOrder": [3, 0, 1, 2, 4],
+              "explanation": "First declare the container, then make it a flex container, then center on both axes."
+            }
+          ],
+          "estimatedMinutes": 10,
+          "xpReward": 25
+        },
+        {
+          "id": "lesson_2",
+          "title": "Flex Direction & Axes",
+          "steps": [
+            {
+              "type": "explanation",
+              "content": "The main axis is defined by flex-direction. The cross axis runs perpendicular. Understanding both axes is key to mastering Flexbox. By default, flex-direction is 'row' (left to right), making the main axis horizontal and cross axis vertical."
+            },
+            {
+              "type": "explanation",
+              "content": "You can change flex-direction to: row (default), row-reverse, column, column-reverse. This completely changes which axis is 'main' and which is 'cross', affecting how justify-content and align-items work."
+            },
+            {
+              "type": "multiple_choice",
+              "question": "What is the default flex-direction?",
+              "options": ["row", "column", "row-reverse", "column-reverse"],
+              "correctAnswer": 0,
+              "explanation": "The default flex-direction is 'row', which lays out items left-to-right horizontally."
+            },
+            {
+              "type": "multiple_choice",
+              "question": "If flex-direction is column, which axis is the main axis?",
+              "options": ["Horizontal", "Vertical", "Diagonal", "Depends on writing mode"],
+              "correctAnswer": 1,
+              "explanation": "With flex-direction: column, the main axis runs vertically (top to bottom), and the cross axis runs horizontally."
+            },
+            {
+              "type": "code_ordering",
+              "question": "Order these to create a vertical column layout with items at the start",
+              "snippets": [
+                "flex-direction: column;",
+                "justify-content: flex-start;",
+                "display: flex;",
+                ".container {",
+                "}"
+              ],
+              "correctOrder": [3, 2, 0, 1, 4],
+              "explanation": "Container → flex → column direction → align to start of main axis (top)."
+            },
+            {
+              "type": "fill_in_blank",
+              "question": "The axis perpendicular to the main axis is called the ______ axis.",
+              "answer": "cross",
+              "explanation": "The cross axis runs perpendicular to the main axis. Its direction depends on flex-direction."
+            }
+          ],
+          "estimatedMinutes": 12,
+          "xpReward": 25
+        },
+        {
+          "id": "lesson_3",
+          "title": "Justify Content",
+          "steps": [
+            {
+              "type": "explanation",
+              "content": "justify-content aligns items along the main axis. It controls how extra space is distributed between and around flex items. This only works when there's extra space on the main axis (items don't fill the container)."
+            },
+            {
+              "type": "explanation",
+              "content": "The six values: flex-start (default, items at start), flex-end (items at end), center (items centered), space-between (first at start, last at end, equal space between), space-around (equal space around each item), space-evenly (equal space between all items and edges)."
+            },
+            {
+              "type": "multiple_choice",
+              "question": "Which justify-content value places the first item at the start and last at the end with equal spacing between?",
+              "options": ["flex-start", "center", "space-between", "space-around"],
+              "correctAnswer": 2,
+              "explanation": "space-between puts first item at main-start, last at main-end, and distributes remaining space equally between items."
+            },
+            {
+              "type": "multiple_choice",
+              "question": "What does space-evenly do?",
+              "options": [
+                "Equal space between items only",
+                "Equal space around each item (half on edges)",
+                "Equal space between all items AND edges",
+                "Items packed at center"
+              ],
+              "correctAnswer": 2,
+              "explanation": "space-evenly distributes space so that the gap between any two items, and between items and edges, are all equal."
+            },
+            {
+              "type": "code_ordering",
+              "question": "Order to create evenly distributed items with space-between",
+              "snippets": [
+                "justify-content: space-between;",
+                "display: flex;",
+                ".container {",
+                "}"
+              ],
+              "correctOrder": [2, 1, 0, 3],
+              "explanation": "Container → flex → space-between distribution."
+            },
+            {
+              "type": "fill_in_blank",
+              "question": "The justify-content value that centers items on the main axis is ______.",
+              "answer": "center",
+              "explanation": "center aligns items at the center of the main axis with equal space on both sides."
+            }
+          ],
+          "estimatedMinutes": 10,
+          "xpReward": 25
+        },
+        {
+          "id": "lesson_4",
+          "title": "Align Items & Align Self",
+          "steps": [
+            {
+              "type": "explanation",
+              "content": "align-items aligns items along the cross axis (perpendicular to main axis). Default is 'stretch' which makes items fill the cross axis. Other values: flex-start, flex-end, center, baseline."
+            },
+            {
+              "type": "explanation",
+              "content": "align-self allows individual items to override the container's align-items. This is powerful for special cases where one item needs different alignment. Values: auto (default, inherits align-items), flex-start, flex-end, center, baseline, stretch."
+            },
+            {
+              "type": "multiple_choice",
+              "question": "What is the default align-items value?",
+              "options": ["flex-start", "center", "stretch", "baseline"],
+              "correctAnswer": 2,
+              "explanation": "stretch is the default, making flex items fill the cross axis (equal height in row, equal width in column)."
+            },
+            {
+              "type": "multiple_choice",
+              "question": "If align-items is center, how can one item align to the end of the cross axis?",
+              "options": [
+                "Set align-self: flex-end on that item",
+                "Set margin-top: auto on that item",
+                "Change flex-direction",
+                "Not possible"
+              ],
+              "correctAnswer": 0,
+              "explanation": "align-self overrides align-items for individual items. flex-end aligns to the end of the cross axis."
+            },
+            {
+              "type": "code_ordering",
+              "question": "Order to center items on both axes",
+              "snippets": [
+                "justify-content: center;",
+                "align-items: center;",
+                "display: flex;",
+                ".container {",
+                "}"
+              ],
+              "correctOrder": [3, 2, 0, 1, 4],
+              "explanation": "Container → flex → center on main axis → center on cross axis = perfectly centered."
+            },
+            {
+              "type": "fill_in_blank",
+              "question": "The property that lets individual items override align-items is ______.",
+              "answer": "align-self",
+              "explanation": "align-self is set on flex items (children), not the container, allowing per-item alignment control."
+            }
+          ],
+          "estimatedMinutes": 12,
+          "xpReward": 25
+        }
+      ]
+    }
+  ]
+}
