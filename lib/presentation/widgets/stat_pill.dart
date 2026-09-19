@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:brainbox/core/constants/app_colors.dart';
 
 class StatPill extends StatelessWidget {
   const StatPill({

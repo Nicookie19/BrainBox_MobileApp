@@ -1,5 +1,14 @@
 import 'package:flutter/material.dart';
 
+// Sentinel for copyWith optional parameters
+class _NotProvided {
+  const _NotProvided();
+  @override
+  String toString() => '_NotProvided';
+}
+
+const _notProvided = _NotProvided();
+
 class CommunityPost {
   final String id;
   final String authorId;
@@ -93,7 +102,7 @@ class CommunityPost {
         updatedAt: DateTime.parse(json['updatedAt']),
         currentUserVote: json['currentUserVote'] != null
             ? UserVote.values.firstWhere(
-                (e) => e.toString() == 'UserVote.${json['currentUserVote']}',
+                (e) => e.toString() == json['currentUserVote'],
                 orElse: () => UserVote.none,
               )
             : null,
@@ -104,7 +113,7 @@ class CommunityPost {
     int? downvoteCount,
     bool? isReported,
     DateTime? updatedAt,
-    UserVote? currentUserVote,
+    Object? currentUserVote = _notProvided,
   }) => CommunityPost(
         id: id,
         authorId: authorId,
@@ -124,7 +133,9 @@ class CommunityPost {
         isReported: isReported ?? this.isReported,
         createdAt: createdAt,
         updatedAt: updatedAt ?? this.updatedAt,
-        currentUserVote: currentUserVote,
+        currentUserVote: currentUserVote == _notProvided
+            ? this.currentUserVote
+            : currentUserVote as UserVote?,
       );
 }
 
@@ -222,7 +233,7 @@ class PostReply {
         updatedAt: DateTime.parse(json['updatedAt']),
         currentUserVote: json['currentUserVote'] != null
             ? UserVote.values.firstWhere(
-                (e) => e.toString() == 'UserVote.${json['currentUserVote']}',
+                (e) => e.toString() == json['currentUserVote'],
                 orElse: () => UserVote.none,
               )
             : null,

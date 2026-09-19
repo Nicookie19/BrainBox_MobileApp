@@ -347,7 +347,7 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> with Ticker
           ),
           const SizedBox(height: 8),
           Text(
-            'You answered ${_score}/${_questions.length} questions correctly',
+            'You answered $_score/${_questions.length} questions correctly',
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
               color: Colors.white.withValues(alpha: 0.9),
             ),

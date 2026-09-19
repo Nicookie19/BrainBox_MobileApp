@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:brainbox/presentation/providers/app_provider.dart';
 import 'package:brainbox/presentation/widgets/course_card.dart';
-import 'package:brainbox/presentation/widgets/section_heading.dart';
 import 'package:brainbox/presentation/widgets/filter_chips.dart';
 import 'package:brainbox/data/models/course_models.dart';
 import 'package:brainbox/data/models/learning_models.dart';
@@ -254,7 +253,7 @@ class _LoadingSkeleton extends StatelessWidget {
           sliver: SliverList.separated(
             itemCount: 5,
             separatorBuilder: (_, _) => const SizedBox(height: 12),
-            itemBuilder: (_, __) => _skeletonBox(width: double.infinity, height: 140),
+            itemBuilder: (_, _) => _skeletonBox(width: double.infinity, height: 140),
           ),
         ),
       ],

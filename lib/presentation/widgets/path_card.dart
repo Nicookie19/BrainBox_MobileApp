@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:brainbox/data/models/course_models.dart';
 import 'package:brainbox/data/models/learning_models.dart';
-import 'package:brainbox/core/constants/app_colors.dart';
 
 class PathCard extends StatelessWidget {
   const PathCard({

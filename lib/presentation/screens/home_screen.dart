@@ -46,10 +46,12 @@ class HomeScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 16),
                     ContinueCard(
-                      course: provider.courses.firstWhere(
-                        (c) => c.id == 'frontend-foundations',
-                        orElse: () => provider.courses.first,
-                      ),
+                      course: provider.courses.isNotEmpty
+                          ? provider.courses.firstWhere(
+                              (c) => c.id == 'frontend-foundations',
+                              orElse: () => provider.courses.first,
+                            )
+                          : null,
                       onTap: () => context.go('/lesson/frontend-foundations'),
                     ),
                     const SizedBox(height: 24),
@@ -148,9 +150,13 @@ class HomeScreen extends StatelessWidget {
   Widget _buildGreeting(BuildContext context) {
     final hour = DateTime.now().hour;
     String greeting;
-    if (hour < 12) greeting = 'Good morning';
-    else if (hour < 17) greeting = 'Good afternoon';
-    else greeting = 'Good evening';
+    if (hour < 12) {
+      greeting = 'Good morning';
+    } else if (hour < 17) {
+      greeting = 'Good afternoon';
+    } else {
+      greeting = 'Good evening';
+    }
 
     return Text(
       '$greeting. Ready to learn?',

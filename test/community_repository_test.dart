@@ -13,6 +13,97 @@ void main() {
     await StorageService.clearAll();
   });
 
+  test('UserVote enum serialization round-trip', () {
+    // Test that UserVote enum serializes and deserializes correctly
+    final vote = UserVote.upvote;
+    final json = vote.toString();
+    expect(json, 'UserVote.upvote');
+
+    final parsed = UserVote.values.firstWhere(
+      (e) => e.toString() == json,
+      orElse: () => UserVote.none,
+    );
+    expect(parsed, UserVote.upvote);
+
+    // Test null handling
+    final nullJson = null;
+    final parsedNull = nullJson != null
+        ? UserVote.values.firstWhere(
+            (e) => e.toString() == nullJson,
+            orElse: () => UserVote.none,
+          )
+        : null;
+    expect(parsedNull, isNull);
+  });
+
+  test('CommunityPost currentUserVote serialization', () {
+    final post = CommunityPost(
+      id: 'test',
+      authorId: 'user1',
+      authorName: 'Test User',
+      title: 'Test Post',
+      content: 'Test content',
+      type: PostType.question,
+      tags: const [],
+      courseIds: const [],
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+      currentUserVote: UserVote.upvote,
+    );
+
+    final json = post.toJson();
+    expect(json['currentUserVote'], 'UserVote.upvote');
+
+    final parsed = CommunityPost.fromJson(json);
+    expect(parsed.currentUserVote, UserVote.upvote);
+  });
+
+  test('CommunityPost currentUserVote null serialization', () {
+    final post = CommunityPost(
+      id: 'test',
+      authorId: 'user1',
+      authorName: 'Test User',
+      title: 'Test Post',
+      content: 'Test content',
+      type: PostType.question,
+      tags: const [],
+      courseIds: const [],
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+      currentUserVote: null,
+    );
+
+    final json = post.toJson();
+    expect(json['currentUserVote'], isNull);
+
+    final parsed = CommunityPost.fromJson(json);
+    expect(parsed.currentUserVote, isNull);
+  });
+
+  test('CommunityPost copyWith preserves currentUserVote', () {
+    final post = CommunityPost(
+      id: 'test',
+      authorId: 'user1',
+      authorName: 'Test User',
+      title: 'Test Post',
+      content: 'Test content',
+      type: PostType.question,
+      tags: const [],
+      courseIds: const [],
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+      currentUserVote: UserVote.upvote,
+    );
+
+    // Copy with explicit null should set to null
+    final copiedNull = post.copyWith(currentUserVote: null);
+    expect(copiedNull.currentUserVote, isNull);
+
+    // Copy without currentUserVote should preserve original
+    final copiedPreserve = post.copyWith(upvoteCount: 10);
+    expect(copiedPreserve.currentUserVote, UserVote.upvote);
+  });
+
   test('seeds and persists community posts', () async {
     final posts = await CommunityRepository.getPosts();
     expect(posts, isNotEmpty);

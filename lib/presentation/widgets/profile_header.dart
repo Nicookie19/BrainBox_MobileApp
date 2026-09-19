@@ -107,7 +107,7 @@ class ProfileHeader extends StatelessWidget {
               ],
             ),
             Text(
-              '${profile.xp} / ${xpForNextLevel} XP',
+              '$profile.xp / $xpForNextLevel XP',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: AppColors.textMuted,
                 fontWeight: FontWeight.w500,

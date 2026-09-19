@@ -11,11 +11,16 @@ class ContinueCard extends StatelessWidget {
     super.key,
   });
 
-  final Course course;
+  final Course? course;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
+    if (course == null) {
+      return _buildEmptyState(context);
+    }
+
+    final c = course!;
     // Calculate progress from storage or default
     final progress = 0.42; // This would come from actual progress tracking
 
@@ -46,10 +51,10 @@ class ContinueCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      gradient: _getCategoryGradient(course.category),
+                      gradient: _getCategoryGradient(c.category),
                       borderRadius: BorderRadius.circular(14),
                     ),
-                    child: Icon(course.category.icon, color: Colors.white, size: 26),
+                    child: Icon(c.category.icon, color: Colors.white, size: 26),
                   ),
                   const SizedBox(width: 14),
                   Expanded(
@@ -57,7 +62,7 @@ class ContinueCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          course.title,
+                          c.title,
                           style: Theme.of(context).textTheme.titleLarge?.copyWith(
                             fontWeight: FontWeight.w700,
                           ),
@@ -121,12 +126,68 @@ class ContinueCard extends StatelessWidget {
                   ),
                   const Spacer(),
                   Text(
-                    '${course.estimatedHours}h total',
+                    '${c.estimatedHours}h total',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: AppColors.textMuted,
                     ),
                   ),
                 ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    ).animate().fadeIn().slideY(begin: 0.1, end: 0);
+  }
+
+  Widget _buildEmptyState(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: AppColors.bgCard,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: AppColors.borderDefault),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.accentPrimarySoft,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(Icons.school_outlined, color: AppColors.accentPrimary, size: 26),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Start Your Learning Journey',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Explore courses to begin',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.arrow_forward_rounded,
+                color: AppColors.textMuted,
+                size: 24,
               ),
             ],
           ),

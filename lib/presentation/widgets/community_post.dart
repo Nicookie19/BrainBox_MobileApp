@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:brainbox/data/models/community_models.dart';
 import 'package:brainbox/core/constants/app_colors.dart';
 

@@ -235,7 +235,7 @@ class _LoadingSkeleton extends StatelessWidget {
           sliver: SliverList.separated(
             itemCount: 5,
             separatorBuilder: (_, _) => const SizedBox(height: 12),
-            itemBuilder: (_, __) => _skeletonBox(width: double.infinity, height: 180),
+            itemBuilder: (_, _) => _skeletonBox(width: double.infinity, height: 180),
           ),
         ),
       ],
