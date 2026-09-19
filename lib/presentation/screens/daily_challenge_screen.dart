@@ -3,54 +3,25 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:brainbox/presentation/providers/app_provider.dart';
+import 'package:brainbox/data/repositories/daily_challenge_repository.dart';
 import 'package:brainbox/core/constants/app_colors.dart';
 
 class DailyChallengeScreen extends StatefulWidget {
-  const DailyChallengeScreen({super.key});
+  final DateTime? fixedDate;
+  const DailyChallengeScreen({super.key, this.fixedDate});
 
   @override
   State<DailyChallengeScreen> createState() => _DailyChallengeScreenState();
 }
 
 class _DailyChallengeScreenState extends State<DailyChallengeScreen> with TickerProviderStateMixin {
-  static const List<_QuizQuestion> _questions = [
-    _QuizQuestion(
-      'What does Array.map() return?',
-      ['A single value', 'A new array', 'Nothing', 'A string'],
-      1,
-      'Array.map() creates a new array with the results of calling a provided function on every element.',
-    ),
-    _QuizQuestion(
-      'Which keyword creates a constant in JavaScript?',
-      ['var', 'let', 'const', 'static'],
-      2,
-      'const creates a block-scoped constant that cannot be reassigned.',
-    ),
-    _QuizQuestion(
-      'What is the result of 2 + "2" in JavaScript?',
-      ['4', '22', 'Error', 'null'],
-      1,
-      'JavaScript converts the number to a string and concatenates, resulting in "22".',
-    ),
-    _QuizQuestion(
-      'What does the spread operator (...) do?',
-      ['Copies array elements', 'Deletes elements', 'Sorts the array', 'Reverses the array'],
-      0,
-      'The spread operator expands an iterable into individual elements, useful for copying arrays.',
-    ),
-    _QuizQuestion(
-      'Which method removes the last element from an array?',
-      ['pop()', 'push()', 'shift()', 'unshift()'],
-      0,
-      'pop() removes the last element from an array and returns that element.',
-    ),
-  ];
-
+  late List<ChallengeQuestion> _questions;
   int _currentIndex = 0;
   int _score = 0;
   int? _selectedAnswer;
   bool _answered = false;
   bool _finished = false;
+  bool _alreadyCompleted = false;
   late AnimationController _progressController;
 
   @override
@@ -60,7 +31,7 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> with Ticker
       duration: const Duration(milliseconds: 400),
       vsync: this,
     );
-    _progressController.forward();
+    _loadDailyChallenge();
   }
 
   @override
@@ -69,8 +40,33 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> with Ticker
     super.dispose();
   }
 
+  Future<void> _loadDailyChallenge() async {
+    final today = widget.fixedDate ?? DateTime.now();
+    _questions = DailyChallengeRepository.getDailyQuestions(today);
+    _alreadyCompleted = DailyChallengeRepository.isCompletedForDate(today);
+
+    if (_alreadyCompleted) {
+      _finished = true;
+      _score = DailyChallengeRepository.getScoreForDate(today);
+    }
+
+    _progressController.forward();
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (_questions.isEmpty) {
+      return Scaffold(
+        backgroundColor: AppColors.bgPrimary,
+        body: const Center(child: CircularProgressIndicator(color: AppColors.accentPrimary)),
+      );
+    }
+
+    if (_alreadyCompleted) {
+      return _buildAlreadyCompletedScreen();
+    }
+
     final question = _questions[_currentIndex];
 
     return Scaffold(
@@ -118,6 +114,69 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> with Ticker
             if (!_finished) _buildBottomAction(),
             if (_finished) _buildFinishAction(),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAlreadyCompletedScreen() {
+    final score = DailyChallengeRepository.getScoreForDate(DateTime.now());
+    return Scaffold(
+      backgroundColor: AppColors.bgPrimary,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          onPressed: () => context.pop(),
+          icon: const Icon(Icons.close_rounded),
+        ),
+        title: const Text('Daily Challenge'),
+        centerTitle: true,
+      ),
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: AppColors.accentSuccess.withValues(alpha: 0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(Icons.check_circle_rounded, color: AppColors.accentSuccess, size: 48),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  'Already Completed Today!',
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'You scored $score/5. Come back tomorrow for a new challenge!',
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                FilledButton.icon(
+                  onPressed: () => context.pop(),
+                  icon: const Icon(Icons.arrow_back_rounded),
+                  label: const Text('Back to Home'),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.accentPrimary,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -178,7 +237,7 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> with Ticker
     );
   }
 
-  Widget _buildQuestionCard(_QuizQuestion question) {
+  Widget _buildQuestionCard(ChallengeQuestion question) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
@@ -202,7 +261,7 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> with Ticker
     ).animate().fadeIn().slideY(begin: 0.2, end: 0);
   }
 
-  Widget _buildAnswerOptions(_QuizQuestion question) {
+  Widget _buildAnswerOptions(ChallengeQuestion question) {
     return Column(
       children: question.options.asMap().entries.map((entry) {
         final index = entry.key;
@@ -268,7 +327,7 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> with Ticker
     ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.2, end: 0);
   }
 
-  Widget _buildExplanation(_QuizQuestion question) {
+  Widget _buildExplanation(ChallengeQuestion question) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -411,8 +470,12 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> with Ticker
       child: SafeArea(
         top: false,
         child: FilledButton(
-          onPressed: () {
+          onPressed: () async {
+            final today = widget.fixedDate ?? DateTime.now();
+            await DailyChallengeRepository.markCompletedForDate(today, _score);
+            if (!mounted) return;
             context.read<AppProvider>().completeChallenge();
+            if (!mounted) return;
             context.pop();
           },
           style: FilledButton.styleFrom(
@@ -482,10 +545,3 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> with Ticker
   }
 }
 
-class _QuizQuestion {
-  const _QuizQuestion(this.text, this.options, this.answer, this.explanation);
-  final String text;
-  final List<String> options;
-  final int answer;
-  final String explanation;
-}

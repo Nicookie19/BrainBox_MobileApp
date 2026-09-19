@@ -11,7 +11,19 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:brainbox/main.dart';
 import 'package:brainbox/presentation/screens/daily_challenge_screen.dart';
+import 'package:brainbox/data/repositories/daily_challenge_repository.dart';
 import 'package:brainbox/data/services/storage_service.dart';
+
+// Test wrapper for daily challenge screen with fixed date
+class _DailyChallengeTestScreen extends StatelessWidget {
+  final DateTime fixedDate;
+  const _DailyChallengeTestScreen({required this.fixedDate});
+
+  @override
+  Widget build(BuildContext context) {
+    return DailyChallengeScreen(fixedDate: fixedDate);
+  }
+}
 
 void main() {
   testWidgets('BrainBox app launches without crashing', (WidgetTester tester) async {
@@ -26,50 +38,44 @@ void main() {
     expect(find.byType(MaterialApp), findsOneWidget);
   });
 
-  testWidgets('Daily challenge screen works', (WidgetTester tester) async {
+  testWidgets('Daily challenge screen works with fixed seed', (WidgetTester tester) async {
     SharedPreferences.setMockInitialValues({});
     await StorageService.init();
     
-    // Directly test daily challenge screen
+    // Use a fixed date for deterministic testing
+    final fixedDate = DateTime(2024, 1, 15);
+    
+    // Get the questions for this fixed date
+    final questions = DailyChallengeRepository.getDailyQuestions(fixedDate);
+    expect(questions.length, 5);
+    
+    // Directly test daily challenge screen with fixed date
     await tester.pumpWidget(
-      const MaterialApp(home: _DailyChallengeTestScreen()),
+      MaterialApp(home: _DailyChallengeTestScreen(fixedDate: fixedDate)),
     );
     await tester.pumpAndSettle();
 
-    // Verify daily challenge screen loads with first question
-    expect(find.text('What does Array.map() return?'), findsOneWidget);
+    // Verify daily challenge screen loads with first question from fixed date
+    final firstQuestion = DailyChallengeRepository.getDailyQuestions(fixedDate).first.text;
+    expect(find.text(firstQuestion), findsOneWidget);
 
     // Answer all 5 questions correctly
-    // Q1: What does Array.map() return? -> A new array
-    await tester.tap(find.text('A new array'));
-    await tester.pump();
-    expect(find.text('Array.map() creates a new array with the results of calling a provided function on every element.'), findsOneWidget);
-    await tester.tap(find.text('Next Question'));
-    await tester.pumpAndSettle();
-
-    // Q2: Which keyword creates a constant in JavaScript? -> const
-    await tester.tap(find.text('const'));
-    await tester.pump();
-    await tester.tap(find.text('Next Question'));
-    await tester.pumpAndSettle();
-
-    // Q3: What is the result of 2 + "2" in JavaScript? -> 22
-    await tester.tap(find.text('22'));
-    await tester.pump();
-    await tester.tap(find.text('Next Question'));
-    await tester.pumpAndSettle();
-
-    // Q4: What does the spread operator (...) do? -> Copies array elements
-    await tester.tap(find.text('Copies array elements'));
-    await tester.pump();
-    await tester.tap(find.text('Next Question'));
-    await tester.pumpAndSettle();
-
-    // Q5: Which method removes the last element from an array? -> pop()
-    await tester.tap(find.text('pop()'));
-    await tester.pump();
-    await tester.tap(find.text('Finish Challenge'));
-    await tester.pumpAndSettle();
+    for (int i = 0; i < 5; i++) {
+      final question = DailyChallengeRepository.getDailyQuestions(fixedDate)[i];
+      final correctAnswer = question.options[question.answer];
+      
+      await tester.tap(find.text(correctAnswer));
+      await tester.pump();
+      expect(find.text(question.explanation), findsOneWidget);
+      
+      if (i < 4) {
+        await tester.tap(find.text('Next Question'));
+        await tester.pumpAndSettle();
+      } else {
+        await tester.tap(find.text('Finish Challenge'));
+        await tester.pumpAndSettle();
+      }
+    }
 
     // Verify completion screen
     expect(find.text('Challenge Complete!'), findsOneWidget);
@@ -85,14 +91,4 @@ void main() {
     // Just verify the app renders something
     expect(find.byType(Scaffold), findsWidgets);
   });
-}
-
-// Test wrapper for daily challenge screen
-class _DailyChallengeTestScreen extends StatelessWidget {
-  const _DailyChallengeTestScreen();
-
-  @override
-  Widget build(BuildContext context) {
-    return const DailyChallengeScreen();
-  }
 }
