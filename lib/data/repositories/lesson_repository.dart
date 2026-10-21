@@ -53,10 +53,7 @@ class LessonModuleData {
   final String courseId;
   final List<LessonModule> modules;
 
-  LessonModuleData({
-    required this.courseId,
-    required this.modules,
-  });
+  LessonModuleData({required this.courseId, required this.modules});
 
   factory LessonModuleData.fromJson(Map<String, dynamic> json) {
     return LessonModuleData(
@@ -148,11 +145,19 @@ class LessonStep {
   });
 
   factory LessonStep.fromJson(Map<String, dynamic> json) {
+    const typeAliases = {
+      'multiple_choice': LessonStepType.multipleChoice,
+      'fill_in_blank': LessonStepType.fillInBlank,
+      'code_ordering': LessonStepType.codeOrdering,
+    };
+    final typeName = json['type'] as String? ?? '';
     return LessonStep(
-      type: LessonStepType.values.firstWhere(
-        (e) => e.name == json['type'],
-        orElse: () => LessonStepType.explanation,
-      ),
+      type:
+          typeAliases[typeName] ??
+          LessonStepType.values.firstWhere(
+            (e) => e.name == typeName,
+            orElse: () => LessonStepType.explanation,
+          ),
       content: json['content'] as String?,
       question: json['question'] as String?,
       options: json['options'] != null
@@ -171,9 +176,4 @@ class LessonStep {
   }
 }
 
-enum LessonStepType {
-  explanation,
-  multipleChoice,
-  fillInBlank,
-  codeOrdering,
-}
+enum LessonStepType { explanation, multipleChoice, fillInBlank, codeOrdering }

@@ -6,6 +6,7 @@ import 'package:brainbox/presentation/providers/app_provider.dart';
 import 'package:brainbox/data/repositories/lesson_repository.dart' as lr;
 import 'package:brainbox/data/repositories/lesson_progress_repository.dart';
 import 'package:brainbox/data/repositories/course_repository.dart';
+import 'package:brainbox/data/services/storage_service.dart';
 import 'package:brainbox/data/models/course_models.dart';
 import 'package:brainbox/core/constants/app_colors.dart';
 
@@ -13,17 +14,14 @@ class LessonScreen extends StatefulWidget {
   final String courseId;
   final String? initialLessonId;
 
-  const LessonScreen({
-    required this.courseId,
-    this.initialLessonId,
-    super.key,
-  });
+  const LessonScreen({required this.courseId, this.initialLessonId, super.key});
 
   @override
   State<LessonScreen> createState() => _LessonScreenState();
 }
 
-class _LessonScreenState extends State<LessonScreen> with TickerProviderStateMixin {
+class _LessonScreenState extends State<LessonScreen>
+    with TickerProviderStateMixin {
   Course? _course;
   lr.LessonModuleData? _lessonData;
   List<lr.Lesson> _allLessons = [];
@@ -43,6 +41,7 @@ class _LessonScreenState extends State<LessonScreen> with TickerProviderStateMix
 
   // Persistence: track answered steps for resume
   Map<int, int> _answeredSteps = {}; // stepIndex -> selectedAnswerIndex
+  final _answerController = TextEditingController();
 
   @override
   void initState() {
@@ -56,13 +55,16 @@ class _LessonScreenState extends State<LessonScreen> with TickerProviderStateMix
 
   @override
   void dispose() {
+    _answerController.dispose();
     _progressController.dispose();
     super.dispose();
   }
 
   Future<void> _loadData() async {
     final course = await CourseRepository.getCourseById(widget.courseId);
-    final lessonData = await lr.LessonRepository.getCourseLessons(widget.courseId);
+    final lessonData = await lr.LessonRepository.getCourseLessons(
+      widget.courseId,
+    );
 
     if (mounted) {
       setState(() {
@@ -72,9 +74,7 @@ class _LessonScreenState extends State<LessonScreen> with TickerProviderStateMix
         _lessonNotFound = lessonData == null || lessonData.modules.isEmpty;
 
         if (course != null && lessonData != null) {
-          _allLessons = lessonData.modules
-              .expand((m) => m.lessons)
-              .toList();
+          _allLessons = lessonData.modules.expand((m) => m.lessons).toList();
 
           // Find initial lesson index
           if (widget.initialLessonId != null) {
@@ -158,7 +158,9 @@ class _LessonScreenState extends State<LessonScreen> with TickerProviderStateMix
     if (_course == null || _lessonData == null) {
       return Scaffold(
         backgroundColor: AppColors.bgPrimary,
-        body: const Center(child: CircularProgressIndicator(color: AppColors.accentPrimary)),
+        body: const Center(
+          child: CircularProgressIndicator(color: AppColors.accentPrimary),
+        ),
       );
     }
 
@@ -197,7 +199,7 @@ class _LessonScreenState extends State<LessonScreen> with TickerProviderStateMix
     );
   }
 
-Widget _buildErrorScreen(String title, String message) {
+  Widget _buildErrorScreen(String title, String message) {
     return Scaffold(
       backgroundColor: AppColors.bgPrimary,
       body: Center(
@@ -206,13 +208,36 @@ Widget _buildErrorScreen(String title, String message) {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.error_outline_rounded, size: 64, color: AppColors.accentError),
+              Icon(
+                Icons.error_outline_rounded,
+                size: 64,
+                color: AppColors.accentError,
+              ),
               const SizedBox(height: 16),
-              Text(title, style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+              Text(
+                title,
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                ),
+              ),
               const SizedBox(height: 8),
-              Text(message, style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: AppColors.textSecondary), textAlign: TextAlign.center),
+              Text(
+                message,
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyLarge?.copyWith(color: AppColors.textSecondary),
+                textAlign: TextAlign.center,
+              ),
               const SizedBox(height: 24),
-              FilledButton.icon(onPressed: () => context.pop(), icon: const Icon(Icons.arrow_back_rounded), label: const Text('Go Back'), style: FilledButton.styleFrom(backgroundColor: AppColors.accentPrimary)),
+              FilledButton.icon(
+                onPressed: () => context.pop(),
+                icon: const Icon(Icons.arrow_back_rounded),
+                label: const Text('Go Back'),
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.accentPrimary,
+                ),
+              ),
             ],
           ),
         ),
@@ -220,7 +245,7 @@ Widget _buildErrorScreen(String title, String message) {
     );
   }
 
-Widget _buildAppBar(BuildContext context) {
+  Widget _buildAppBar(BuildContext context) {
     final lesson = _getCurrentLesson();
     final backButton = IconButton(
       onPressed: () => context.pop(),
@@ -235,17 +260,25 @@ Widget _buildAppBar(BuildContext context) {
       children: [
         Text(
           _course!.title,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
           overflow: TextOverflow.ellipsis,
         ),
         Text(
           'Lesson ${_currentLessonIndex + 1} of ${_allLessons.length}',
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
         ),
       ],
     );
 
-    final isBookmarked = lesson != null && context.read<AppProvider>().isBookmarked('${widget.courseId}:${lesson.id}');
+    final isBookmarked =
+        lesson != null &&
+        context.read<AppProvider>().isBookmarked(
+          '${widget.courseId}:${lesson.id}',
+        );
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
@@ -255,16 +288,26 @@ Widget _buildAppBar(BuildContext context) {
           const SizedBox(width: 12),
           Expanded(child: titleColumn),
           IconButton(
-            onPressed: lesson != null ? () => context.read<AppProvider>().toggleBookmark('${widget.courseId}:${lesson.id}') : null,
-            icon: Icon(isBookmarked ? Icons.bookmark_rounded : Icons.bookmark_outline_rounded),
+            onPressed: lesson != null
+                ? () => context.read<AppProvider>().toggleBookmark(
+                    '${widget.courseId}:${lesson.id}',
+                  )
+                : null,
+            icon: Icon(
+              isBookmarked
+                  ? Icons.bookmark_rounded
+                  : Icons.bookmark_outline_rounded,
+            ),
             style: IconButton.styleFrom(
               backgroundColor: AppColors.bgCard,
-              foregroundColor: isBookmarked ? AppColors.accentPrimary : AppColors.textSecondary,
+              foregroundColor: isBookmarked
+                  ? AppColors.accentPrimary
+                  : AppColors.textSecondary,
             ),
           ),
           const SizedBox(width: 8),
           IconButton(
-            onPressed: () {},
+            onPressed: lesson == null ? null : _downloadCurrentLesson,
             icon: const Icon(Icons.download_outlined),
             style: IconButton.styleFrom(
               backgroundColor: AppColors.bgCard,
@@ -409,7 +452,9 @@ Widget _buildAppBar(BuildContext context) {
             child: Material(
               color: Colors.transparent,
               child: InkWell(
-                onTap: _stepAnswered ? null : () => _selectAnswer(index, isCorrect),
+                onTap: _stepAnswered
+                    ? null
+                    : () => _selectAnswer(index, isCorrect),
                 borderRadius: BorderRadius.circular(14),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
@@ -425,10 +470,13 @@ Widget _buildAppBar(BuildContext context) {
                       Expanded(
                         child: Text(
                           option,
-                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            color: textColor,
-                            fontWeight: isCorrect && _stepAnswered ? FontWeight.w600 : FontWeight.w500,
-                          ),
+                          style: Theme.of(context).textTheme.bodyLarge
+                              ?.copyWith(
+                                color: textColor,
+                                fontWeight: isCorrect && _stepAnswered
+                                    ? FontWeight.w600
+                                    : FontWeight.w500,
+                              ),
                         ),
                       ),
                       if (trailingIcon != null)
@@ -461,6 +509,7 @@ Widget _buildAppBar(BuildContext context) {
         ),
         const SizedBox(height: 20),
         TextField(
+          controller: _answerController,
           onChanged: (value) => _fillInBlankAnswer = value.trim().toLowerCase(),
           onSubmitted: _stepAnswered ? null : (_) => _checkFillInBlank(step),
           decoration: InputDecoration(
@@ -472,20 +521,29 @@ Widget _buildAppBar(BuildContext context) {
               borderRadius: BorderRadius.circular(14),
               borderSide: BorderSide(
                 color: _stepAnswered
-                    ? (_stepCorrect ? AppColors.accentSuccess : AppColors.accentError)
+                    ? (_stepCorrect
+                          ? AppColors.accentSuccess
+                          : AppColors.accentError)
                     : AppColors.borderDefault,
                 width: 2,
               ),
             ),
             enabled: !_stepAnswered,
           ),
-          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-            color: AppColors.textPrimary,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyLarge?.copyWith(color: AppColors.textPrimary),
         ),
         if (_stepAnswered) ...[
           const SizedBox(height: 16),
           _buildExplanationCard(step),
+        ],
+        if (!_stepAnswered) ...[
+          const SizedBox(height: 14),
+          FilledButton(
+            onPressed: () => _checkFillInBlank(step),
+            child: const Text('Check answer'),
+          ),
         ],
       ],
     ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.2, end: 0);
@@ -493,6 +551,12 @@ Widget _buildAppBar(BuildContext context) {
 
   void _checkFillInBlank(lr.LessonStep step) {
     final userAnswer = _fillInBlankAnswer?.trim().toLowerCase() ?? '';
+    if (userAnswer.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Enter an answer before checking it.')),
+      );
+      return;
+    }
     final correct = userAnswer == step.answer?.toLowerCase();
     setState(() {
       _stepAnswered = true;
@@ -504,7 +568,8 @@ Widget _buildAppBar(BuildContext context) {
 
   Widget _buildCodeOrderingStep(lr.LessonStep step) {
     final snippets = step.snippets ?? [];
-    final currentOrder = _codeOrderAnswer ?? List.generate(snippets.length, (i) => i);
+    final currentOrder =
+        _codeOrderAnswer ?? List.generate(snippets.length, (i) => i);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -519,9 +584,9 @@ Widget _buildAppBar(BuildContext context) {
         const SizedBox(height: 12),
         Text(
           'Drag to reorder (tap to move up/down)',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: AppColors.textMuted,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: AppColors.textMuted),
         ),
         const SizedBox(height: 16),
         ...currentOrder.asMap().entries.map((entry) {
@@ -534,8 +599,12 @@ Widget _buildAppBar(BuildContext context) {
             child: Material(
               color: Colors.transparent,
               child: InkWell(
-                onTap: _stepAnswered ? null : () => _moveCodeSnippet(displayIndex, -1),
-                onLongPress: _stepAnswered ? null : () => _moveCodeSnippet(displayIndex, 1),
+                onTap: _stepAnswered
+                    ? null
+                    : () => _moveCodeSnippet(displayIndex, -1),
+                onLongPress: _stepAnswered
+                    ? null
+                    : () => _moveCodeSnippet(displayIndex, 1),
                 borderRadius: BorderRadius.circular(12),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
@@ -546,7 +615,9 @@ Widget _buildAppBar(BuildContext context) {
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: _stepAnswered
-                          ? (_isCodeOrderCorrect(step) ? AppColors.accentSuccess : AppColors.accentError)
+                          ? (_isCodeOrderCorrect(step)
+                                ? AppColors.accentSuccess
+                                : AppColors.accentError)
                           : AppColors.borderDefault,
                       width: 2,
                     ),
@@ -591,6 +662,13 @@ Widget _buildAppBar(BuildContext context) {
           const SizedBox(height: 16),
           _buildExplanationCard(step),
         ],
+        if (!_stepAnswered) ...[
+          const SizedBox(height: 14),
+          FilledButton(
+            onPressed: () => _checkCodeOrder(step),
+            child: const Text('Check order'),
+          ),
+        ],
       ],
     ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.2, end: 0);
   }
@@ -599,8 +677,9 @@ Widget _buildAppBar(BuildContext context) {
     final currentStep = _getCurrentStep();
     if (currentStep == null) return;
     final snippets = currentStep.snippets ?? [];
-    final newOrder = List<int>.from(_codeOrderAnswer ?? List.generate(
-      snippets.length, (i) => i));
+    final newOrder = List<int>.from(
+      _codeOrderAnswer ?? List.generate(snippets.length, (i) => i),
+    );
     final newIndex = index + direction;
     if (newIndex >= 0 && newIndex < newOrder.length) {
       final temp = newOrder[index];
@@ -611,12 +690,30 @@ Widget _buildAppBar(BuildContext context) {
   }
 
   bool _isCodeOrderCorrect(lr.LessonStep step) {
-    if (_codeOrderAnswer == null || step.correctOrder == null) return false;
-    if (_codeOrderAnswer!.length != step.correctOrder!.length) return false;
-    for (int i = 0; i < _codeOrderAnswer!.length; i++) {
-      if (_codeOrderAnswer![i] != step.correctOrder![i]) return false;
+    return _isOrderCorrect(_codeOrderAnswer, step.correctOrder);
+  }
+
+  bool _isOrderCorrect(List<int>? order, List<int>? correctOrder) {
+    if (order == null || correctOrder == null) return false;
+    if (order.length != correctOrder.length) return false;
+    for (int i = 0; i < order.length; i++) {
+      if (order[i] != correctOrder[i]) return false;
     }
     return true;
+  }
+
+  void _checkCodeOrder(lr.LessonStep step) {
+    final order =
+        _codeOrderAnswer ??
+        List.generate(step.snippets?.length ?? 0, (index) => index);
+    final correct = _isOrderCorrect(order, step.correctOrder);
+    setState(() {
+      _codeOrderAnswer = order;
+      _stepAnswered = true;
+      _stepCorrect = correct;
+      _answeredSteps[_currentStepIndex] = correct ? 1 : 0;
+    });
+    _saveProgress();
   }
 
   Widget _buildExplanationCard(lr.LessonStep step) {
@@ -638,7 +735,9 @@ Widget _buildAppBar(BuildContext context) {
         children: [
           Icon(
             _stepCorrect ? Icons.check_circle_rounded : Icons.info_rounded,
-            color: _stepCorrect ? AppColors.accentSuccess : AppColors.accentPrimary,
+            color: _stepCorrect
+                ? AppColors.accentSuccess
+                : AppColors.accentPrimary,
             size: 22,
           ),
           const SizedBox(width: 12),
@@ -646,7 +745,9 @@ Widget _buildAppBar(BuildContext context) {
             child: Text(
               step.explanation ?? '',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: _stepCorrect ? AppColors.accentSuccess : AppColors.accentPrimary,
+                color: _stepCorrect
+                    ? AppColors.accentSuccess
+                    : AppColors.accentPrimary,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -680,6 +781,7 @@ Widget _buildAppBar(BuildContext context) {
 
     final isLastStep = _currentStepIndex == lesson.steps.length - 1;
     final isLastLesson = _currentLessonIndex == _allLessons.length - 1;
+    final isExplanation = step.type == lr.LessonStepType.explanation;
 
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
@@ -691,25 +793,37 @@ Widget _buildAppBar(BuildContext context) {
         top: false,
         child: Column(
           children: [
-            if (!_stepAnswered)
+            if (!_stepAnswered && !isExplanation)
               Text(
-                'Select an answer to continue',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppColors.textMuted,
-                ),
+                step.type == lr.LessonStepType.fillInBlank
+                    ? 'Enter and check your answer to continue'
+                    : step.type == lr.LessonStepType.codeOrdering
+                    ? 'Arrange and check the code to continue'
+                    : 'Select an answer to continue',
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: AppColors.textMuted),
               ),
             const SizedBox(height: 12),
             FilledButton.icon(
-              onPressed: _stepAnswered ? _nextStep : null,
-              icon: Icon(isLastStep ? Icons.check_circle_outline_rounded : Icons.arrow_forward_rounded),
+              onPressed: _stepAnswered || isExplanation ? _nextStep : null,
+              icon: Icon(
+                isLastStep
+                    ? Icons.check_circle_outline_rounded
+                    : Icons.arrow_forward_rounded,
+              ),
               label: Text(
                 isLastStep
                     ? (isLastLesson ? 'Complete Course' : 'Next Lesson')
-                    : 'Next Step',
+                    : (isExplanation ? 'Continue' : 'Next Step'),
               ),
               style: FilledButton.styleFrom(
-                backgroundColor: _stepAnswered ? AppColors.accentPrimary : AppColors.bgTertiary,
-                foregroundColor: _stepAnswered ? AppColors.textOnAccent : AppColors.textMuted,
+                backgroundColor: _stepAnswered || isExplanation
+                    ? AppColors.accentPrimary
+                    : AppColors.bgTertiary,
+                foregroundColor: _stepAnswered || isExplanation
+                    ? AppColors.textOnAccent
+                    : AppColors.textMuted,
                 minimumSize: const Size(double.infinity, 52),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),
@@ -735,6 +849,7 @@ Widget _buildAppBar(BuildContext context) {
         _currentStepIndex++;
         _selectedAnswer = null;
         _fillInBlankAnswer = null;
+        _answerController.clear();
         _codeOrderAnswer = null;
         _stepAnswered = false;
         _stepCorrect = false;
@@ -757,22 +872,41 @@ Widget _buildAppBar(BuildContext context) {
         _currentStepIndex = 0;
         _selectedAnswer = null;
         _fillInBlankAnswer = null;
+        _answerController.clear();
         _codeOrderAnswer = null;
         _stepAnswered = false;
         _stepCorrect = false;
       });
       _progressController.forward(from: 0);
-      _awardXp(lesson.xpReward);
+      _awardXp(lesson.id);
     } else {
       setState(() => _isCompleted = true);
-      _awardXp(lesson.xpReward);
+      _awardXp(lesson.id);
       _showCompletionDialog();
     }
   }
 
-  Future<void> _awardXp(int amount) async {
+  Future<void> _awardXp(String lessonId) async {
     final provider = context.read<AppProvider>();
-    await provider.addXp(amount);
+    await provider.completeLesson(widget.courseId, lessonId: lessonId);
+  }
+
+  Future<void> _downloadCurrentLesson() async {
+    final lesson = _getCurrentLesson();
+    if (lesson == null) return;
+    await StorageService.saveDownloadedContent(
+      '${widget.courseId}:${lesson.id}',
+      {
+        'courseId': widget.courseId,
+        'lessonId': lesson.id,
+        'title': lesson.title,
+        'downloadedAt': DateTime.now().toIso8601String(),
+      },
+    );
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Lesson saved for offline access.')),
+    );
   }
 
   Future<void> _saveProgress() async {
@@ -803,7 +937,11 @@ Widget _buildAppBar(BuildContext context) {
                 gradient: AppColors.primaryGradient,
                 borderRadius: BorderRadius.circular(14),
               ),
-              child: const Icon(Icons.celebration_rounded, color: Colors.white, size: 28),
+              child: const Icon(
+                Icons.celebration_rounded,
+                color: Colors.white,
+                size: 28,
+              ),
             ),
             const SizedBox(width: 12),
             const Expanded(child: Text('Course Complete!')),
@@ -822,9 +960,9 @@ Widget _buildAppBar(BuildContext context) {
             const SizedBox(height: 8),
             Text(
               'You\'ve completed all lessons in ${_course!.title}!',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppColors.textSecondary,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
               textAlign: TextAlign.center,
             ),
           ],
@@ -862,7 +1000,11 @@ Widget _buildAppBar(BuildContext context) {
                     color: Colors.white.withValues(alpha: 0.2),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.celebration_rounded, color: Colors.white, size: 48),
+                  child: const Icon(
+                    Icons.celebration_rounded,
+                    color: Colors.white,
+                    size: 48,
+                  ),
                 ),
                 const SizedBox(height: 20),
                 Text(

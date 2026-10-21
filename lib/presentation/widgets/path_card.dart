@@ -1,24 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:go_router/go_router.dart';
 import 'package:brainbox/data/models/course_models.dart';
 import 'package:brainbox/data/models/learning_models.dart';
 
 class PathCard extends StatelessWidget {
-  const PathCard({
-    required this.course,
-    super.key,
-  });
+  const PathCard({required this.course, super.key});
 
   final Course course;
 
   @override
   Widget build(BuildContext context) {
     final colors = _getCourseColors(course.category);
-    
+
     return InkWell(
-      onTap: () {
-        // Navigate to course detail
-      },
+      onTap: () => context.go('/course/${course.id}'),
       borderRadius: BorderRadius.circular(20),
       child: Container(
         width: 170,
@@ -76,7 +72,11 @@ class PathCard extends StatelessWidget {
             const SizedBox(height: 12),
             Row(
               children: [
-                Icon(Icons.menu_book_rounded, size: 14, color: Colors.white.withValues(alpha: 0.8)),
+                Icon(
+                  Icons.menu_book_rounded,
+                  size: 14,
+                  color: Colors.white.withValues(alpha: 0.8),
+                ),
                 const SizedBox(width: 4),
                 Text(
                   '${course.lessonCount} lessons',
@@ -87,7 +87,11 @@ class PathCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 12),
-                Icon(Icons.schedule_rounded, size: 14, color: Colors.white.withValues(alpha: 0.8)),
+                Icon(
+                  Icons.schedule_rounded,
+                  size: 14,
+                  color: Colors.white.withValues(alpha: 0.8),
+                ),
                 const SizedBox(width: 4),
                 Text(
                   '${course.estimatedHours}h',

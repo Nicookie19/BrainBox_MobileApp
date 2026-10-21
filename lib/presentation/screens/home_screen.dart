@@ -71,10 +71,10 @@ class HomeScreen extends StatelessWidget {
                     SectionHeading(
                       title: 'Recommended for You',
                       action: 'Refresh',
-                      onPressed: () {},
+                      onPressed: () => context.go('/explore'),
                     ),
                     const SizedBox(height: 16),
-                    _buildRecommendations(),
+                    _buildRecommendations(context),
                     const SizedBox(height: 32),
                   ],
                 ),
@@ -112,7 +112,9 @@ class HomeScreen extends StatelessWidget {
         ),
         const Spacer(),
         IconButton(
-          onPressed: () {},
+          onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('You\'re all caught up.')),
+          ),
           icon: const Icon(Icons.notifications_none_rounded),
           style: IconButton.styleFrom(
             backgroundColor: AppColors.bgTertiary,
@@ -126,12 +128,14 @@ class HomeScreen extends StatelessWidget {
   }
 
   Widget _buildAvatar(AppProvider provider) {
-    final initials = provider.profile?.displayName
-        .split(' ')
-        .map((e) => e[0])
-        .take(2)
-        .join()
-        .toUpperCase() ?? 'AR';
+    final initials =
+        provider.profile?.displayName
+            .split(' ')
+            .map((e) => e[0])
+            .take(2)
+            .join()
+            .toUpperCase() ??
+        'AR';
 
     return CircleAvatar(
       radius: 18,
@@ -170,9 +174,9 @@ class HomeScreen extends StatelessWidget {
   Widget _buildSubtitle(BuildContext context) {
     return Text(
       'Master new concepts through interactive problem-solving',
-      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-        color: AppColors.textSecondary,
-      ),
+      style: Theme.of(
+        context,
+      ).textTheme.bodyLarge?.copyWith(color: AppColors.textSecondary),
     ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.2, end: 0);
   }
 
@@ -233,13 +237,16 @@ class HomeScreen extends StatelessWidget {
         separatorBuilder: (_, _) => const SizedBox(width: 12),
         itemBuilder: (context, index) {
           final course = provider.courses[index];
-          return PathCard(course: course).animate().fadeIn(delay: (700 + index * 100).ms).slideX(begin: 0.3, end: 0);
+          return PathCard(course: course)
+              .animate()
+              .fadeIn(delay: (700 + index * 100).ms)
+              .slideX(begin: 0.3, end: 0);
         },
       ),
     );
   }
 
-  Widget _buildRecommendations() {
+  Widget _buildRecommendations(BuildContext context) {
     return Column(
       children: [
         RecommendationTile(
@@ -247,6 +254,7 @@ class HomeScreen extends StatelessWidget {
           title: 'Neural Networks',
           subtitle: '8 min · Intermediate',
           color: AppColors.accentPrimary,
+          onTap: () => context.go('/explore'),
         ).animate().fadeIn(delay: 800.ms).slideY(begin: 0.2, end: 0),
         const SizedBox(height: 12),
         RecommendationTile(
@@ -254,6 +262,7 @@ class HomeScreen extends StatelessWidget {
           title: 'Algorithms & Data Structures',
           subtitle: '12 min · Beginner',
           color: AppColors.accentSecondary,
+          onTap: () => context.go('/course/data-structures'),
         ).animate().fadeIn(delay: 900.ms).slideY(begin: 0.2, end: 0),
         const SizedBox(height: 12),
         RecommendationTile(
@@ -261,6 +270,7 @@ class HomeScreen extends StatelessWidget {
           title: 'Cloud Fundamentals',
           subtitle: '15 min · Beginner',
           color: AppColors.accentSuccess,
+          onTap: () => context.go('/explore'),
         ).animate().fadeIn(delay: 1000.ms).slideY(begin: 0.2, end: 0),
       ],
     );

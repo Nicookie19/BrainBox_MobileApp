@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import 'package:brainbox/presentation/providers/app_provider.dart';
 import 'package:brainbox/core/constants/app_colors.dart';
 
@@ -14,8 +15,9 @@ class AppShell extends StatefulWidget {
 }
 
 class _AppShellState extends State<AppShell> with TickerProviderStateMixin {
-  int _selectedIndex = 0;
   late AnimationController _navController;
+
+  static const _routes = ['/', '/explore', '/learn', '/community', '/profile'];
 
   static const List<NavigationDestination> _destinations = [
     NavigationDestination(
@@ -62,15 +64,24 @@ class _AppShellState extends State<AppShell> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    final currentPath = GoRouterState.of(context).uri.path;
+    final selectedIndex = _routes.indexWhere((route) => currentPath == route);
     return Consumer<AppProvider>(
       builder: (context, provider, _) => Scaffold(
-        body: widget.child,
+        body: Column(
+          children: [
+            const SizedBox(
+              height: 4,
+              width: double.infinity,
+              child: ColoredBox(color: AppColors.accentSecondary),
+            ),
+            Expanded(child: widget.child),
+          ],
+        ),
         bottomNavigationBar: Container(
           decoration: BoxDecoration(
             color: AppColors.bgCard,
-            border: Border(
-              top: BorderSide(color: AppColors.borderDefault),
-            ),
+            border: Border(top: BorderSide(color: AppColors.borderDefault)),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.3),
@@ -81,20 +92,25 @@ class _AppShellState extends State<AppShell> with TickerProviderStateMixin {
           ),
           child: SafeArea(
             top: false,
-            child: NavigationBar(
-              selectedIndex: _selectedIndex,
-              onDestinationSelected: (index) {
-                setState(() => _selectedIndex = index);
-                _navController.forward(from: 0);
-              },
-              height: 72,
-              backgroundColor: Colors.transparent,
-              surfaceTintColor: Colors.transparent,
-              indicatorColor: AppColors.accentPrimarySoft,
-              labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
-              animationDuration: const Duration(milliseconds: 300),
-              destinations: _destinations,
-            ).animate(controller: _navController).fadeIn(duration: 300.ms).slideY(begin: 1, end: 0),
+            child:
+                NavigationBar(
+                      selectedIndex: selectedIndex == -1 ? 0 : selectedIndex,
+                      onDestinationSelected: (index) {
+                        _navController.forward(from: 0);
+                        context.go(_routes[index]);
+                      },
+                      height: 72,
+                      backgroundColor: Colors.transparent,
+                      surfaceTintColor: Colors.transparent,
+                      indicatorColor: AppColors.accentPrimarySoft,
+                      labelBehavior:
+                          NavigationDestinationLabelBehavior.onlyShowSelected,
+                      animationDuration: const Duration(milliseconds: 300),
+                      destinations: _destinations,
+                    )
+                    .animate(controller: _navController)
+                    .fadeIn(duration: 300.ms)
+                    .slideY(begin: 1, end: 0),
           ),
         ),
       ),

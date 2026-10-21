@@ -8,6 +8,7 @@ class RecommendationTile extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.color,
+    required this.onTap,
     super.key,
   });
 
@@ -15,12 +16,13 @@ class RecommendationTile extends StatelessWidget {
   final String title;
   final String subtitle;
   final Color color;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) => Material(
     color: Colors.transparent,
     child: InkWell(
-      onTap: () {},
+      onTap: onTap,
       borderRadius: BorderRadius.circular(16),
       child: Container(
         padding: const EdgeInsets.all(16),
@@ -53,9 +55,9 @@ class RecommendationTile extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     subtitle,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppColors.textMuted,
-                    ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodySmall?.copyWith(color: AppColors.textMuted),
                   ),
                 ],
               ),

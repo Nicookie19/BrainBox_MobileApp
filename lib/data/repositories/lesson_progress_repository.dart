@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:brainbox/data/services/storage_service.dart';
 
 class LessonProgressRepository {
@@ -15,40 +17,40 @@ class LessonProgressRepository {
     required Map<int, int> answeredSteps, // stepIndex -> selectedAnswerIndex
     required bool isFinished,
   }) async {
-    final data = {
+    final data = <String, dynamic>{
       'currentStepIndex': currentStepIndex,
-      'answeredSteps': answeredSteps,
+      'answeredSteps': answeredSteps.map(
+        (key, value) => MapEntry('$key', value),
+      ),
       'isFinished': isFinished,
       'lastUpdated': DateTime.now().toIso8601String(),
     };
-    await StorageService.setString(_key(courseId, lessonId), data.toString());
+    await StorageService.setString(_key(courseId, lessonId), jsonEncode(data));
   }
 
   /// Loads the saved lesson progress
-  static Future<LessonProgress?> loadProgress(String courseId, String lessonId) async {
+  static Future<LessonProgress?> loadProgress(
+    String courseId,
+    String lessonId,
+  ) async {
     final dataString = StorageService.getString(_key(courseId, lessonId));
     if (dataString == null) return null;
 
     try {
-      // Parse the stored string back to a map
-      // Note: This is a simple implementation; in production, use JSON encoding
-      final data = _parseProgressString(dataString);
+      final data = jsonDecode(dataString) as Map<String, dynamic>;
+      final answers = Map<String, dynamic>.from(
+        data['answeredSteps'] as Map? ?? {},
+      );
       return LessonProgress(
-        currentStepIndex: data['currentStepIndex'] ?? 0,
-        answeredSteps: Map<int, int>.from(data['answeredSteps'] ?? {}),
-        isFinished: data['isFinished'] ?? false,
+        currentStepIndex: data['currentStepIndex'] as int? ?? 0,
+        answeredSteps: answers.map(
+          (key, value) => MapEntry(int.parse(key), value as int),
+        ),
+        isFinished: data['isFinished'] as bool? ?? false,
       );
     } catch (_) {
       return null;
     }
-  }
-
-  static Map<String, dynamic> _parseProgressString(String dataString) {
-    // Simple parser for the stored string format
-    // In production, use proper JSON serialization
-    final Map<String, dynamic> result = {};
-    // This is a simplified parser - real implementation would use JSON
-    return result;
   }
 
   /// Clears progress for a specific lesson

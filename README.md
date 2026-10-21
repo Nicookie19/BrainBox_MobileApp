@@ -32,12 +32,27 @@ flutter analyze
 flutter test
 ```
 
-## Local-Only Limitations
+## Cloud backend (Supabase)
 
-There is no backend or authentication service configured. Community posts and
-learning data are stored on the current device, so they are not synchronized
-between users or devices. The repository interfaces are intentionally local-first
-so a backend can be introduced without moving persistence logic into widgets.
+BrainBox works locally by default, which keeps development and offline learning
+available without a cloud account. To enable Supabase, create a project, run the
+migration in `supabase/migrations`, then provide its credentials at build time:
+
+```bash
+flutter run \
+  --dart-define=SUPABASE_URL=https://your-project.supabase.co \
+  --dart-define=SUPABASE_PUBLISHABLE_KEY=your-publishable-key
+```
+
+The schema covers user profiles, course progress, bookmarks, the community,
+votes, replies, and daily challenge completion with row-level security. Never
+place a Supabase service-role key in this application.
+
+## Local-first mode
+
+Without runtime credentials, community posts and learning data are stored on the
+current device and are not synchronized. This is deliberate, so the app can
+remain usable offline while cloud repositories are introduced incrementally.
 
 For help getting started with Flutter development, view the
 [online documentation](https://docs.flutter.dev/), which offers tutorials,

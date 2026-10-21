@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:brainbox/data/repositories/community_repository.dart';
 import 'package:brainbox/data/repositories/course_repository.dart';
 import 'package:brainbox/data/services/storage_service.dart';
+import 'package:brainbox/data/services/supabase_service.dart';
 import 'package:brainbox/data/models/course_models.dart';
 import 'package:brainbox/data/models/user_models.dart';
 import 'package:brainbox/data/models/community_models.dart';
@@ -36,12 +37,28 @@ class AppProvider extends ChangeNotifier {
 
   Future<UserProfile> _loadOrCreateProfile() async {
     final existing = StorageService.getUserProfile();
-    if (existing != null) return existing;
+    final cloudUser = SupabaseService.isEnabled
+        ? SupabaseService.client.auth.currentUser
+        : null;
+    if (existing != null) {
+      if (cloudUser == null || existing.id == cloudUser.id) return existing;
+      final migrated = existing.copyWith(
+        id: cloudUser.id,
+        email: cloudUser.email ?? existing.email,
+        displayName:
+            (cloudUser.userMetadata?['display_name'] as String?) ??
+            existing.displayName,
+      );
+      await StorageService.saveUserProfile(migrated);
+      return migrated;
+    }
 
     final newProfile = UserProfile(
-      id: 'current_user',
-      email: 'user@brainbox.app',
-      displayName: 'Alex Rivera',
+      id: cloudUser?.id ?? 'current_user',
+      email: cloudUser?.email ?? 'user@brainbox.app',
+      displayName:
+          (cloudUser?.userMetadata?['display_name'] as String?) ??
+          'Alex Rivera',
       bio: 'Aspiring Frontend Developer',
       level: UserLevel.getLevelForXp(0),
       xp: 0,
@@ -63,40 +80,40 @@ class AppProvider extends ChangeNotifier {
   }
 
   List<Achievement> _defaultAchievements() => [
-        Achievement(
-          id: 'streak_7',
-          title: 'On Fire',
-          description: '7 day streak',
-          iconAsset: 'local_fire_department',
-          type: AchievementType.streakDays,
-          xpReward: 50,
-          isUnlocked: false,
-          progress: 0,
-          target: 7,
-        ),
-        Achievement(
-          id: 'first_course',
-          title: 'Starter',
-          description: 'Complete your first course',
-          iconAsset: 'rocket_launch',
-          type: AchievementType.coursesCompleted,
-          xpReward: 100,
-          isUnlocked: false,
-          progress: 0,
-          target: 1,
-        ),
-        Achievement(
-          id: 'lessons_10',
-          title: 'Scholar',
-          description: 'Complete 10 lessons',
-          iconAsset: 'menu_book',
-          type: AchievementType.lessonsCompleted,
-          xpReward: 75,
-          isUnlocked: false,
-          progress: 0,
-          target: 10,
-        ),
-      ];
+    Achievement(
+      id: 'streak_7',
+      title: 'On Fire',
+      description: '7 day streak',
+      iconAsset: 'local_fire_department',
+      type: AchievementType.streakDays,
+      xpReward: 50,
+      isUnlocked: false,
+      progress: 0,
+      target: 7,
+    ),
+    Achievement(
+      id: 'first_course',
+      title: 'Starter',
+      description: 'Complete your first course',
+      iconAsset: 'rocket_launch',
+      type: AchievementType.coursesCompleted,
+      xpReward: 100,
+      isUnlocked: false,
+      progress: 0,
+      target: 1,
+    ),
+    Achievement(
+      id: 'lessons_10',
+      title: 'Scholar',
+      description: 'Complete 10 lessons',
+      iconAsset: 'menu_book',
+      type: AchievementType.lessonsCompleted,
+      xpReward: 75,
+      isUnlocked: false,
+      progress: 0,
+      target: 10,
+    ),
+  ];
 
   Future<void> addXp(int amount) async {
     if (_profile == null) return;
@@ -121,9 +138,10 @@ class AppProvider extends ChangeNotifier {
     if (_profile == null) return;
 
     final lessonIdKey = lessonId != null ? '$courseId:$lessonId' : null;
-    
+
     // Check if lesson was already completed
-    if (lessonIdKey != null && _profile!.completedLessonIds.contains(lessonIdKey)) {
+    if (lessonIdKey != null &&
+        _profile!.completedLessonIds.contains(lessonIdKey)) {
       return; // Already completed, don't award XP again
     }
 
@@ -132,26 +150,29 @@ class AppProvider extends ChangeNotifier {
     final nowUtc = now.toUtc();
     final todayUtc = DateTime(nowUtc.year, nowUtc.month, nowUtc.day);
 
-    final updatedProgress = (courseProgress ?? CourseProgress(
-      courseId: courseId,
-      userId: 'current_user',
-      completedModules: 0,
-      totalModules: 1,
-      completedLessons: 0,
-      totalLessons: 10,
-      completedQuizzes: 0,
-      totalQuizzes: 3,
-      completedProjects: 0,
-      totalProjects: 2,
-      totalStudyMinutes: 0,
-      startedAt: now,
-      lastAccessedAt: now,
-      isEnrolled: true,
-    )).copyWith(
-      completedLessons: (courseProgress?.completedLessons ?? 0) + 1,
-      totalStudyMinutes: (courseProgress?.totalStudyMinutes ?? 0) + 10,
-      lastAccessedAt: now,
-    );
+    final updatedProgress =
+        (courseProgress ??
+                CourseProgress(
+                  courseId: courseId,
+                  userId: 'current_user',
+                  completedModules: 0,
+                  totalModules: 1,
+                  completedLessons: 0,
+                  totalLessons: 10,
+                  completedQuizzes: 0,
+                  totalQuizzes: 3,
+                  completedProjects: 0,
+                  totalProjects: 2,
+                  totalStudyMinutes: 0,
+                  startedAt: now,
+                  lastAccessedAt: now,
+                  isEnrolled: true,
+                ))
+            .copyWith(
+              completedLessons: (courseProgress?.completedLessons ?? 0) + 1,
+              totalStudyMinutes: (courseProgress?.totalStudyMinutes ?? 0) + 10,
+              lastAccessedAt: now,
+            );
 
     await StorageService.saveCourseProgress(updatedProgress);
 
@@ -174,7 +195,11 @@ class AppProvider extends ChangeNotifier {
 
     if (lastLessonDate != null) {
       final lastLessonUtc = lastLessonDate.toUtc();
-      final lastLessonDay = DateTime(lastLessonUtc.year, lastLessonUtc.month, lastLessonUtc.day);
+      final lastLessonDay = DateTime(
+        lastLessonUtc.year,
+        lastLessonUtc.month,
+        lastLessonUtc.day,
+      );
       final yesterdayUtc = todayUtc.subtract(const Duration(days: 1));
 
       if (lastLessonDay == yesterdayUtc) {
@@ -191,7 +216,7 @@ class AppProvider extends ChangeNotifier {
       newStreak = 1;
     }
 
-if (newStreak > newLongestStreak) {
+    if (newStreak > newLongestStreak) {
       newLongestStreak = newStreak;
     }
 
@@ -206,7 +231,8 @@ if (newStreak > newLongestStreak) {
         totalLessonsCompleted: _profile!.stats.totalLessonsCompleted + 1,
         currentStreakDays: newStreak,
         longestStreakDays: newLongestStreak > _profile!.stats.longestStreakDays
-            ? newStreak : _profile!.stats.longestStreakDays,
+            ? newStreak
+            : _profile!.stats.longestStreakDays,
         totalStudyMinutes: _profile!.stats.totalStudyMinutes + 10,
       ),
       achievements: _updateAchievementProgress(
@@ -252,7 +278,9 @@ if (newStreak > newLongestStreak) {
       return achievement.copyWith(
         progress: newProgress.clamp(0, achievement.target),
         isUnlocked: isUnlocked,
-        unlockedAt: isUnlocked && achievement.unlockedAt == null ? DateTime.now() : achievement.unlockedAt,
+        unlockedAt: isUnlocked && achievement.unlockedAt == null
+            ? DateTime.now()
+            : achievement.unlockedAt,
       );
     }).toList();
   }
@@ -285,7 +313,11 @@ if (newStreak > newLongestStreak) {
     }
   }
 
-  Future<PostReply> createReply(String postId, String content, {String? parentReplyId}) async {
+  Future<PostReply> createReply(
+    String postId,
+    String content, {
+    String? parentReplyId,
+  }) async {
     final reply = await CommunityRepository.createReply(
       postId: postId,
       content: content,
@@ -301,7 +333,11 @@ if (newStreak > newLongestStreak) {
     return await CommunityRepository.getReplies(postId);
   }
 
-  Future<void> toggleReplyVote(String postId, String replyId, UserVote vote) async {
+  Future<void> toggleReplyVote(
+    String postId,
+    String replyId,
+    UserVote vote,
+  ) async {
     await CommunityRepository.toggleReplyVote(postId, replyId, vote);
     // Update in local state if needed
     notifyListeners();
@@ -310,14 +346,18 @@ if (newStreak > newLongestStreak) {
   Future<void> toggleBookmark(String lessonId) async {
     if (_profile == null) return;
 
-    final bookmarkedLessonIds = List<String>.from(_profile!.bookmarkedLessonIds);
+    final bookmarkedLessonIds = List<String>.from(
+      _profile!.bookmarkedLessonIds,
+    );
     if (bookmarkedLessonIds.contains(lessonId)) {
       bookmarkedLessonIds.remove(lessonId);
     } else {
       bookmarkedLessonIds.add(lessonId);
     }
 
-    final updatedProfile = _profile!.copyWith(bookmarkedLessonIds: bookmarkedLessonIds);
+    final updatedProfile = _profile!.copyWith(
+      bookmarkedLessonIds: bookmarkedLessonIds,
+    );
     _profile = updatedProfile;
     await StorageService.saveUserProfile(updatedProfile);
     notifyListeners();

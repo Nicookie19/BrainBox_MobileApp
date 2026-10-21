@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import 'core/theme/app_theme.dart';
 import 'data/services/storage_service.dart';
+import 'data/services/supabase_service.dart';
+import 'presentation/screens/auth_screen.dart';
 import 'data/repositories/course_repository.dart';
 import 'presentation/screens/home_screen.dart';
 import 'presentation/screens/explore_screen.dart';
@@ -21,6 +23,7 @@ import 'presentation/providers/app_provider.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await StorageService.init();
+  await SupabaseService.initialize();
   await CourseRepository.initializeSampleCourses();
   runApp(const BrainBoxApp());
 }
@@ -30,19 +33,24 @@ class BrainBoxApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ChangeNotifierProvider(
-        create: (_) => AppProvider()..initialize(),
-        child: MaterialApp.router(
-          title: 'BrainBox | Learn by doing',
-          debugShowCheckedModeBanner: false,
-          theme: AppTheme.darkTheme,
-          routerConfig: _router,
-        ),
-      );
+    create: (_) => AppProvider()..initialize(),
+    child: MaterialApp.router(
+      title: 'BrainBox | Learn by doing',
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.darkTheme,
+      routerConfig: _router,
+    ),
+  );
 }
 
 final _router = GoRouter(
-  initialLocation: '/',
+  initialLocation:
+      SupabaseService.isEnabled &&
+          SupabaseService.client.auth.currentSession == null
+      ? '/auth'
+      : '/',
   routes: [
+    GoRoute(path: '/auth', builder: (_, _) => const AuthScreen()),
     ShellRoute(
       builder: (context, state, child) => AppShell(child: child),
       routes: [
@@ -57,6 +65,7 @@ final _router = GoRouter(
       path: '/lesson/:courseId',
       builder: (context, state) => LessonScreen(
         courseId: state.pathParameters['courseId']!,
+        initialLessonId: state.uri.queryParameters['lesson'],
       ),
     ),
     GoRoute(
@@ -65,17 +74,10 @@ final _router = GoRouter(
     ),
     GoRoute(
       path: '/course/:courseId',
-      builder: (context, state) => CourseDetailScreen(
-        courseId: state.pathParameters['courseId']!,
-      ),
+      builder: (context, state) =>
+          CourseDetailScreen(courseId: state.pathParameters['courseId']!),
     ),
-    GoRoute(
-      path: '/settings',
-      builder: (_, _) => const SettingsScreen(),
-    ),
-    GoRoute(
-      path: '/bookmarks',
-      builder: (_, _) => const BookmarksScreen(),
-    ),
+    GoRoute(path: '/settings', builder: (_, _) => const SettingsScreen()),
+    GoRoute(path: '/bookmarks', builder: (_, _) => const BookmarksScreen()),
   ],
 );

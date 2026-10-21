@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/user_models.dart';
+import 'profile_sync_service.dart';
 
 class StorageService {
   static const String _userProfileKey = 'user_profile';
@@ -34,6 +35,7 @@ class StorageService {
   static Future<void> saveUserProfile(UserProfile profile) async {
     final json = jsonEncode(profile.toJson());
     await prefs.setString(_userProfileKey, json);
+    await ProfileSyncService.sync(profile);
   }
 
   static UserProfile? getUserProfile() {
