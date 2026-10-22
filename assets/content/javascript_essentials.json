@@ -1,0 +1,265 @@
+{
+  "courseId": "javascript_essentials",
+  "learningPathId": "web_development",
+  "version": 1,
+  "modules": [
+    {
+      "id": "module_1",
+      "title": "JavaScript Basics",
+      "description": "Core syntax, variables, and data types",
+      "order": 1,
+      "lessons": [
+        {
+          "id": "lesson_1",
+          "title": "Variables and Data Types",
+          "description": "Learn to store and work with data in JavaScript",
+          "order": 1,
+          "estimatedMinutes": 12,
+          "xpReward": 25,
+          "steps": [
+            {
+              "type": "explanation",
+              "content": "JavaScript has three ways to declare variables: const (constants), let (reassignable), and var (legacy, function-scoped). Modern JS prefers const by default, let when reassignment is needed. Avoid var."
+            },
+            {
+              "type": "explanation",
+              "content": "JavaScript is dynamically typed - variables hold values of any type. Primitive types: string, number, boolean, null, undefined, symbol, bigint. Objects (arrays, functions, objects) are reference types. typeof operator reveals a value's type."
+            },
+            {
+              "type": "multiple_choice",
+              "question": "Which keyword creates a variable that cannot be reassigned?",
+              "options": ["let", "var", "const", "variable"],
+              "correctAnswer": 2,
+              "explanation": "const creates a read-only reference. The variable identifier cannot be reassigned, though objects/arrays declared with const can still have their contents modified.",
+              "hints": ["Think 'constant'", "It's the preferred default in modern JS"]
+            },
+            {
+              "type": "fill_in_blank",
+              "question": "The operator that returns a string indicating the type of a value is ______.",
+              "acceptedAnswers": ["typeof"],
+              "explanation": "typeof 'hello' returns 'string', typeof 42 returns 'number', typeof true returns 'boolean'. Note: typeof null === 'object' (a known quirk).",
+              "hints": ["It's a unary operator", "Not a function - no parentheses needed for simple values"]
+            },
+            {
+              "type": "code_ordering",
+              "question": "Order these to declare a constant user object and log its name",
+              "snippets": [
+                "const user = {",
+                "  name: 'Alex',",
+                "  age: 28",
+                "};",
+                "console.log(user.name);"
+              ],
+              "correctOrder": [0, 1, 2, 3, 4],
+              "explanation": "Declare const object with properties, then access property with dot notation.",
+              "hints": ["Objects use curly braces", "Dot notation accesses properties"]
+            },
+            {
+              "type": "true_false",
+              "question": "Arrays in JavaScript are a type of object.",
+              "correctAnswerBool": true,
+              "explanation": "Arrays are special objects with numeric indices and a length property. typeof [] === 'object'. Use Array.isArray() to specifically check for arrays.",
+              "hints": ["typeof [] gives 'object'", "They inherit from Array.prototype"]
+            },
+            {
+              "type": "multiple_choice",
+              "question": "What is the result of: const x = 5; x = 10;",
+              "options": ["10", "5", "TypeError", "ReferenceError"],
+              "correctAnswer": 2,
+              "explanation": "const variables cannot be reassigned. Attempting to reassign throws a TypeError in strict mode.",
+              "hints": ["const means constant reference", "The error occurs at assignment time"]
+            }
+          ]
+        },
+        {
+          "id": "lesson_2",
+          "title": "Control Flow",
+          "description": "Make decisions with conditionals and loops",
+          "order": 2,
+          "estimatedMinutes": 15,
+          "xpReward": 30,
+          "steps": [
+            {
+              "type": "explanation",
+              "content": "Conditionals: if/else if/else for branching. Switch for multiple equality checks. Ternary operator (condition ? trueVal : falseVal) for inline expressions. JavaScript uses truthy/falsy: false, 0, '', null, undefined, NaN are falsy; everything else is truthy."
+            },
+            {
+              "type": "explanation",
+              "content": "Loops: for (initialization; condition; increment), while (condition), for...of (iterables), for...in (object keys). break exits loop, continue skips to next iteration. forEach/map/filter/reduce are array methods for functional iteration."
+            },
+            {
+              "type": "multiple_choice",
+              "question": "Which loop is best for iterating over array values?",
+              "options": ["for...in", "for...of", "while", "do...while"],
+              "correctAnswer": 1,
+              "explanation": "for...of iterates over iterable values (arrays, strings, maps, sets). for...in iterates over object keys (including inherited).",
+              "hints": ["for...of = values, for...in = keys", "Think 'of' as in 'each of these items'"]
+            },
+            {
+              "type": "fill_in_blank",
+              "question": "The keyword to skip the current loop iteration and continue to the next is ______.",
+              "acceptedAnswers": ["continue"],
+              "explanation": "continue jumps to the next iteration immediately. break exits the loop entirely.",
+              "hints": ["Think 'continue to the next one'", "It's not 'skip' or 'next'"]
+            },
+            {
+              "type": "code_ordering",
+              "question": "Order these to create a loop that logs numbers 1 to 5",
+              "snippets": [
+                "for (let i = 1; i <= 5; i++) {",
+                "  console.log(i);",
+                "}"
+              ],
+              "correctOrder": [0, 1, 2],
+              "explanation": "Standard for loop: start at 1, continue while <= 5, increment by 1 each iteration.",
+              "hints": ["Three parts: init; condition; increment", "i <= 5 includes 5"]
+            },
+            {
+              "type": "true_false",
+              "question": "The forEach method can be stopped early with break.",
+              "correctAnswerBool": false,
+              "explanation": "forEach cannot be stopped early - it always runs for every element. Use for...of or a traditional for loop if you need early exit.",
+              "hints": ["forEach runs to completion", "Use for...of for break/continue"]
+            },
+            {
+              "type": "multiple_choice",
+              "question": "What does the map() method return?",
+              "options": ["The original array", "undefined", "A new array", "The first matching element"],
+              "correctAnswer": 2,
+              "explanation": "map() creates a new array by calling a function on each element. It doesn't modify the original array.",
+              "hints": ["Think 'map each element to a new value'", "It's a transformation, not a filter"]
+            }
+          ]
+        },
+        {
+          "id": "lesson_3",
+          "title": "Functions",
+          "description": "Reusable blocks of code with parameters and return values",
+          "order": 3,
+          "estimatedMinutes": 15,
+          "xpReward": 30,
+          "steps": [
+            {
+              "type": "explanation",
+              "content": "Functions can be declared with function keyword or as arrow functions (() => {}). Parameters are placeholders; arguments are actual values passed. Default parameters: (param = defaultValue). Rest parameters: (...args) collects remaining arguments into an array."
+            },
+            {
+              "type": "explanation",
+              "content": "Arrow functions: concise syntax, implicit return for single expressions, lexical this binding. Function expressions: const fn = function() {}. Hoisting: function declarations are hoisted, function expressions and arrow functions are not."
+            },
+            {
+              "type": "multiple_choice",
+              "question": "What does this return: const add = (a, b = 5) => a + b; add(10);",
+              "options": ["10", "15", "NaN", "Error"],
+              "correctAnswer": 1,
+              "explanation": "Default parameter b = 5 is used when only one argument is passed. add(10) = 10 + 5 = 15.",
+              "hints": ["Default parameters fill in missing arguments", "b is 5 because it wasn't provided"]
+            },
+            {
+              "type": "fill_in_blank",
+              "question": "The keyword to return a value from a function is ______.",
+              "acceptedAnswers": ["return"],
+              "explanation": "return exits the function and optionally provides a value. Without return, functions return undefined.",
+              "hints": ["It's the same in most languages", "Arrow functions can have implicit return"]
+            },
+            {
+              "type": "code_ordering",
+              "question": "Order these to create a function that calculates factorial recursively",
+              "snippets": [
+                "function factorial(n) {",
+                "  if (n <= 1) return 1;",
+                "  return n * factorial(n - 1);",
+                "}"
+              ],
+              "correctOrder": [0, 1, 2, 3],
+              "explanation": "Base case: n <= 1 returns 1. Recursive case: n * factorial(n-1).",
+              "hints": ["Recursion needs a base case", "Each call reduces n by 1"]
+            },
+            {
+              "type": "true_false",
+              "question": "Arrow functions have their own 'this' binding.",
+              "correctAnswerBool": false,
+              "explanation": "Arrow functions capture 'this' from their enclosing scope (lexical this). Regular functions have their own 'this' determined by how they're called.",
+              "hints": ["This is a key difference from regular functions", "Useful for callbacks and event handlers"]
+            },
+            {
+              "type": "multiple_choice",
+              "question": "What is the output: const fn = () => 'hello'; console.log(fn());",
+              "options": ["undefined", "'hello'", "fn", "Error"],
+              "correctAnswer": 1,
+              "explanation": "Arrow function with single expression has implicit return. () => 'hello' is equivalent to () => { return 'hello'; }.",
+              "hints": ["No braces = implicit return", "Braces require explicit return"]
+            }
+          ]
+        },
+        {
+          "id": "lesson_4",
+          "title": "Objects and Arrays",
+          "description": "Work with complex data structures",
+          "order": 4,
+          "estimatedMinutes": 15,
+          "xpReward": 30,
+          "steps": [
+            {
+              "type": "explanation",
+              "content": "Objects store key-value pairs. Keys are strings (or symbols). Access with dot notation (obj.key) or bracket notation (obj['key']). Methods are functions as property values. this refers to the object the method is called on."
+            },
+            {
+              "type": "explanation",
+              "content": "Arrays are ordered lists. Common methods: push/pop (end), shift/unshift (start), slice (copy portion), splice (modify in place), map/filter/reduce (transform), find/findIndex (search), forEach (iterate). Destructuring: const [a, b] = arr; const {key} = obj."
+            },
+            {
+              "type": "multiple_choice",
+              "question": "Which method adds elements to the end of an array?",
+              "options": ["push", "pop", "shift", "unshift"],
+              "correctAnswer": 0,
+              "explanation": "push() adds to end, pop() removes from end, unshift() adds to start, shift() removes from start.",
+              "hints": ["push = push onto the end", "Think of a stack of plates"]
+            },
+            {
+              "type": "fill_in_blank",
+              "question": "The method that creates a new array with elements that pass a test is ______.",
+              "acceptedAnswers": ["filter"],
+              "explanation": "filter() keeps elements where the callback returns truthy. map() transforms, reduce() accumulates, find() returns first match.",
+              "hints": ["Think 'filter out unwanted items'", "Returns array of matching elements"]
+            },
+            {
+              "type": "code_ordering",
+              "question": "Order these to destructure name and age from a user object",
+              "snippets": [
+                "const user = { name: 'Sam', age: 25, city: 'NYC' };",
+                "const { name, age } = user;",
+                "console.log(name, age);"
+              ],
+              "correctOrder": [0, 1, 2],
+              "explanation": "Destructuring extracts properties into variables with matching names.",
+              "hints": ["Curly braces for object destructuring", "Variable names match property names"]
+            },
+            {
+              "type": "true_false",
+              "question": "The spread operator (...) creates a shallow copy of an array.",
+              "correctAnswerBool": true,
+              "explanation": "const copy = [...original] creates a new array with the same elements. Nested objects/arrays are still shared (shallow copy).",
+              "hints": ["Spread expands elements", "Only one level deep"]
+            },
+            {
+              "type": "multiple_choice",
+              "question": "What does Object.keys(obj) return?",
+              "options": ["An array of values", "An array of keys", "An array of [key, value] pairs", "The number of properties"],
+              "correctAnswer": 1,
+              "explanation": "Object.keys() returns an array of the object's own enumerable property names (keys). Object.values() returns values, Object.entries() returns [key, value] pairs.",
+              "hints": ["Keys, not values", "Returns an array"]
+            },
+            {
+              "type": "fill_in_blank",
+              "question": "To check if an object has a specific property, use the ______ operator.",
+              "acceptedAnswers": ["in"],
+              "explanation": "'prop' in obj returns true if obj has property prop (including inherited). obj.hasOwnProperty('prop') checks only own properties.",
+              "hints": ["It's a binary operator", "Not hasOwnProperty - that's a method"]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

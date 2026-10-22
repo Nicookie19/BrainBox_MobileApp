@@ -1,0 +1,273 @@
+{
+  "courseId": "frontend_foundations",
+  "learningPathId": "web_development",
+  "version": 1,
+  "modules": [
+    {
+      "id": "module_1",
+      "title": "HTML & CSS Fundamentals",
+      "description": "Learn the building blocks of web pages",
+      "order": 1,
+      "lessons": [
+        {
+          "id": "lesson_1",
+          "title": "HTML Document Structure",
+          "description": "Understand the anatomy of an HTML document",
+          "order": 1,
+          "estimatedMinutes": 10,
+          "xpReward": 25,
+          "steps": [
+            {
+              "type": "explanation",
+              "content": "Every HTML document follows a standard structure. The <!DOCTYPE html> declaration tells the browser this is HTML5. The <html> element wraps everything, with <head> containing metadata (title, charset, viewport) and <body> containing visible content."
+            },
+            {
+              "type": "explanation",
+              "content": "The <head> section includes: <meta charset=\"UTF-8\"> for character encoding, <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"> for responsive design, and <title> for the browser tab text. These don't appear on the page but are crucial for proper rendering."
+            },
+            {
+              "type": "multiple_choice",
+              "question": "What does the <!DOCTYPE html> declaration do?",
+              "options": [
+                "Sets the page title",
+                "Declares this is an HTML5 document",
+                "Links a CSS stylesheet",
+                "Creates a heading"
+              ],
+              "correctAnswer": 1,
+              "explanation": "<!DOCTYPE html> is not an HTML tag; it's a declaration that tells the browser to render the page in standards mode for HTML5.",
+              "hints": ["It's the very first line in an HTML file", "It doesn't have a closing tag"]
+            },
+            {
+              "type": "fill_in_blank",
+              "question": "The element that contains metadata like title and charset is <______>.",
+              "acceptedAnswers": ["head"],
+              "explanation": "The <head> element contains document metadata - information about the page that isn't displayed directly.",
+              "hints": ["It's a sibling of <body>", "Think 'heading' of the document"]
+            },
+            {
+              "type": "code_ordering",
+              "question": "Order these tags to create a valid HTML5 document structure",
+              "snippets": [
+                "<!DOCTYPE html>",
+                "<html>",
+                "  <head>",
+                "    <title>My Page</title>",
+                "  </head>",
+                "  <body>",
+                "    <h1>Hello</h1>",
+                "  </body>",
+                "</html>"
+              ],
+              "correctOrder": [0, 1, 2, 3, 4, 5, 6, 7, 8],
+              "explanation": "DOCTYPE first, then html wrapper, then head with metadata, then body with visible content.",
+              "hints": ["DOCTYPE always comes first", "head comes before body"]
+            },
+            {
+              "type": "true_false",
+              "question": "The <title> element appears in the browser tab, not on the page itself.",
+              "correctAnswerBool": true,
+              "explanation": "The <title> goes in <head> and shows in the browser tab, bookmarks, and search results - not in the page content area.",
+              "hints": ["Check where <title> is placed in the document structure"]
+            }
+          ]
+        },
+        {
+          "id": "lesson_2",
+          "title": "Semantic HTML Elements",
+          "description": "Use meaningful tags for better accessibility and SEO",
+          "order": 2,
+          "estimatedMinutes": 12,
+          "xpReward": 25,
+          "steps": [
+            {
+              "type": "explanation",
+              "content": "Semantic HTML uses elements that describe their meaning: <header>, <nav>, <main>, <section>, <article>, <aside>, <footer>. These help screen readers, search engines, and developers understand page structure without reading CSS classes."
+            },
+            {
+              "type": "explanation",
+              "content": "Before semantic elements, developers used <div class=\"header\"> or <div id=\"nav\">. Semantic tags replace these with meaningful names. For example, <nav> clearly indicates navigation links, while <main> identifies the primary content area (only one per page)."
+            },
+            {
+              "type": "multiple_choice",
+              "question": "Which element should wrap the main navigation links?",
+              "options": ["<header>", "<nav>", "<main>", "<section>"],
+              "correctAnswer": 1,
+              "explanation": "<nav> is specifically designed for navigation sections. While often placed inside <header>, the <nav> element itself semantically marks navigation links.",
+              "hints": ["Think 'navigation'", "It's not <header> - that's for the page header area"]
+            },
+            {
+              "type": "multiple_choice",
+              "question": "How many <main> elements should a page have?",
+              "options": ["As many as needed", "Exactly one", "Zero or one", "At least two"],
+              "correctAnswer": 1,
+              "explanation": "HTML spec allows exactly one <main> element per document. It represents the dominant content of the <body>.",
+              "hints": ["The spec is strict about this", "It's the 'main' content after all"]
+            },
+            {
+              "type": "fill_in_blank",
+              "question": "An independent, self-contained piece of content (like a blog post) uses the <______> element.",
+              "acceptedAnswers": ["article"],
+              "explanation": "<article> represents a complete, self-contained composition that could be syndicated (e.g., blog post, news article, forum post).",
+              "hints": ["Think 'article' as in newspaper article", "It's distinct from <section> which groups related content"]
+            },
+            {
+              "type": "code_ordering",
+              "question": "Order these semantic elements in a typical page layout",
+              "snippets": [
+                "<header>",
+                "  <nav>Navigation</nav>",
+                "</header>",
+                "<main>",
+                "  <article>Content</article>",
+                "</main>",
+                "<footer>Footer</footer>"
+              ],
+              "correctOrder": [0, 1, 2, 3, 4, 5, 6],
+              "explanation": "Header (with nav) at top, main content in middle, footer at bottom.",
+              "hints": ["Top to bottom: header, main, footer", "nav goes inside header"]
+            },
+            {
+              "type": "true_false",
+              "question": "A <section> element must always have a heading (h1-h6) as a child.",
+              "correctAnswerBool": true,
+              "explanation": "The HTML spec recommends that each <section> have a heading to identify its topic. This improves accessibility and document outline.",
+              "hints": ["Sections represent thematic groupings", "Headings label what the section is about"]
+            }
+          ]
+        },
+        {
+          "id": "lesson_3",
+          "title": "CSS Box Model",
+          "description": "Understand how elements are sized and spaced",
+          "order": 3,
+          "estimatedMinutes": 15,
+          "xpReward": 30,
+          "steps": [
+            {
+              "type": "explanation",
+              "content": "Every HTML element is a rectangular box with four layers: content (text/images), padding (space around content), border (edge around padding), and margin (space outside border). The total width = content width + padding + border + margin."
+            },
+            {
+              "type": "explanation",
+              "content": "By default, width/height apply to the content box only. Adding padding or border increases the total element size. The box-sizing: border-box property changes this so width/height include padding and border, making layouts much more predictable."
+            },
+            {
+              "type": "multiple_choice",
+              "question": "What is the default value of box-sizing?",
+              "options": ["border-box", "content-box", "padding-box", "margin-box"],
+              "correctAnswer": 1,
+              "explanation": "The default is content-box, meaning width/height only include the content area. Padding and border add to the total size.",
+              "hints": ["This is why layouts often break unexpectedly", "border-box is generally preferred"]
+            },
+            {
+              "type": "fill_in_blank",
+              "question": "The space between an element's border and the next element is called ______.",
+              "acceptedAnswers": ["margin"],
+              "explanation": "Margin creates space outside the border. It's transparent and doesn't have a background color. Margins can collapse vertically.",
+              "hints": ["It's the outermost layer of the box model", "It pushes other elements away"]
+            },
+            {
+              "type": "code_ordering",
+              "question": "Order these CSS declarations from innermost to outermost layer",
+              "snippets": [
+                "content",
+                "padding",
+                "border",
+                "margin"
+              ],
+              "correctOrder": [0, 1, 2, 3],
+              "explanation": "The box model layers from inside out: content → padding → border → margin.",
+              "hints": ["Content is at the center", "Margin is the outermost space"]
+            },
+            {
+              "type": "true_false",
+              "question": "Vertical margins between adjacent elements collapse into the larger margin.",
+              "correctAnswerBool": true,
+              "explanation": "Margin collapse means if one element has margin-bottom: 20px and the next has margin-top: 30px, the space between them is 30px (the larger), not 50px.",
+              "hints": ["This only happens with vertical margins", "Horizontal margins never collapse"]
+            },
+            {
+              "type": "multiple_choice",
+              "question": "If an element has width: 200px, padding: 20px, border: 5px, and box-sizing: content-box, what is its total rendered width?",
+              "options": ["200px", "240px", "250px", "290px"],
+              "correctAnswer": 2,
+              "explanation": "With content-box: total = 200 (content) + 40 (padding left+right) + 10 (border left+right) = 250px.",
+              "hints": ["Remember padding and border are on both sides", "box-sizing: content-box means width is content only"]
+            }
+          ]
+        },
+        {
+          "id": "lesson_4",
+          "title": "Flexbox Layout",
+          "description": "Create flexible, responsive layouts with Flexbox",
+          "order": 4,
+          "estimatedMinutes": 15,
+          "xpReward": 30,
+          "steps": [
+            {
+              "type": "explanation",
+              "content": "Flexbox is a one-dimensional layout system for arranging items in rows or columns. Apply display: flex to a container to make its children flex items. The container controls alignment, distribution, and ordering of items."
+            },
+            {
+              "type": "explanation",
+              "content": "Key container properties: flex-direction (row, column), justify-content (main axis alignment), align-items (cross axis alignment), gap (spacing), flex-wrap (wrapping). Key item properties: flex-grow, flex-shrink, flex-basis, align-self."
+            },
+            {
+              "type": "multiple_choice",
+              "question": "What is the default flex-direction?",
+              "options": ["row", "column", "row-reverse", "column-reverse"],
+              "correctAnswer": 0,
+              "explanation": "The default flex-direction is row, which arranges items left-to-right horizontally. The main axis is horizontal, cross axis is vertical.",
+              "hints": ["Think of reading direction in English", "row = horizontal, column = vertical"]
+            },
+            {
+              "type": "fill_in_blank",
+              "question": "The property that aligns items on the main axis is ______.",
+              "acceptedAnswers": ["justify-content"],
+              "explanation": "justify-content controls main axis alignment: flex-start, flex-end, center, space-between, space-around, space-evenly.",
+              "hints": ["It's about 'justifying' content along the main axis", "Main axis depends on flex-direction"]
+            },
+            {
+              "type": "code_ordering",
+              "question": "Order these to create a centered card using Flexbox",
+              "snippets": [
+                ".container {",
+                "  display: flex;",
+                "  justify-content: center;",
+                "  align-items: center;",
+                "  min-height: 100vh;",
+                "}"
+              ],
+              "correctOrder": [0, 1, 2, 3, 4, 5],
+              "explanation": "Container → flex → center main axis → center cross axis → full viewport height = perfectly centered.",
+              "hints": ["Need both justify-content and align-items for perfect centering", "min-height: 100vh gives the container height"]
+            },
+            {
+              "type": "true_false",
+              "question": "The gap property works on both flex and grid containers.",
+              "correctAnswerBool": true,
+              "explanation": "gap (and row-gap/column-gap) is now supported in both Flexbox and Grid layouts, providing consistent spacing between items.",
+              "hints": ["It used to be grid-gap only", "Now unified across layout modes"]
+            },
+            {
+              "type": "multiple_choice",
+              "question": "To make a flex item take up remaining space, you set:",
+              "options": ["flex-grow: 1", "flex-shrink: 1", "flex-basis: auto", "align-self: stretch"],
+              "correctAnswer": 0,
+              "explanation": "flex-grow: 1 tells the item to expand and fill available space on the main axis. Multiple items with flex-grow share space proportionally.",
+              "hints": ["flex-grow controls growing", "flex-shrink controls shrinking"]
+            },
+            {
+              "type": "fill_in_blank",
+              "question": "To allow flex items to wrap to the next line, set flex-wrap: ______.",
+              "acceptedAnswers": ["wrap"],
+              "explanation": "By default flex-wrap is nowrap (all items on one line). Setting wrap allows items to flow to new lines when they don't fit.",
+              "hints": ["The opposite of nowrap", "Items flow like text wrapping"]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

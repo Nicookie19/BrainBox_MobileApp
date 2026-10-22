@@ -1,0 +1,287 @@
+{
+  "courseId": "react_basics",
+  "learningPathId": "web_development",
+  "version": 1,
+  "modules": [
+    {
+      "id": "module_1",
+      "title": "React Fundamentals",
+      "description": "Components, props, and state",
+      "order": 1,
+      "lessons": [
+        {
+          "id": "lesson_1",
+          "title": "Components and JSX",
+          "description": "Build UI with reusable components",
+          "order": 1,
+          "estimatedMinutes": 15,
+          "xpReward": 30,
+          "steps": [
+            {
+              "type": "explanation",
+              "content": "React components are JavaScript functions that return JSX (JavaScript XML). JSX looks like HTML but is actually syntactic sugar for React.createElement(). Component names must start with a capital letter. Components can be composed - using one component inside another."
+            },
+            {
+              "type": "explanation",
+              "content": "JSX rules: single root element (or fragment <>...</>), className instead of class, camelCase for attributes (onClick, tabIndex), self-closing tags must end with />. JavaScript expressions go in curly braces: {variable}, {function()}, {condition ? 'yes' : 'no'}."
+            },
+            {
+              "type": "multiple_choice",
+              "question": "What must a React component name start with?",
+              "options": ["A lowercase letter", "A capital letter", "An underscore", "A number"],
+              "correctAnswer": 1,
+              "explanation": "React treats lowercase names as HTML elements (div, span). Capitalized names indicate custom components. This is how React distinguishes <MyComponent /> from <div />.",
+              "hints": ["Think 'Component' not 'component'", "It's a convention that React enforces"]
+            },
+            {
+              "type": "fill_in_blank",
+              "question": "To embed a JavaScript expression in JSX, wrap it in ______.",
+              "acceptedAnswers": ["curly braces", "{}", "braces"],
+              "explanation": "Use {expression} to embed any valid JavaScript expression in JSX. This includes variables, function calls, ternary operators, and more.",
+              "hints": ["It's not parentheses", "It's the same braces used for objects"]
+            },
+            {
+              "type": "code_ordering",
+              "question": "Order these to create a functional component that displays a greeting",
+              "snippets": [
+                "function Greeting({ name }) {",
+                "  return <h1>Hello, {name}!</h1>;",
+                "}"
+              ],
+              "correctOrder": [0, 1, 2],
+              "explanation": "Component function receives props object, destructures name, returns JSX with embedded expression.",
+              "hints": ["Props come as an object parameter", "Use curly braces for the expression"]
+            },
+            {
+              "type": "true_false",
+              "question": "JSX requires a single root element.",
+              "correctAnswerBool": true,
+              "explanation": "A component must return one root element. Use fragments <>...</> to group siblings without adding a DOM node.",
+              "hints": ["Fragments solve this", "They don't create extra DOM nodes"]
+            },
+            {
+              "type": "multiple_choice",
+              "question": "What is the correct way to write a self-closing div in JSX?",
+              "options": ["<div>", "<div />", "<div></div>", "<div />"],
+              "correctAnswer": 1,
+              "explanation": "All tags must be closed. Self-closing tags use />. A div with no children is <div />.",
+              "hints": ["HTML allows <div> but JSX doesn't", "It's the XML rule"]
+            },
+            {
+              "type": "fill_in_blank",
+              "question": "The attribute for CSS classes in JSX is ______.",
+              "acceptedAnswers": ["className"],
+              "explanation": "class is a reserved word in JavaScript. React uses className for the HTML class attribute.",
+              "hints": ["It's camelCase", "Not 'class'"]
+            }
+          ]
+        },
+        {
+          "id": "lesson_2",
+          "title": "Props and Composition",
+          "description": "Pass data between components",
+          "order": 2,
+          "estimatedMinutes": 15,
+          "xpReward": 30,
+          "steps": [
+            {
+              "type": "explanation",
+              "content": "Props (properties) are read-only data passed from parent to child components. They're like function parameters. Parent passes props as attributes: <Child name=\"Alex\" age={25} />. Child receives them as the first parameter: function Child({ name, age })."
+            },
+            {
+              "type": "explanation",
+              "content": "Children prop: content between opening and closing tags goes to props.children. Useful for wrapper components: <Card><h1>Title</h1><p>Content</p></Card>. Inside Card: props.children renders the passed content. Default props: Component.defaultProps = { prop: defaultValue }."
+            },
+            {
+              "type": "multiple_choice",
+              "question": "How do you pass a number as a prop?",
+              "options": ["age=\"25\"", "age={25}", "age='25'", "{age: 25}"],
+              "correctAnswer": 1,
+              "explanation": "Curly braces pass JavaScript expressions. age=\"25\" passes the string \"25\". age={25} passes the number 25.",
+              "hints": ["Strings use quotes", "Expressions use braces"]
+            },
+            {
+              "type": "fill_in_blank",
+              "question": "The special prop that contains content between component tags is ______.",
+              "acceptedAnswers": ["children"],
+              "explanation": "props.children contains whatever is between <Component> and </Component>. It enables composition patterns like layouts and wrappers.",
+              "hints": ["Think 'child elements'", "It's automatically provided"]
+            },
+            {
+              "type": "code_ordering",
+              "question": "Order these to create a Card component that wraps children",
+              "snippets": [
+                "function Card({ children }) {",
+                "  return (",
+                "    <div className=\"card\">",
+                "      {children}",
+                "    </div>",
+                "  );",
+                "}"
+              ],
+              "correctOrder": [0, 1, 2, 3, 4, 5, 6],
+              "explanation": "Destructure children from props, render it inside a wrapper div.",
+              "hints": ["children is a prop like any other", "Render it where you want the content to appear"]
+            },
+            {
+              "type": "true_false",
+              "question": "Props are immutable - a child component cannot modify its props.",
+              "correctAnswerBool": true,
+              "explanation": "Props flow one way: parent to child. They're read-only. To change data, the parent must update its state and pass new props.",
+              "hints": ["One-way data flow", "State goes down, events go up"]
+            },
+            {
+              "type": "multiple_choice",
+              "question": "What is the default value of props.children if nothing is passed?",
+              "options": ["undefined", "null", "[]", "''"],
+              "correctAnswer": 0,
+              "explanation": "If no children are passed, props.children is undefined. You can provide a default with defaultProps or default parameter: ({ children = 'Default' }).",
+              "hints": ["No children = no value", "It's not an empty array"]
+            }
+          ]
+        },
+        {
+          "id": "lesson_3",
+          "title": "State with useState",
+          "description": "Add interactivity with component state",
+          "order": 3,
+          "estimatedMinutes": 15,
+          "xpReward": 30,
+          "steps": [
+            {
+              "type": "explanation",
+              "content": "State lets components remember values between renders. useState hook: const [state, setState] = useState(initialValue). State can be any type. Updating state triggers a re-render. State updates are asynchronous and batched."
+            },
+            {
+              "type": "explanation",
+              "content": "Functional updates: setState(prev => prev + 1) uses the latest state. This avoids bugs with stale closures. For objects/arrays, always create new copies: setItems([...items, newItem]), setUser({...user, name: 'New'}). Never mutate state directly."
+            },
+            {
+              "type": "multiple_choice",
+              "question": "What does useState return?",
+              "options": ["A single value", "An array with two elements", "An object with get/set", "A function"],
+              "correctAnswer": 1,
+              "explanation": "useState returns [currentState, setterFunction]. Destructuring: const [count, setCount] = useState(0).",
+              "hints": ["Array destructuring", "Exactly two elements"]
+            },
+            {
+              "type": "fill_in_blank",
+              "question": "To update state based on the previous value, pass a ______ to the setter.",
+              "acceptedAnswers": ["function"],
+              "explanation": "setCount(prev => prev + 1) receives the latest state as argument. This is essential when updates depend on previous state.",
+              "hints": ["It's a callback function", "Called 'functional update'"]
+            },
+            {
+              "type": "code_ordering",
+              "question": "Order these to create a counter with increment button",
+              "snippets": [
+                "function Counter() {",
+                "  const [count, setCount] = useState(0);",
+                "  return (",
+                "    <button onClick={() => setCount(c => c + 1)}>",
+                "      Count: {count}",
+                "    </button>",
+                "  );",
+                "}"
+              ],
+              "correctOrder": [0, 1, 2, 3, 4, 5, 6, 7],
+              "explanation": "Declare state, use functional update in onClick, display count in JSX.",
+              "hints": ["useState at top of component", "Functional update for reliability"]
+            },
+            {
+              "type": "true_false",
+              "question": "State updates are synchronous - the state is immediately available after calling setState.",
+              "correctAnswerBool": false,
+              "explanation": "State updates are asynchronous and batched. The component re-renders with new state, but the current render still sees the old value.",
+              "hints": ["They're batched for performance", "Use functional updates if you need latest value"]
+            },
+            {
+              "type": "multiple_choice",
+              "question": "How do you correctly add an item to a state array?",
+              "options": [
+                "items.push(newItem); setItems(items);",
+                "setItems([...items, newItem]);",
+                "items = [...items, newItem];",
+                "setItems(items.push(newItem));"
+              ],
+              "correctAnswer": 1,
+              "explanation": "Create a new array with spread syntax. Never mutate state directly (push mutates). push returns new length, not array.",
+              "hints": ["Immutability is key", "Spread creates new array"]
+            }
+          ]
+        },
+        {
+          "id": "lesson_4",
+          "title": "Event Handling",
+          "description": "Respond to user interactions",
+          "order": 4,
+          "estimatedMinutes": 12,
+          "xpReward": 25,
+          "steps": [
+            {
+              "type": "explanation",
+              "content": "Event handlers in React use camelCase: onClick, onChange, onSubmit, onMouseEnter. They receive a SyntheticEvent (cross-browser wrapper). Access target value: e.target.value (inputs), e.target.checked (checkboxes). Prevent default: e.preventDefault()."
+            },
+            {
+              "type": "explanation",
+              "content": "Controlled components: input value controlled by state. value={state} onChange={e => setState(e.target.value)}. Uncontrolled: use ref to access DOM directly. Forms: onSubmit on <form>, preventDefault to stop page reload."
+            },
+            {
+              "type": "multiple_choice",
+              "question": "What is the correct handler for form submission?",
+              "options": ["onClick on <button>", "onSubmit on <form>", "onChange on <input>", "onEnter on <input>"],
+              "correctAnswer": 1,
+              "explanation": "Attach onSubmit to the <form> element. It fires on button click or Enter key. Call e.preventDefault() to prevent page reload.",
+              "hints": ["It's on the form, not the button", "Handles both click and Enter"]
+            },
+            {
+              "type": "fill_in_blank",
+              "question": "To access an input's value in onChange, use e.target.______.",
+              "acceptedAnswers": ["value"],
+              "explanation": "For text inputs, e.target.value gives the current string. For checkboxes, use e.target.checked (boolean).",
+              "hints": ["It's the same as vanilla JS", "Not 'text' or 'val'"]
+            },
+            {
+              "type": "code_ordering",
+              "question": "Order these to create a controlled input",
+              "snippets": [
+                "function Input() {",
+                "  const [text, setText] = useState('');",
+                "  return (",
+                "    <input",
+                "      value={text}",
+                "      onChange={e => setText(e.target.value)}",
+                "    />",
+                "  );",
+                "}"
+              ],
+              "correctOrder": [0, 1, 2, 3, 4, 5, 6, 7, 8],
+              "explanation": "State holds value, input shows value, onChange updates state - creating a controlled loop.",
+              "hints": ["Value comes from state", "onChange updates state"]
+            },
+            {
+              "type": "true_false",
+              "question": "Arrow functions in event handlers create a new function on every render.",
+              "correctAnswerBool": true,
+              "explanation": "onClick={() => doSomething()} creates a new function each render. For performance, use useCallback or define handler outside render (though rarely needed).",
+              "hints": ["New function each render", "Usually not a performance issue"]
+            },
+            {
+              "type": "multiple_choice",
+              "question": "What does e.preventDefault() do in a form submit handler?",
+              "options": [
+                "Stops event bubbling",
+                "Prevents the default browser action (page reload)",
+                "Stops other handlers from running",
+                "Prevents form validation"
+              ],
+              "correctAnswer": 1,
+              "explanation": "Forms reload the page by default on submit. e.preventDefault() stops this so React can handle submission.",
+              "hints": ["Default = browser's built-in behavior", "Not stopPropagation"]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,296 @@
+{
+  "courseId": "git_github",
+  "learningPathId": "programming_fundamentals",
+  "version": 1,
+  "modules": [
+    {
+      "id": "module_1",
+      "title": "Git Fundamentals",
+      "description": "Version control basics with Git",
+      "order": 1,
+      "lessons": [
+        {
+          "id": "lesson_1",
+          "title": "Introduction to Version Control",
+          "description": "Why Git and how it works",
+          "order": 1,
+          "estimatedMinutes": 10,
+          "xpReward": 25,
+          "steps": [
+            {
+              "type": "explanation",
+              "content": "Git is a distributed version control system. It tracks changes to files over time, allowing you to revert, compare, and collaborate. Every developer has a full copy of the repository (including history) on their machine. Changes are committed locally, then pushed to a remote (like GitHub)."
+            },
+            {
+              "type": "explanation",
+              "content": "Key concepts: repository (repo) = project folder with .git directory. commit = snapshot of changes with a message. branch = independent line of development. merge = combine branches. remote = server copy (GitHub, GitLab). HEAD = current commit pointer."
+            },
+            {
+              "type": "multiple_choice",
+              "question": "What does 'distributed' mean in distributed version control?",
+              "options": [
+                "Code is spread across multiple servers",
+                "Every developer has a full copy of the repository",
+                "Changes are automatically synced",
+                "Only one central server exists"
+              ],
+              "correctAnswer": 1,
+              "explanation": "Distributed means each clone contains the full history. You can work offline, commit locally, and sync later. No single point of failure.",
+              "hints": ["Full history locally", "Not just central server"]
+            },
+            {
+              "type": "fill_in_blank",
+              "question": "A ______ is a snapshot of your changes with a descriptive message.",
+              "acceptedAnswers": ["commit"],
+              "explanation": "A commit records changes to the repository. Each commit has a unique hash (SHA), author, timestamp, and message.",
+              "hints": ["Think 'commit to memory'", "It's a saved state"]
+            },
+            {
+              "type": "code_ordering",
+              "question": "Order these commands to initialize a Git repo and make first commit",
+              "snippets": [
+                "git init",
+                "git add .",
+                "git commit -m 'Initial commit'"
+              ],
+              "correctOrder": [0, 1, 2],
+              "explanation": "Initialize repo, stage all files, commit with message.",
+              "hints": ["Init first", "Add before commit"]
+            },
+            {
+              "type": "true_false",
+              "question": "Git tracks changes to individual files, not the entire project.",
+              "correctAnswerBool": false,
+              "explanation": "Git tracks the entire project as a series of snapshots. Each commit represents the state of all tracked files at that point.",
+              "hints": ["Project-wide snapshots", "Not per-file"]
+            },
+            {
+              "type": "multiple_choice",
+              "question": "What does HEAD refer to in Git?",
+              "options": [
+                "The latest commit on the current branch",
+                "The first commit ever made",
+                "The remote repository",
+                "The staging area"
+              ],
+              "correctAnswer": 0,
+              "explanation": "HEAD is a pointer to the current commit (usually the tip of the current branch). Detached HEAD means pointing directly to a commit, not a branch.",
+              "hints": ["Current position", "Where you are right now"]
+            }
+          ]
+        },
+        {
+          "id": "lesson_2",
+          "title": "Basic Git Workflow",
+          "description": "Stage, commit, and view history",
+          "order": 2,
+          "estimatedMinutes": 15,
+          "xpReward": 30,
+          "steps": [
+            {
+              "type": "explanation",
+              "content": "Git workflow: modify files -> git add (stage) -> git commit (save). Staging area (index) lets you choose which changes go into the next commit. git status shows working tree state. git diff shows unstaged changes. git diff --staged shows staged changes."
+            },
+            {
+              "type": "explanation",
+              "content": "Viewing history: git log shows commit history. git log --oneline for compact view. git show <commit> shows details of a commit. git log -p shows patches. .gitignore lists files to ignore (build artifacts, secrets, dependencies)."
+            },
+            {
+              "type": "multiple_choice",
+              "question": "What does git add . do?",
+              "options": [
+                "Commits all changes",
+                "Stages all new and modified files",
+                "Adds a remote repository",
+                "Creates a new branch"
+              ],
+              "correctAnswer": 1,
+              "explanation": "git add stages changes for the next commit. The dot means all files in current directory and subdirectories. It doesn't commit.",
+              "hints": ["Staging, not committing", "Dot = current directory"]
+            },
+            {
+              "type": "fill_in_blank",
+              "question": "To see a compact one-line history, use git log --______.",
+              "acceptedAnswers": ["oneline"],
+              "explanation": "git log --oneline shows each commit on one line with abbreviated hash and message.",
+              "hints": ["One line per commit", "Abbreviated hash"]
+            },
+            {
+              "type": "code_ordering",
+              "question": "Order to stage a specific file and commit with message",
+              "snippets": [
+                "git add README.md",
+                "git commit -m 'Add README'"
+              ],
+              "correctOrder": [0, 1],
+              "explanation": "Stage the specific file, then commit with a descriptive message.",
+              "hints": ["Stage first", "Commit second"]
+            },
+            {
+              "type": "true_false",
+              "question": "git diff shows changes that are already staged.",
+              "correctAnswerBool": false,
+              "explanation": "git diff shows unstaged changes. git diff --staged (or --cached) shows staged changes.",
+              "hints": ["Unstaged by default", "Use --staged for staged"]
+            },
+            {
+              "type": "multiple_choice",
+              "question": "What should you add to .gitignore?",
+              "options": [
+                "Source code files",
+                "Build artifacts and dependencies",
+                "README.md",
+                "Git configuration"
+              ],
+              "correctAnswer": 1,
+              "explanation": "Ignore build outputs (dist/, build/), dependencies (node_modules/, __pycache__/), secrets (.env), and IDE files (.vscode/). Never ignore source code.",
+              "hints": ["Generated files", "Not source code"]
+            }
+          ]
+        },
+        {
+          "id": "lesson_3",
+          "title": "Branching and Merging",
+          "description": "Work on features independently",
+          "order": 3,
+          "estimatedMinutes": 15,
+          "xpReward": 30,
+          "steps": [
+            {
+              "type": "explanation",
+              "content": "Branches let you develop features in isolation. git branch lists branches. git branch <name> creates branch. git checkout <name> or git switch <name> switches branches. git checkout -b <name> creates and switches. Main branch is typically 'main' or 'master'."
+            },
+            {
+              "type": "explanation",
+              "content": "Merging combines branches. git merge <branch> merges into current branch. Fast-forward merge if no divergence. Merge commit if branches diverged. Conflicts occur when same lines changed differently - must resolve manually. git status shows conflicted files. Edit files, then git add, git commit."
+            },
+            {
+              "type": "multiple_choice",
+              "question": "What command creates a new branch AND switches to it?",
+              "options": [
+                "git branch feature",
+                "git checkout feature",
+                "git checkout -b feature",
+                "git switch feature"
+              ],
+              "correctAnswer": 2,
+              "explanation": "git checkout -b <name> creates and switches in one command. git switch -c <name> does the same (newer command).",
+              "hints": ["-b flag = create", "Combines two operations"]
+            },
+            {
+              "type": "fill_in_blank",
+              "question": "When merging, if the same lines were changed in both branches, Git creates a ______.",
+              "acceptedAnswers": ["conflict"],
+              "explanation": "Git can't automatically merge when both branches modified the same lines. You must manually resolve by editing the file, then stage and commit.",
+              "hints": ["Same lines, different changes", "Manual resolution needed"]
+            },
+            {
+              "type": "code_ordering",
+              "question": "Order to merge a feature branch into main",
+              "snippets": [
+                "git checkout main",
+                "git merge feature",
+                "git push origin main"
+              ],
+              "correctOrder": [0, 1, 2],
+              "explanation": "Switch to target branch (main), merge source branch (feature), push updated main.",
+              "hints": ["Be on the branch you're merging INTO", "Then merge the other branch"]
+            },
+            {
+              "type": "true_false",
+              "question": "A fast-forward merge creates a new merge commit.",
+              "correctAnswerBool": false,
+              "explanation": "Fast-forward merge simply moves the branch pointer forward - no merge commit created. Only when branches diverged does a merge commit appear.",
+              "hints": ["Pointer just moves forward", "No divergence = no merge commit"]
+            },
+            {
+              "type": "multiple_choice",
+              "question": "After resolving a merge conflict, what commands complete the merge?",
+              "options": [
+                "git add <file>; git commit",
+                "git commit --amend",
+                "git merge --continue",
+                "git reset HEAD"
+              ],
+              "correctAnswer": 0,
+              "explanation": "Stage the resolved file(s) with git add, then git commit to complete the merge. Git will suggest a merge commit message.",
+              "hints": ["Stage resolved files", "Then commit"]
+            }
+          ]
+        },
+        {
+          "id": "lesson_4",
+          "title": "GitHub Collaboration",
+          "description": "Remote repositories and pull requests",
+          "order": 4,
+          "estimatedMinutes": 15,
+          "xpReward": 30,
+          "steps": [
+            {
+              "type": "explanation",
+              "content": "GitHub hosts Git repositories remotely. git remote -v lists remotes. git remote add origin <url> adds remote. git push -u origin main pushes and sets upstream. git pull fetches and merges. git fetch downloads without merging."
+            },
+            {
+              "type": "explanation",
+              "content": "Pull Requests (PRs) are GitHub's code review workflow. Fork repo -> clone fork -> create branch -> push branch -> open PR from fork to upstream. Reviewers comment, suggest changes. CI runs tests. Merge when approved. Keep fork updated with upstream."
+            },
+            {
+              "type": "multiple_choice",
+              "question": "What does git push -u origin main do?",
+              "options": [
+                "Pushes main branch and sets upstream tracking",
+                "Creates a new branch called main",
+                "Pulls changes from origin",
+                "Deletes the main branch"
+              ],
+              "correctAnswer": 0,
+              "explanation": "-u (--set-upstream) links local main to origin/main. Future git push/pull work without arguments.",
+              "hints": ["-u = set upstream", "Links local and remote"]
+            },
+            {
+              "type": "fill_in_blank",
+              "question": "The GitHub workflow for contributing to open source is called a ______ ______.",
+              "acceptedAnswers": ["pull request", "PR"],
+              "explanation": "Pull Request (PR) is a request to merge your branch into another repository. It enables code review and discussion before merging.",
+              "hints": ["Two words", "Often abbreviated PR"]
+            },
+            {
+              "type": "code_ordering",
+              "question": "Order to fork, clone, branch, and push for a PR",
+              "snippets": [
+                "Fork on GitHub",
+                "git clone <your-fork-url>",
+                "git checkout -b my-feature",
+                "git push origin my-feature",
+                "Open Pull Request"
+              ],
+              "correctOrder": [0, 1, 2, 3, 4],
+              "explanation": "Fork first, clone your fork, create feature branch, push to your fork, open PR to upstream.",
+              "hints": ["Fork before clone", "Push to YOUR fork"]
+            },
+            {
+              "type": "true_false",
+              "question": "git pull is equivalent to git fetch followed by git merge.",
+              "correctAnswerBool": true,
+              "explanation": "git pull = git fetch + git merge. It downloads changes and immediately tries to merge them. git fetch alone is safer for reviewing before merging.",
+              "hints": ["Two commands in one", "Fetch then merge"]
+            },
+            {
+              "type": "multiple_choice",
+              "question": "To update your fork with changes from the original (upstream) repo:",
+              "options": [
+                "git pull upstream main",
+                "git push upstream main",
+                "git fetch origin",
+                "git merge origin/main"
+              ],
+              "correctAnswer": 0,
+              "explanation": "Add upstream remote: git remote add upstream <original-url>. Then git fetch upstream && git merge upstream/main (or git pull upstream main).",
+              "hints": ["Upstream = original repo", "Pull from upstream"]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

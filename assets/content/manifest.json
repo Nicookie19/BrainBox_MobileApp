@@ -1,0 +1,28 @@
+{
+  "learningPaths": [
+    {
+      "id": "web_development",
+      "title": "Web Development",
+      "description": "Build modern websites and web applications from scratch",
+      "iconName": "web",
+      "courseIds": ["frontend_foundations", "javascript_essentials", "react_basics"],
+      "order": 1
+    },
+    {
+      "id": "programming_fundamentals",
+      "title": "Programming Fundamentals",
+      "description": "Master core programming concepts and tools every developer needs",
+      "iconName": "code",
+      "courseIds": ["python_essentials", "data_structures", "git_github"],
+      "order": 2
+    },
+    {
+      "id": "backend_cloud",
+      "title": "Backend & Cloud",
+      "description": "Learn server-side development, databases, and cloud fundamentals",
+      "iconName": "cloud",
+      "courseIds": ["sql_basics", "http_apis", "machine_learning_basics"],
+      "order": 3
+    }
+  ]
+}

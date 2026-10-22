@@ -1,0 +1,290 @@
+{
+  "courseId": "http_apis",
+  "learningPathId": "backend_cloud",
+  "version": 1,
+  "modules": [
+    {
+      "id": "module_1",
+      "title": "HTTP and REST APIs",
+      "description": "Understand web communication and API design",
+      "order": 1,
+      "lessons": [
+        {
+          "id": "lesson_1",
+          "title": "HTTP Fundamentals",
+          "description": "How the web communicates",
+          "order": 1,
+          "estimatedMinutes": 12,
+          "xpReward": 25,
+          "steps": [
+            {
+              "type": "explanation",
+              "content": "HTTP (HyperText Transfer Protocol) is the foundation of web communication. Client (browser, app) sends a request to a server, which responds. Request: method (GET, POST, PUT, DELETE), URL, headers, optional body. Response: status code, headers, body."
+            },
+            {
+              "type": "explanation",
+              "content": "Common methods: GET (retrieve), POST (create), PUT/PATCH (update), DELETE (remove). Status codes: 2xx success (200 OK, 201 Created), 3xx redirect (301, 302), 4xx client error (400 Bad Request, 401 Unauthorized, 404 Not Found), 5xx server error (500 Internal Server Error)."
+            },
+            {
+              "type": "multiple_choice",
+              "question": "Which HTTP method is used to retrieve a resource?",
+              "options": ["POST", "GET", "PUT", "DELETE"],
+              "correctAnswer": 1,
+              "explanation": "GET requests data from a server. It should be safe (no side effects) and idempotent (multiple calls = same result).",
+              "hints": ["Retrieve = GET", "Safe and idempotent"]
+            },
+            {
+              "type": "fill_in_blank",
+              "question": "The status code for 'Not Found' is ______.",
+              "acceptedAnswers": ["404"],
+              "explanation": "404 means the requested resource doesn't exist on the server.",
+              "hints": ["Most famous error code", "Client error (4xx)"]
+            },
+            {
+              "type": "code_ordering",
+              "question": "Order the parts of an HTTP request",
+              "snippets": [
+                "GET /api/users HTTP/1.1",
+                "Host: api.example.com",
+                "Accept: application/json",
+                "",
+                "{}"
+              ],
+              "correctOrder": [0, 1, 2, 3, 4],
+              "explanation": "Request line -> headers -> blank line -> optional body. GET requests typically have no body.",
+              "hints": ["Request line first", "Body last"]
+            },
+            {
+              "type": "true_false",
+              "question": "POST requests should be idempotent.",
+              "correctAnswerBool": false,
+              "explanation": "POST is NOT idempotent - multiple identical POST requests create multiple resources. PUT and DELETE are idempotent.",
+              "hints": ["POST creates new", "Each call = new resource"]
+            },
+            {
+              "type": "multiple_choice",
+              "question": "What does a 201 Created status code mean?",
+              "options": [
+                "Request succeeded and resource was created",
+                "Request succeeded but no content",
+                "Resource moved permanently",
+                "Server error"
+              ],
+              "correctAnswer": 0,
+              "explanation": "201 is the standard success code for POST requests that create a new resource. Response often includes Location header with new resource URL.",
+              "hints": ["Creation success", "POST response"]
+            }
+          ]
+        },
+        {
+          "id": "lesson_2",
+          "title": "REST API Design",
+          "description": "Build consistent, predictable APIs",
+          "order": 2,
+          "estimatedMinutes": 15,
+          "xpReward": 30,
+          "steps": [
+            {
+              "type": "explanation",
+              "content": "REST (Representational State Transfer) is an architectural style for APIs. Resources are nouns (users, posts), not verbs. URLs represent resources: GET /users (list), GET /users/123 (single), POST /users (create), PUT /users/123 (update), DELETE /users/123 (delete)."
+            },
+            {
+              "type": "explanation",
+              "content": "Use plural nouns for collections (/users not /user). Version APIs in URL (/api/v1/users). Use HTTP status codes correctly. Return JSON. Filter/sort/paginate with query params: GET /users?page=2&limit=20&sort=name. Nested resources: /users/123/posts."
+            },
+            {
+              "type": "multiple_choice",
+              "question": "Which URL follows REST conventions for getting a specific user?",
+              "options": ["GET /getUser?id=123", "GET /users/123", "GET /user/123", "POST /users/123"],
+              "correctAnswer": 1,
+              "explanation": "REST uses nouns (plural) and HTTP methods. GET /users/123 retrieves user 123. No verbs in URL.",
+              "hints": ["Nouns not verbs", "Plural collection name"]
+            },
+            {
+              "type": "fill_in_blank",
+              "question": "To create a new user, send a ______ request to /users.",
+              "acceptedAnswers": ["POST"],
+              "explanation": "POST to collection URL creates a new resource. The server assigns the ID.",
+              "hints": ["Create = POST", "To the collection URL"]
+            },
+            {
+              "type": "code_ordering",
+              "question": "Order these REST endpoints for a posts resource",
+              "snippets": [
+                "GET    /posts          # List posts",
+                "POST   /posts          # Create post",
+                "GET    /posts/1        # Get post 1",
+                "PUT    /posts/1        # Update post 1",
+                "DELETE /posts/1        # Delete post 1"
+              ],
+              "correctOrder": [0, 1, 2, 3, 4],
+              "explanation": "Standard CRUD mapping: list, create, read, update, delete.",
+              "hints": ["Collection for list/create", "Item for read/update/delete"]
+            },
+            {
+              "type": "true_false",
+              "question": "PUT replaces the entire resource; PATCH partially updates it.",
+              "correctAnswerBool": true,
+              "explanation": "PUT expects full resource representation (replaces). PATCH applies partial updates. Both are idempotent.",
+              "hints": ["PUT = replace all", "PATCH = partial"]
+            },
+            {
+              "type": "multiple_choice",
+              "question": "How do you filter results in a REST API?",
+              "options": [
+                "POST /users/filter",
+                "GET /users?active=true",
+                "GET /users/filter/active",
+                "PUT /users with filter body"
+              ],
+              "correctAnswer": 1,
+              "explanation": "Query parameters for filtering, sorting, pagination: GET /users?active=true&role=admin. Keeps URL clean.",
+              "hints": ["Query parameters", "Not in URL path"]
+            }
+          ]
+        },
+        {
+          "id": "lesson_3",
+          "title": "Authentication and Security",
+          "description": "Secure your APIs",
+          "order": 3,
+          "estimatedMinutes": 15,
+          "xpReward": 30,
+          "steps": [
+            {
+              "type": "explanation",
+              "content": "API authentication: API keys (simple, in header/query), Bearer tokens (JWT in Authorization header), OAuth 2.0 (delegated access), Session cookies (traditional web). Always use HTTPS. Never put secrets in URLs."
+            },
+            {
+              "type": "explanation",
+              "content": "Authorization: after authentication, check permissions. RBAC (Role-Based Access Control): user has role, role has permissions. ABAC (Attribute-Based): policies based on attributes. Rate limiting prevents abuse. CORS controls cross-origin requests. Validate and sanitize all input."
+            },
+            {
+              "type": "multiple_choice",
+              "question": "Where should a JWT be sent in an HTTP request?",
+              "options": [
+                "In the URL as a query parameter",
+                "In the Authorization header as Bearer token",
+                "In the request body",
+                "In a cookie named 'jwt'"
+              ],
+              "correctAnswer": 1,
+              "explanation": "Standard: Authorization: Bearer <token>. Keeps token out of URLs (logs) and separates from body.",
+              "hints": ["Authorization header", "Bearer scheme"]
+            },
+            {
+              "type": "fill_in_blank",
+              "question": "The HTTP header for cross-origin resource sharing is ______.",
+              "acceptedAnswers": ["CORS", "Access-Control-Allow-Origin"],
+              "explanation": "CORS headers (Access-Control-Allow-Origin, etc.) control which origins can access your API. Set by server.",
+              "hints": ["Cross-Origin Resource Sharing", "Allow-Origin header"]
+            },
+            {
+              "type": "code_ordering",
+              "question": "Order to make an authenticated API request with fetch",
+              "snippets": [
+                "fetch('/api/user', {",
+                "  headers: {",
+                "    'Authorization': 'Bearer ' + token",
+                "  }",
+                "})"
+              ],
+              "correctOrder": [0, 1, 2, 3, 4],
+              "explanation": "Include Authorization header with Bearer token in fetch options.",
+              "hints": ["Headers object", "Bearer prefix"]
+            },
+            {
+              "type": "true_false",
+              "question": "Rate limiting should only apply to authenticated endpoints.",
+              "correctAnswerBool": false,
+              "explanation": "Rate limit ALL endpoints (including auth/login) to prevent brute force and DoS. Different limits for different endpoint types.",
+              "hints": ["Everything needs limits", "Especially auth endpoints"]
+            },
+            {
+              "type": "multiple_choice",
+              "question": "What is the purpose of a refresh token in OAuth 2.0?",
+              "options": [
+                "To refresh the access token when it expires",
+                "To revoke user access",
+                "To refresh the page",
+                "To reset the password"
+              ],
+              "correctAnswer": 0,
+              "explanation": "Access tokens are short-lived. Refresh tokens are long-lived and used to obtain new access tokens without re-authentication.",
+              "hints": ["Short-lived access tokens", "Long-lived refresh tokens"]
+            }
+          ]
+        },
+        {
+          "id": "lesson_4",
+          "title": "Working with JSON APIs",
+          "description": "Request, response, and error handling",
+          "order": 4,
+          "estimatedMinutes": 12,
+          "xpReward": 25,
+          "steps": [
+            {
+              "type": "explanation",
+              "content": "JSON (JavaScript Object Notation) is the standard API data format. Request: Content-Type: application/json header. Body: JSON.stringify(data). Response: check ok status, parse with response.json(). Handle errors: network errors, HTTP errors, validation errors."
+            },
+            {
+              "type": "explanation",
+              "content": "Error responses should be consistent: { error: { code: 'VALIDATION_ERROR', message: 'Invalid input', details: [...] } }. Client-side: try/catch for network, check response.ok for HTTP errors, parse error body for details. Retry with exponential backoff for 5xx/429."
+            },
+            {
+              "type": "multiple_choice",
+              "question": "What Content-Type header should you send with JSON data?",
+              "options": ["text/plain", "application/json", "application/x-www-form-urlencoded", "multipart/form-data"],
+              "correctAnswer": 1,
+              "explanation": "application/json tells the server the body contains JSON. Server uses this to parse correctly.",
+              "hints": ["Standard for JSON", "Not form data"]
+            },
+            {
+              "type": "fill_in_blank",
+              "question": "To parse a JSON response in JavaScript, use response.______().",
+              "acceptedAnswers": ["json"],
+              "explanation": "response.json() parses the response body as JSON and returns a promise resolving to the parsed object.",
+              "hints": ["Method on Response", "Returns a promise"]
+            },
+            {
+              "type": "code_ordering",
+              "question": "Order to POST JSON data and handle response",
+              "snippets": [
+                "const response = await fetch('/api/users', {",
+                "  method: 'POST',",
+                "  headers: { 'Content-Type': 'application/json' },",
+                "  body: JSON.stringify({ name: 'Alex' })",
+                "});",
+                "if (!response.ok) throw new Error('Failed');",
+                "const user = await response.json();"
+              ],
+              "correctOrder": [0, 1, 2, 3, 4, 5, 6],
+              "explanation": "Fetch with POST, JSON headers, stringified body. Check ok, then parse JSON.",
+              "hints": ["POST method", "Parse JSON"]
+            },
+            {
+              "type": "true_false",
+              "question": "A 422 Unprocessable Entity status means the server understood the request but validation failed.",
+              "correctAnswerBool": true,
+              "explanation": "422 is used for semantic errors - request is well-formed but fails business logic/validation. Different from 400 (malformed request).",
+              "hints": ["Validation error", "Well-formed but invalid"]
+            },
+            {
+              "type": "multiple_choice",
+              "question": "What should you do on a 500 Internal Server Error?",
+              "options": [
+                "Retry immediately",
+                "Retry with exponential backoff",
+                "Show 'Invalid input' to user",
+                "Clear user session"
+              ],
+              "correctAnswer": 1,
+              "explanation": "5xx errors are server-side. Retry with exponential backoff (wait longer between retries). Don't retry immediately - adds load.",
+              "hints": ["Server error", "Back off and retry"]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -28,6 +28,7 @@ flutter:
 
   assets:
     - assets/lessons/
+    - assets/content/
 
   fonts:
     - family: Space Grotesk
