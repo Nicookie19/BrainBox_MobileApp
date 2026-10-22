@@ -81,9 +81,13 @@ class _ExploreScreenState extends State<ExploreScreen> {
                     return _buildEmptyState();
                   }
                   return CourseCard(
-                    course: filteredCourses[index],
-                    onTap: () => context.go('/course/${filteredCourses[index].id}'),
-                  ).animate().fadeIn(delay: (100 + index * 50).ms).slideY(begin: 0.2, end: 0);
+                        course: filteredCourses[index],
+                        onTap: () =>
+                            context.go('/course/${filteredCourses[index].id}'),
+                      )
+                      .animate()
+                      .fadeIn(delay: (100 + index * 50).ms)
+                      .slideY(begin: 0.2, end: 0);
                 },
               ),
             ),
@@ -108,9 +112,9 @@ class _ExploreScreenState extends State<ExploreScreen> {
         const SizedBox(height: 8),
         Text(
           'Explore 50+ courses across 8 categories',
-          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-            color: AppColors.textSecondary,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyLarge?.copyWith(color: AppColors.textSecondary),
         ),
       ],
     ).animate().fadeIn().slideY(begin: 0.2, end: 0);
@@ -161,23 +165,30 @@ class _ExploreScreenState extends State<ExploreScreen> {
   Widget _buildResultsCount(BuildContext context, int count) {
     return Text(
       '$count learning path${count == 1 ? '' : 's'} found',
-      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-        fontWeight: FontWeight.w700,
-      ),
+      style: Theme.of(
+        context,
+      ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
     ).animate().fadeIn(delay: 500.ms);
   }
 
   List<Course> _filterCourses(List<Course> courses) {
     return courses.where((course) {
-      final matchesSearch = _searchQuery.isEmpty ||
+      final matchesSearch =
+          _searchQuery.isEmpty ||
           course.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          course.shortDescription.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          course.tags.any((tag) => tag.toLowerCase().contains(_searchQuery.toLowerCase()));
+          course.shortDescription.toLowerCase().contains(
+            _searchQuery.toLowerCase(),
+          ) ||
+          course.tags.any(
+            (tag) => tag.toLowerCase().contains(_searchQuery.toLowerCase()),
+          );
 
-      final matchesCategory = _selectedCategory == 'All' ||
+      final matchesCategory =
+          _selectedCategory == 'All' ||
           course.category.title == _selectedCategory;
 
-      final matchesDifficulty = _selectedDifficulty == null ||
+      final matchesDifficulty =
+          _selectedDifficulty == null ||
           course.difficulty == _selectedDifficulty;
 
       return matchesSearch && matchesCategory && matchesDifficulty;
@@ -194,24 +205,20 @@ class _ExploreScreenState extends State<ExploreScreen> {
       ),
       child: Column(
         children: [
-          Icon(
-            Icons.search_off_rounded,
-            size: 64,
-            color: AppColors.textMuted,
-          ),
+          Icon(Icons.search_off_rounded, size: 64, color: AppColors.textMuted),
           const SizedBox(height: 16),
           Text(
             'No courses match your filters',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 8),
           Text(
             'Try adjusting your search or filters',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: AppColors.textSecondary,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
             textAlign: TextAlign.center,
           ),
         ],
@@ -253,7 +260,8 @@ class _LoadingSkeleton extends StatelessWidget {
           sliver: SliverList.separated(
             itemCount: 5,
             separatorBuilder: (_, _) => const SizedBox(height: 12),
-            itemBuilder: (_, _) => _skeletonBox(width: double.infinity, height: 140),
+            itemBuilder: (_, _) =>
+                _skeletonBox(width: double.infinity, height: 140),
           ),
         ),
       ],

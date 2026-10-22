@@ -70,13 +70,16 @@ class SettingsScreen extends StatelessWidget {
   Widget _buildSectionTitle(BuildContext context, String title) {
     return Text(
       title,
-      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-        fontWeight: FontWeight.w700,
-      ),
+      style: Theme.of(
+        context,
+      ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
     ).animate().fadeIn().slideY(begin: 0.1, end: 0);
   }
 
-  Widget _buildThemeSelector(BuildContext context, UserPreferences preferences) {
+  Widget _buildThemeSelector(
+    BuildContext context,
+    UserPreferences preferences,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -95,7 +98,11 @@ class SettingsScreen extends StatelessWidget {
                   color: AppColors.accentPrimarySoft,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(Icons.palette_outlined, color: AppColors.accentPrimary, size: 22),
+                child: Icon(
+                  Icons.palette_outlined,
+                  color: AppColors.accentPrimary,
+                  size: 22,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -162,10 +169,14 @@ class SettingsScreen extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.accentPrimarySoft : AppColors.bgTertiary,
+          color: isSelected
+              ? AppColors.accentPrimarySoft
+              : AppColors.bgTertiary,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? AppColors.accentPrimary : AppColors.borderDefault,
+            color: isSelected
+                ? AppColors.accentPrimary
+                : AppColors.borderDefault,
             width: 2,
           ),
         ),
@@ -173,7 +184,9 @@ class SettingsScreen extends StatelessWidget {
           children: [
             Icon(
               icon,
-              color: isSelected ? AppColors.accentPrimary : AppColors.textSecondary,
+              color: isSelected
+                  ? AppColors.accentPrimary
+                  : AppColors.textSecondary,
               size: 28,
             ),
             const SizedBox(height: 8),
@@ -181,7 +194,9 @@ class SettingsScreen extends StatelessWidget {
               label,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 fontWeight: FontWeight.w600,
-                color: isSelected ? AppColors.accentPrimary : AppColors.textPrimary,
+                color: isSelected
+                    ? AppColors.accentPrimary
+                    : AppColors.textPrimary,
               ),
             ),
           ],
@@ -190,8 +205,11 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  Future<void> _updateTheme(BuildContext context, bool useSystem,
-      {bool forceDark = false}) async {
+  Future<void> _updateTheme(
+    BuildContext context,
+    bool useSystem, {
+    bool forceDark = false,
+  }) async {
     final provider = context.read<AppProvider>();
     if (provider.profile == null) return;
 
@@ -199,12 +217,17 @@ class SettingsScreen extends StatelessWidget {
       darkMode: forceDark || !useSystem,
     );
 
-    final updatedProfile = provider.profile!.copyWith(preferences: updatedPreferences);
+    final updatedProfile = provider.profile!.copyWith(
+      preferences: updatedPreferences,
+    );
     await StorageService.saveUserProfile(updatedProfile);
     provider.initialize();
   }
 
-  Widget _buildNotificationToggles(BuildContext context, UserPreferences preferences) {
+  Widget _buildNotificationToggles(
+    BuildContext context,
+    UserPreferences preferences,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -220,7 +243,10 @@ class SettingsScreen extends StatelessWidget {
             'Receive notifications about streaks, new content, and reminders',
             Icons.notifications_outlined,
             preferences.pushNotifications,
-            (value) => _updateNotificationPreference(context, pushNotifications: value),
+            (value) => _updateNotificationPreference(
+              context,
+              pushNotifications: value,
+            ),
           ),
           const Divider(height: 1, color: AppColors.borderDefault),
           _buildToggleTile(
@@ -229,7 +255,10 @@ class SettingsScreen extends StatelessWidget {
             'Receive weekly progress summaries and updates via email',
             Icons.email_outlined,
             preferences.emailNotifications,
-            (value) => _updateNotificationPreference(context, emailNotifications: value),
+            (value) => _updateNotificationPreference(
+              context,
+              emailNotifications: value,
+            ),
           ),
           const Divider(height: 1, color: AppColors.borderDefault),
           _buildToggleTile(
@@ -238,14 +267,20 @@ class SettingsScreen extends StatelessWidget {
             'Get reminded to practice at your preferred time',
             Icons.alarm_outlined,
             preferences.notificationsEnabled,
-            (value) => _updateNotificationPreference(context, notificationsEnabled: value),
+            (value) => _updateNotificationPreference(
+              context,
+              notificationsEnabled: value,
+            ),
           ),
         ],
       ),
     ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.1, end: 0);
   }
 
-  Widget _buildPreferenceToggles(BuildContext context, UserPreferences preferences) {
+  Widget _buildPreferenceToggles(
+    BuildContext context,
+    UserPreferences preferences,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -315,15 +350,15 @@ class SettingsScreen extends StatelessWidget {
       ),
       title: Text(
         title,
-        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-          fontWeight: FontWeight.w600,
-        ),
+        style: Theme.of(
+          context,
+        ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
       ),
       subtitle: Text(
         subtitle,
-        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-          color: AppColors.textSecondary,
-        ),
+        style: Theme.of(
+          context,
+        ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
       ),
       trailing: Switch(
         value: value,
@@ -334,40 +369,57 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  Future<void> _updateNotificationPreference(BuildContext context,
-      {bool? notificationsEnabled,
-      bool? emailNotifications,
-      bool? pushNotifications}) async {
+  Future<void> _updateNotificationPreference(
+    BuildContext context, {
+    bool? notificationsEnabled,
+    bool? emailNotifications,
+    bool? pushNotifications,
+  }) async {
     final provider = context.read<AppProvider>();
     if (provider.profile == null) return;
 
     final updatedPreferences = provider.profile!.preferences.copyWith(
-      notificationsEnabled: notificationsEnabled ?? provider.profile!.preferences.notificationsEnabled,
-      emailNotifications: emailNotifications ?? provider.profile!.preferences.emailNotifications,
-      pushNotifications: pushNotifications ?? provider.profile!.preferences.pushNotifications,
+      notificationsEnabled:
+          notificationsEnabled ??
+          provider.profile!.preferences.notificationsEnabled,
+      emailNotifications:
+          emailNotifications ??
+          provider.profile!.preferences.emailNotifications,
+      pushNotifications:
+          pushNotifications ?? provider.profile!.preferences.pushNotifications,
     );
 
-    final updatedProfile = provider.profile!.copyWith(preferences: updatedPreferences);
+    final updatedProfile = provider.profile!.copyWith(
+      preferences: updatedPreferences,
+    );
     await StorageService.saveUserProfile(updatedProfile);
     provider.initialize();
   }
 
-  Future<void> _updatePreference(BuildContext context,
-      {bool? hapticFeedback,
-      bool? reduceMotion,
-      bool? autoPlayVideos,
-      bool? downloadOnWifiOnly}) async {
+  Future<void> _updatePreference(
+    BuildContext context, {
+    bool? hapticFeedback,
+    bool? reduceMotion,
+    bool? autoPlayVideos,
+    bool? downloadOnWifiOnly,
+  }) async {
     final provider = context.read<AppProvider>();
     if (provider.profile == null) return;
 
     final updatedPreferences = provider.profile!.preferences.copyWith(
-      hapticFeedback: hapticFeedback ?? provider.profile!.preferences.hapticFeedback,
+      hapticFeedback:
+          hapticFeedback ?? provider.profile!.preferences.hapticFeedback,
       reduceMotion: reduceMotion ?? provider.profile!.preferences.reduceMotion,
-      autoPlayVideos: autoPlayVideos ?? provider.profile!.preferences.autoPlayVideos,
-      downloadOnWifiOnly: downloadOnWifiOnly ?? provider.profile!.preferences.downloadOnWifiOnly,
+      autoPlayVideos:
+          autoPlayVideos ?? provider.profile!.preferences.autoPlayVideos,
+      downloadOnWifiOnly:
+          downloadOnWifiOnly ??
+          provider.profile!.preferences.downloadOnWifiOnly,
     );
 
-    final updatedProfile = provider.profile!.copyWith(preferences: updatedPreferences);
+    final updatedProfile = provider.profile!.copyWith(
+      preferences: updatedPreferences,
+    );
     await StorageService.saveUserProfile(updatedProfile);
     provider.initialize();
   }
@@ -387,7 +439,12 @@ class SettingsScreen extends StatelessWidget {
             subtitle: 'Download your learning data and progress',
             onTap: () => _showExportDialog(context),
           ),
-          const Divider(height: 1, color: AppColors.borderDefault, indent: 56, endIndent: 16),
+          const Divider(
+            height: 1,
+            color: AppColors.borderDefault,
+            indent: 56,
+            endIndent: 16,
+          ),
           MenuRow(
             icon: Icons.delete_outline_rounded,
             title: 'Reset Progress',
@@ -416,9 +473,9 @@ class SettingsScreen extends StatelessWidget {
           children: [
             Text(
               'Your data has been prepared for export. In a full implementation, this would save a JSON file to your device.',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppColors.textSecondary,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
             ),
             const SizedBox(height: 16),
             Container(
@@ -447,7 +504,10 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  Future<void> _showResetProgressDialog(BuildContext context, AppProvider provider) async {
+  Future<void> _showResetProgressDialog(
+    BuildContext context,
+    AppProvider provider,
+  ) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -456,9 +516,9 @@ class SettingsScreen extends StatelessWidget {
         title: const Text('Reset All Progress?'),
         content: Text(
           'This will permanently delete your XP, streak, completed lessons, achievements, and course progress. This action cannot be undone.',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: AppColors.textSecondary,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
         ),
         actions: [
           TextButton(
@@ -502,21 +562,36 @@ class SettingsScreen extends StatelessWidget {
             subtitle: 'BrainBox v1.0.0',
             onTap: () {},
           ),
-          const Divider(height: 1, color: AppColors.borderDefault, indent: 56, endIndent: 16),
+          const Divider(
+            height: 1,
+            color: AppColors.borderDefault,
+            indent: 56,
+            endIndent: 16,
+          ),
           MenuRow(
             icon: Icons.article_outlined,
             title: 'Terms of Service',
             subtitle: 'Read our terms and conditions',
             onTap: () {},
           ),
-          const Divider(height: 1, color: AppColors.borderDefault, indent: 56, endIndent: 16),
+          const Divider(
+            height: 1,
+            color: AppColors.borderDefault,
+            indent: 56,
+            endIndent: 16,
+          ),
           MenuRow(
             icon: Icons.privacy_tip_outlined,
             title: 'Privacy Policy',
             subtitle: 'Learn how we handle your data',
             onTap: () {},
           ),
-          const Divider(height: 1, color: AppColors.borderDefault, indent: 56, endIndent: 16),
+          const Divider(
+            height: 1,
+            color: AppColors.borderDefault,
+            indent: 56,
+            endIndent: 16,
+          ),
           MenuRow(
             icon: Icons.star_outline_rounded,
             title: 'Rate the App',

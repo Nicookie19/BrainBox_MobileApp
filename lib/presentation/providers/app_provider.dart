@@ -6,6 +6,7 @@ import 'package:brainbox/data/services/supabase_service.dart';
 import 'package:brainbox/data/models/course_models.dart';
 import 'package:brainbox/data/models/user_models.dart';
 import 'package:brainbox/data/models/community_models.dart';
+import 'package:brainbox/core/utils/clock.dart';
 
 class AppProvider extends ChangeNotifier {
   UserProfile? _profile;
@@ -21,7 +22,7 @@ class AppProvider extends ChangeNotifier {
   int get xp => _profile?.xp ?? 0;
   UserLevel get level => _profile?.level ?? UserLevel.allLevels[0];
   double get levelProgress => _profile?.levelProgress ?? 0;
-  int get currentStreak => _profile?.stats.currentStreakDays ?? 0;
+  int get currentStreak => StorageService.getComputedCurrentStreak();
 
   Future<void> initialize() async {
     _isLoading = true;
@@ -36,7 +37,8 @@ class AppProvider extends ChangeNotifier {
   }
 
   Future<UserProfile> _loadOrCreateProfile() async {
-    final existing = StorageService.getUserProfile();
+    final existingResult = StorageService.getUserProfile();
+    final existing = existingResult.isSuccess ? existingResult.value : null;
     final cloudUser = SupabaseService.isEnabled
         ? SupabaseService.client.auth.currentUser
         : null;
@@ -145,10 +147,12 @@ class AppProvider extends ChangeNotifier {
       return; // Already completed, don't award XP again
     }
 
-    final courseProgress = StorageService.getCourseProgress(courseId);
+    final courseProgressResult = StorageService.getCourseProgress(courseId);
+    final courseProgress = courseProgressResult.isSuccess
+        ? courseProgressResult.value
+        : null;
     final now = DateTime.now();
-    final nowUtc = now.toUtc();
-    final todayUtc = DateTime(nowUtc.year, nowUtc.month, nowUtc.day);
+    final todayLocal = now.startOfLocalDay;
 
     final updatedProgress =
         (courseProgress ??
@@ -188,24 +192,18 @@ class AppProvider extends ChangeNotifier {
       enrolledIds.add(courseId);
     }
 
-    // Calculate streak
+    // Calculate streak using local day boundaries
     int newStreak = _profile!.stats.currentStreakDays;
     int newLongestStreak = _profile!.stats.longestStreakDays;
     DateTime? lastLessonDate = _profile!.lastLessonCompletedAt;
 
     if (lastLessonDate != null) {
-      final lastLessonUtc = lastLessonDate.toUtc();
-      final lastLessonDay = DateTime(
-        lastLessonUtc.year,
-        lastLessonUtc.month,
-        lastLessonUtc.day,
-      );
-      final yesterdayUtc = todayUtc.subtract(const Duration(days: 1));
+      final lastLessonLocal = lastLessonDate.startOfLocalDay;
 
-      if (lastLessonDay == yesterdayUtc) {
+      if (lastLessonLocal == todayLocal.subtract(const Duration(days: 1))) {
         // Consecutive day - increment streak
         newStreak += 1;
-      } else if (lastLessonDay == todayUtc) {
+      } else if (lastLessonLocal == todayLocal) {
         // Same day - streak unchanged
       } else {
         // Streak broken

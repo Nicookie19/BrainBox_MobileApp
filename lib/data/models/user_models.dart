@@ -43,7 +43,8 @@ class UserProfile {
     this.lastLessonCompletedAt,
   });
 
-  int get xpToNextLevel => (UserLevel.getNextLevel(level)?.xpRequired ?? xp) - xp;
+  int get xpToNextLevel =>
+      (UserLevel.getNextLevel(level)?.xpRequired ?? xp) - xp;
   double get levelProgress {
     final nextLevel = UserLevel.getNextLevel(level);
     if (nextLevel == null) return 1;
@@ -53,53 +54,50 @@ class UserProfile {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'email': email,
-        'displayName': displayName,
-        'photoUrl': photoUrl,
-        'bio': bio,
-        'level': level.toJson(),
-        'xp': xp,
-        'totalXp': totalXp,
-        'completedCourseIds': completedCourseIds,
-        'enrolledCourseIds': enrolledCourseIds,
-        'bookmarkedLessonIds': bookmarkedLessonIds,
-        'completedLessonIds': completedLessonIds,
-        'achievements': achievements.map((a) => a.toJson()).toList(),
-        'stats': stats.toJson(),
-        'preferences': preferences.toJson(),
-        'joinedAt': joinedAt.toIso8601String(),
-        'lastActiveAt': lastActiveAt.toIso8601String(),
-        'lastLessonCompletedAt': lastLessonCompletedAt?.toIso8601String(),
-      };
+    'id': id,
+    'email': email,
+    'displayName': displayName,
+    'photoUrl': photoUrl,
+    'bio': bio,
+    'level': level.toJson(),
+    'xp': xp,
+    'totalXp': totalXp,
+    'completedCourseIds': completedCourseIds,
+    'enrolledCourseIds': enrolledCourseIds,
+    'bookmarkedLessonIds': bookmarkedLessonIds,
+    'completedLessonIds': completedLessonIds,
+    'achievements': achievements.map((a) => a.toJson()).toList(),
+    'stats': stats.toJson(),
+    'preferences': preferences.toJson(),
+    'joinedAt': joinedAt.toIso8601String(),
+    'lastActiveAt': lastActiveAt.toIso8601String(),
+    'lastLessonCompletedAt': lastLessonCompletedAt?.toIso8601String(),
+  };
 
   factory UserProfile.fromJson(Map<String, dynamic> json) => UserProfile(
-        id: json['id'],
-        email: json['email'],
-        displayName: json['displayName'],
-        photoUrl: json['photoUrl'],
-        bio: json['bio'] ?? '',
-        level: UserLevel.fromJson(json['level']),
-        xp: json['xp'],
-        totalXp: json['totalXp'],
-        completedCourseIds:
-            List<String>.from(json['completedCourseIds'] ?? []),
-        enrolledCourseIds:
-            List<String>.from(json['enrolledCourseIds'] ?? []),
-        bookmarkedLessonIds:
-            List<String>.from(json['bookmarkedLessonIds'] ?? []),
-        completedLessonIds:
-            List<String>.from(json['completedLessonIds'] ?? []),
-        achievements: List<Achievement>.from(
-            json['achievements']?.map((a) => Achievement.fromJson(a)) ?? []),
-        stats: UserStats.fromJson(json['stats']),
-        preferences: UserPreferences.fromJson(json['preferences']),
-        joinedAt: DateTime.parse(json['joinedAt']),
-        lastActiveAt: DateTime.parse(json['lastActiveAt']),
-        lastLessonCompletedAt: json['lastLessonCompletedAt'] != null
-            ? DateTime.parse(json['lastLessonCompletedAt'])
-            : null,
-      );
+    id: json['id'],
+    email: json['email'],
+    displayName: json['displayName'],
+    photoUrl: json['photoUrl'],
+    bio: json['bio'] ?? '',
+    level: UserLevel.fromJson(json['level']),
+    xp: json['xp'],
+    totalXp: json['totalXp'],
+    completedCourseIds: List<String>.from(json['completedCourseIds'] ?? []),
+    enrolledCourseIds: List<String>.from(json['enrolledCourseIds'] ?? []),
+    bookmarkedLessonIds: List<String>.from(json['bookmarkedLessonIds'] ?? []),
+    completedLessonIds: List<String>.from(json['completedLessonIds'] ?? []),
+    achievements: List<Achievement>.from(
+      json['achievements']?.map((a) => Achievement.fromJson(a)) ?? [],
+    ),
+    stats: UserStats.fromJson(json['stats']),
+    preferences: UserPreferences.fromJson(json['preferences']),
+    joinedAt: DateTime.parse(json['joinedAt']),
+    lastActiveAt: DateTime.parse(json['lastActiveAt']),
+    lastLessonCompletedAt: json['lastLessonCompletedAt'] != null
+        ? DateTime.parse(json['lastLessonCompletedAt'])
+        : null,
+  );
 
   UserProfile copyWith({
     String? id,
@@ -130,19 +128,17 @@ class UserProfile {
       level: level ?? this.level,
       xp: xp ?? this.xp,
       totalXp: totalXp ?? this.totalXp,
-      completedCourseIds:
-          completedCourseIds ?? this.completedCourseIds,
+      completedCourseIds: completedCourseIds ?? this.completedCourseIds,
       enrolledCourseIds: enrolledCourseIds ?? this.enrolledCourseIds,
-      bookmarkedLessonIds:
-          bookmarkedLessonIds ?? this.bookmarkedLessonIds,
-      completedLessonIds:
-          completedLessonIds ?? this.completedLessonIds,
+      bookmarkedLessonIds: bookmarkedLessonIds ?? this.bookmarkedLessonIds,
+      completedLessonIds: completedLessonIds ?? this.completedLessonIds,
       achievements: achievements ?? this.achievements,
       stats: stats ?? this.stats,
       preferences: preferences ?? this.preferences,
       joinedAt: joinedAt ?? this.joinedAt,
       lastActiveAt: lastActiveAt ?? this.lastActiveAt,
-      lastLessonCompletedAt: lastLessonCompletedAt ?? this.lastLessonCompletedAt,
+      lastLessonCompletedAt:
+          lastLessonCompletedAt ?? this.lastLessonCompletedAt,
     );
   }
 }
@@ -163,20 +159,20 @@ class UserLevel {
   });
 
   Map<String, dynamic> toJson() => {
-        'number': number,
-        'title': title,
-        'xpRequired': xpRequired,
-        'badgeAsset': badgeAsset,
-      'color': color.toARGB32(),
-      };
+    'number': number,
+    'title': title,
+    'xpRequired': xpRequired,
+    'badgeAsset': badgeAsset,
+    'color': color.toARGB32(),
+  };
 
   factory UserLevel.fromJson(Map<String, dynamic> json) => UserLevel(
-        number: json['number'],
-        title: json['title'],
-        xpRequired: json['xpRequired'],
-        badgeAsset: json['badgeAsset'],
-        color: Color(json['color']),
-      );
+    number: json['number'],
+    title: json['title'],
+    xpRequired: json['xpRequired'],
+    badgeAsset: json['badgeAsset'],
+    color: Color(json['color']),
+  );
 
   static const List<UserLevel> allLevels = [
     UserLevel(
@@ -293,42 +289,52 @@ class UserStats {
   });
 
   Map<String, dynamic> toJson() => {
-        'totalCoursesCompleted': totalCoursesCompleted,
-        'totalLessonsCompleted': totalLessonsCompleted,
-        'totalQuizzesPassed': totalQuizzesPassed,
-        'totalProjectsCompleted': totalProjectsCompleted,
-        'totalStudyMinutes': totalStudyMinutes,
-        'currentStreakDays': currentStreakDays,
-        'longestStreakDays': longestStreakDays,
-        'categoryProgress': categoryProgress.map(
-            (key, value) => MapEntry(key.toString(), value)),
-        'difficultyBreakdown': difficultyBreakdown.map(
-            (key, value) => MapEntry(key.toString(), value)),
-      };
+    'totalCoursesCompleted': totalCoursesCompleted,
+    'totalLessonsCompleted': totalLessonsCompleted,
+    'totalQuizzesPassed': totalQuizzesPassed,
+    'totalProjectsCompleted': totalProjectsCompleted,
+    'totalStudyMinutes': totalStudyMinutes,
+    'currentStreakDays': currentStreakDays,
+    'longestStreakDays': longestStreakDays,
+    'categoryProgress': categoryProgress.map(
+      (key, value) => MapEntry(key.toString(), value),
+    ),
+    'difficultyBreakdown': difficultyBreakdown.map(
+      (key, value) => MapEntry(key.toString(), value),
+    ),
+  };
 
   factory UserStats.fromJson(Map<String, dynamic> json) => UserStats(
-        totalCoursesCompleted: json['totalCoursesCompleted'],
-        totalLessonsCompleted: json['totalLessonsCompleted'],
-        totalQuizzesPassed: json['totalQuizzesPassed'],
-        totalProjectsCompleted: json['totalProjectsCompleted'],
-        totalStudyMinutes: json['totalStudyMinutes'],
-        currentStreakDays: json['currentStreakDays'],
-        longestStreakDays: json['longestStreakDays'],
-        categoryProgress: (json['categoryProgress'] as Map<String, dynamic>?)
-                ?.map((key, value) =>
-                    MapEntry(LearningCategory.values.firstWhere(
-                        (e) => e.toString() == 'LearningCategory.$key',
-                        orElse: () => LearningCategory.webDevelopment),
-                        value as int)) ??
-            {},
-        difficultyBreakdown: (json['difficultyBreakdown'] as Map<String, dynamic>?)
-                ?.map((key, value) => MapEntry(
-                    DifficultyLevel.values.firstWhere(
-                        (e) => e.toString() == 'DifficultyLevel.$key',
-                        orElse: () => DifficultyLevel.beginner),
-                    value as int)) ??
-            {},
-      );
+    totalCoursesCompleted: json['totalCoursesCompleted'],
+    totalLessonsCompleted: json['totalLessonsCompleted'],
+    totalQuizzesPassed: json['totalQuizzesPassed'],
+    totalProjectsCompleted: json['totalProjectsCompleted'],
+    totalStudyMinutes: json['totalStudyMinutes'],
+    currentStreakDays: json['currentStreakDays'],
+    longestStreakDays: json['longestStreakDays'],
+    categoryProgress:
+        (json['categoryProgress'] as Map<String, dynamic>?)?.map(
+          (key, value) => MapEntry(
+            LearningCategory.values.firstWhere(
+              (e) => e.toString() == 'LearningCategory.$key',
+              orElse: () => LearningCategory.webDevelopment,
+            ),
+            value as int,
+          ),
+        ) ??
+        {},
+    difficultyBreakdown:
+        (json['difficultyBreakdown'] as Map<String, dynamic>?)?.map(
+          (key, value) => MapEntry(
+            DifficultyLevel.values.firstWhere(
+              (e) => e.toString() == 'DifficultyLevel.$key',
+              orElse: () => DifficultyLevel.beginner,
+            ),
+            value as int,
+          ),
+        ) ??
+        {},
+  );
 
   factory UserStats.empty() {
     return UserStats(
@@ -356,10 +362,13 @@ class UserStats {
     Map<DifficultyLevel, int>? difficultyBreakdown,
   }) {
     return UserStats(
-      totalCoursesCompleted: totalCoursesCompleted ?? this.totalCoursesCompleted,
-      totalLessonsCompleted: totalLessonsCompleted ?? this.totalLessonsCompleted,
+      totalCoursesCompleted:
+          totalCoursesCompleted ?? this.totalCoursesCompleted,
+      totalLessonsCompleted:
+          totalLessonsCompleted ?? this.totalLessonsCompleted,
       totalQuizzesPassed: totalQuizzesPassed ?? this.totalQuizzesPassed,
-      totalProjectsCompleted: totalProjectsCompleted ?? this.totalProjectsCompleted,
+      totalProjectsCompleted:
+          totalProjectsCompleted ?? this.totalProjectsCompleted,
       totalStudyMinutes: totalStudyMinutes ?? this.totalStudyMinutes,
       currentStreakDays: currentStreakDays ?? this.currentStreakDays,
       longestStreakDays: longestStreakDays ?? this.longestStreakDays,
@@ -397,35 +406,35 @@ class Achievement {
   double get progressPercent => target > 0 ? progress / target : 0.0;
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'title': title,
-        'description': description,
-        'iconAsset': iconAsset,
-        'type': type.toString(),
-        'xpReward': xpReward,
-        'isUnlocked': isUnlocked,
-        'unlockedAt': unlockedAt?.toIso8601String(),
-        'progress': progress,
-        'target': target,
-      };
+    'id': id,
+    'title': title,
+    'description': description,
+    'iconAsset': iconAsset,
+    'type': type.toString(),
+    'xpReward': xpReward,
+    'isUnlocked': isUnlocked,
+    'unlockedAt': unlockedAt?.toIso8601String(),
+    'progress': progress,
+    'target': target,
+  };
 
   factory Achievement.fromJson(Map<String, dynamic> json) => Achievement(
-        id: json['id'],
-        title: json['title'],
-        description: json['description'],
-        iconAsset: json['iconAsset'],
-        type: AchievementType.values.firstWhere(
-          (e) => e.toString() == 'AchievementType.${json['type']}',
-          orElse: () => AchievementType.coursesCompleted,
-        ),
-        xpReward: json['xpReward'],
-        isUnlocked: json['isUnlocked'],
-        unlockedAt: json['unlockedAt'] != null
-            ? DateTime.parse(json['unlockedAt'])
-            : null,
-        progress: json['progress'],
-        target: json['target'],
-      );
+    id: json['id'],
+    title: json['title'],
+    description: json['description'],
+    iconAsset: json['iconAsset'],
+    type: AchievementType.values.firstWhere(
+      (e) => e.toString() == 'AchievementType.${json['type']}',
+      orElse: () => AchievementType.coursesCompleted,
+    ),
+    xpReward: json['xpReward'],
+    isUnlocked: json['isUnlocked'],
+    unlockedAt: json['unlockedAt'] != null
+        ? DateTime.parse(json['unlockedAt'])
+        : null,
+    progress: json['progress'],
+    target: json['target'],
+  );
 
   Achievement copyWith({
     String? id,
@@ -500,21 +509,23 @@ class UserPreferences {
   });
 
   Map<String, dynamic> toJson() => {
-        'notificationsEnabled': notificationsEnabled,
-        'emailNotifications': emailNotifications,
-        'pushNotifications': pushNotifications,
-        'darkMode': darkMode,
-        'autoPlayVideos': autoPlayVideos,
-        'downloadOnWifiOnly': downloadOnWifiOnly,
-        'preferredLanguage': preferredLanguage,
-        'interestedCategories':
-            interestedCategories.map((e) => e.toString()).toList(),
-        'dailyReminderTime': dailyReminderTime.inSeconds,
-        'hapticFeedback': hapticFeedback,
-        'reduceMotion': reduceMotion,
-      };
+    'notificationsEnabled': notificationsEnabled,
+    'emailNotifications': emailNotifications,
+    'pushNotifications': pushNotifications,
+    'darkMode': darkMode,
+    'autoPlayVideos': autoPlayVideos,
+    'downloadOnWifiOnly': downloadOnWifiOnly,
+    'preferredLanguage': preferredLanguage,
+    'interestedCategories': interestedCategories
+        .map((e) => e.toString())
+        .toList(),
+    'dailyReminderTime': dailyReminderTime.inSeconds,
+    'hapticFeedback': hapticFeedback,
+    'reduceMotion': reduceMotion,
+  };
 
-  factory UserPreferences.fromJson(Map<String, dynamic> json) => UserPreferences(
+  factory UserPreferences.fromJson(Map<String, dynamic> json) =>
+      UserPreferences(
         notificationsEnabled: json['notificationsEnabled'] ?? true,
         emailNotifications: json['emailNotifications'] ?? true,
         pushNotifications: json['pushNotifications'] ?? true,
@@ -522,13 +533,19 @@ class UserPreferences {
         autoPlayVideos: json['autoPlayVideos'] ?? false,
         downloadOnWifiOnly: json['downloadOnWifiOnly'] ?? true,
         preferredLanguage: json['preferredLanguage'] ?? 'en',
-        interestedCategories: (json['interestedCategories'] as List<dynamic>?)
-                ?.map((e) => LearningCategory.values.firstWhere(
+        interestedCategories:
+            (json['interestedCategories'] as List<dynamic>?)
+                ?.map(
+                  (e) => LearningCategory.values.firstWhere(
                     (cat) => cat.toString() == 'LearningCategory.$e',
-                    orElse: () => LearningCategory.webDevelopment))
+                    orElse: () => LearningCategory.webDevelopment,
+                  ),
+                )
                 .toList() ??
             [],
-        dailyReminderTime: Duration(seconds: json['dailyReminderTime'] ?? 19 * 3600),
+        dailyReminderTime: Duration(
+          seconds: json['dailyReminderTime'] ?? 19 * 3600,
+        ),
         hapticFeedback: json['hapticFeedback'] ?? true,
         reduceMotion: json['reduceMotion'] ?? false,
       );
@@ -547,16 +564,14 @@ class UserPreferences {
     bool? reduceMotion,
   }) {
     return UserPreferences(
-      notificationsEnabled:
-          notificationsEnabled ?? this.notificationsEnabled,
+      notificationsEnabled: notificationsEnabled ?? this.notificationsEnabled,
       emailNotifications: emailNotifications ?? this.emailNotifications,
       pushNotifications: pushNotifications ?? this.pushNotifications,
       darkMode: darkMode ?? this.darkMode,
       autoPlayVideos: autoPlayVideos ?? this.autoPlayVideos,
       downloadOnWifiOnly: downloadOnWifiOnly ?? this.downloadOnWifiOnly,
       preferredLanguage: preferredLanguage ?? this.preferredLanguage,
-      interestedCategories:
-          interestedCategories ?? this.interestedCategories,
+      interestedCategories: interestedCategories ?? this.interestedCategories,
       dailyReminderTime: dailyReminderTime ?? this.dailyReminderTime,
       hapticFeedback: hapticFeedback ?? this.hapticFeedback,
       reduceMotion: reduceMotion ?? this.reduceMotion,
@@ -613,44 +628,44 @@ class CourseProgress {
   }
 
   Map<String, dynamic> toJson() => {
-        'courseId': courseId,
-        'userId': userId,
-        'completedModules': completedModules,
-        'totalModules': totalModules,
-        'completedLessons': completedLessons,
-        'totalLessons': totalLessons,
-        'completedQuizzes': completedQuizzes,
-        'totalQuizzes': totalQuizzes,
-        'completedProjects': completedProjects,
-        'totalProjects': totalProjects,
-        'totalStudyMinutes': totalStudyMinutes,
-        'startedAt': startedAt.toIso8601String(),
-        'completedAt': completedAt?.toIso8601String(),
-        'lastAccessedAt': lastAccessedAt.toIso8601String(),
-        'isEnrolled': isEnrolled,
-        'isCompleted': isCompleted,
-      };
+    'courseId': courseId,
+    'userId': userId,
+    'completedModules': completedModules,
+    'totalModules': totalModules,
+    'completedLessons': completedLessons,
+    'totalLessons': totalLessons,
+    'completedQuizzes': completedQuizzes,
+    'totalQuizzes': totalQuizzes,
+    'completedProjects': completedProjects,
+    'totalProjects': totalProjects,
+    'totalStudyMinutes': totalStudyMinutes,
+    'startedAt': startedAt.toIso8601String(),
+    'completedAt': completedAt?.toIso8601String(),
+    'lastAccessedAt': lastAccessedAt.toIso8601String(),
+    'isEnrolled': isEnrolled,
+    'isCompleted': isCompleted,
+  };
 
   factory CourseProgress.fromJson(Map<String, dynamic> json) => CourseProgress(
-        courseId: json['courseId'],
-        userId: json['userId'],
-        completedModules: json['completedModules'],
-        totalModules: json['totalModules'],
-        completedLessons: json['completedLessons'],
-        totalLessons: json['totalLessons'],
-        completedQuizzes: json['completedQuizzes'],
-        totalQuizzes: json['totalQuizzes'],
-        completedProjects: json['completedProjects'],
-        totalProjects: json['totalProjects'],
-        totalStudyMinutes: json['totalStudyMinutes'],
-        startedAt: DateTime.parse(json['startedAt']),
-        completedAt: json['completedAt'] != null
-            ? DateTime.parse(json['completedAt'])
-            : null,
-        lastAccessedAt: DateTime.parse(json['lastAccessedAt']),
-        isEnrolled: json['isEnrolled'],
-        isCompleted: json['isCompleted'],
-      );
+    courseId: json['courseId'],
+    userId: json['userId'],
+    completedModules: json['completedModules'],
+    totalModules: json['totalModules'],
+    completedLessons: json['completedLessons'],
+    totalLessons: json['totalLessons'],
+    completedQuizzes: json['completedQuizzes'],
+    totalQuizzes: json['totalQuizzes'],
+    completedProjects: json['completedProjects'],
+    totalProjects: json['totalProjects'],
+    totalStudyMinutes: json['totalStudyMinutes'],
+    startedAt: DateTime.parse(json['startedAt']),
+    completedAt: json['completedAt'] != null
+        ? DateTime.parse(json['completedAt'])
+        : null,
+    lastAccessedAt: DateTime.parse(json['lastAccessedAt']),
+    isEnrolled: json['isEnrolled'],
+    isCompleted: json['isCompleted'],
+  );
 
   CourseProgress copyWith({
     String? courseId,

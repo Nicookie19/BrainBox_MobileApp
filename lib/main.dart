@@ -62,7 +62,7 @@ class _MobileAppFrame extends StatelessWidget {
         color: AppColors.bgPrimary,
         child: Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 430, maxHeight: 900),
+            constraints: const BoxConstraints(maxWidth: 390, maxHeight: 844),
             child: DecoratedBox(
               decoration: BoxDecoration(
                 color: AppColors.bgPrimary,

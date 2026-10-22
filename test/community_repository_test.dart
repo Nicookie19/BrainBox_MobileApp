@@ -115,7 +115,10 @@ void main() {
     final reloaded = await CommunityRepository.getPosts();
 
     expect(reloaded.any((post) => post.id == created.id), isTrue);
-    expect(reloaded.firstWhere((post) => post.id == created.id).content, contains('practice loops'));
+    expect(
+      reloaded.firstWhere((post) => post.id == created.id).content,
+      contains('practice loops'),
+    );
   });
 
   test('toggles a vote without contradictory counts', () async {

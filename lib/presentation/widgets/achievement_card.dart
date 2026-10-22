@@ -24,16 +24,16 @@ class AchievementCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final progressPercent = target > 0 ? (progress / target).clamp(0.0, 1.0) : 0.0;
+    final progressPercent = target > 0
+        ? (progress / target).clamp(0.0, 1.0)
+        : 0.0;
 
     return Material(
       color: Colors.transparent,
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isUnlocked
-              ? color.withValues(alpha: 0.1)
-              : AppColors.bgCard,
+          color: isUnlocked ? color.withValues(alpha: 0.1) : AppColors.bgCard,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isUnlocked
@@ -69,9 +69,9 @@ class AchievementCard extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               subtitle,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppColors.textMuted,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: AppColors.textMuted),
               textAlign: TextAlign.center,
             ),
             if (!isUnlocked) ...[
@@ -97,7 +97,10 @@ class AchievementCard extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(top: 12),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.accentSuccessSoft,
                     borderRadius: BorderRadius.circular(20),
@@ -105,7 +108,11 @@ class AchievementCard extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.check_rounded, size: 12, color: AppColors.accentSuccess),
+                      Icon(
+                        Icons.check_rounded,
+                        size: 12,
+                        color: AppColors.accentSuccess,
+                      ),
                       const SizedBox(width: 4),
                       Text(
                         'Unlocked',

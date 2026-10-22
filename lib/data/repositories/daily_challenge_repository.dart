@@ -29,7 +29,12 @@ class DailyChallengeRepository {
     ),
     ChallengeQuestion(
       'What does the spread operator (...) do?',
-      ['Copies array elements', 'Deletes elements', 'Sorts the array', 'Reverses the array'],
+      [
+        'Copies array elements',
+        'Deletes elements',
+        'Sorts the array',
+        'Reverses the array',
+      ],
       0,
       'The spread operator expands an iterable into individual elements, useful for copying arrays.',
     ),
@@ -105,7 +110,12 @@ class DailyChallengeRepository {
     ),
     ChallengeQuestion(
       'What does display: flex do?',
-      ['Creates a grid', 'Makes element a flex container', 'Hides element', 'Centers content'],
+      [
+        'Creates a grid',
+        'Makes element a flex container',
+        'Hides element',
+        'Centers content',
+      ],
       1,
       'display: flex makes an element a flex container, enabling flexbox layout for its children.',
     ),
@@ -117,7 +127,12 @@ class DailyChallengeRepository {
     ),
     ChallengeQuestion(
       'What does justify-content: center do?',
-      ['Centers items on cross axis', 'Centers items on main axis', 'Centers text', 'Centers container'],
+      [
+        'Centers items on cross axis',
+        'Centers items on main axis',
+        'Centers text',
+        'Centers container',
+      ],
       1,
       'justify-content aligns items along the main axis. center places them in the middle.',
     ),
@@ -143,13 +158,23 @@ class DailyChallengeRepository {
     ),
     ChallengeQuestion(
       'What is a closure in programming?',
-      ['A loop', 'A function with access to outer scope', 'A variable', 'An error'],
+      [
+        'A loop',
+        'A function with access to outer scope',
+        'A variable',
+        'An error',
+      ],
       1,
       'A closure is a function that retains access to variables from its enclosing scope.',
     ),
     ChallengeQuestion(
       'What does SQL stand for?',
-      ['Structured Query Language', 'Simple Query Language', 'Standard Query Logic', 'System Query Language'],
+      [
+        'Structured Query Language',
+        'Simple Query Language',
+        'Standard Query Logic',
+        'System Query Language',
+      ],
       0,
       'SQL stands for Structured Query Language.',
     ),
@@ -196,7 +221,12 @@ class DailyChallengeRepository {
 }
 
 class ChallengeQuestion {
-  const ChallengeQuestion(this.text, this.options, this.answer, this.explanation);
+  const ChallengeQuestion(
+    this.text,
+    this.options,
+    this.answer,
+    this.explanation,
+  );
   final String text;
   final List<String> options;
   final int answer;

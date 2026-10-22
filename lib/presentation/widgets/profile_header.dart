@@ -56,9 +56,7 @@ class ProfileHeader extends StatelessWidget {
         IconButton(
           onPressed: () {},
           icon: Icon(Icons.settings_outlined, color: AppColors.textMuted),
-          style: IconButton.styleFrom(
-            backgroundColor: AppColors.bgTertiary,
-          ),
+          style: IconButton.styleFrom(backgroundColor: AppColors.bgTertiary),
         ).animate().fadeIn(delay: 400.ms),
       ],
     );
@@ -71,7 +69,8 @@ class ProfileHeader extends StatelessWidget {
     final xpForNextLevel = nextLevel?.xpRequired ?? profile.level.xpRequired;
     final progress = nextLevel == null
         ? 1.0
-        : (currentXp - xpForCurrentLevel) / (xpForNextLevel - xpForCurrentLevel);
+        : (currentXp - xpForCurrentLevel) /
+              (xpForNextLevel - xpForCurrentLevel);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -82,7 +81,10 @@ class ProfileHeader extends StatelessWidget {
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
                     gradient: AppColors.primaryGradient,
                     borderRadius: BorderRadius.circular(6),

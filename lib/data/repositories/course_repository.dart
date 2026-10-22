@@ -51,7 +51,8 @@ class CourseRepository {
         id: 'frontend-foundations',
         title: 'Frontend Foundations',
         shortDescription: 'Learn HTML, CSS, and JavaScript basics',
-        longDescription: 'Master the fundamentals of frontend development with hands-on projects and exercises.',
+        longDescription:
+            'Master the fundamentals of frontend development with hands-on projects and exercises.',
         category: LearningCategory.webDevelopment,
         difficulty: DifficultyLevel.beginner,
         thumbnailUrl: '',
@@ -63,7 +64,7 @@ class CourseRepository {
         learningOutcomes: [
           'Build responsive websites with HTML5 and CSS3',
           'Create interactive web applications with JavaScript',
-          'Understand frontend development best practices'
+          'Understand frontend development best practices',
         ],
         tags: ['html', 'css', 'javascript', 'frontend'],
         isFeatured: true,
@@ -77,7 +78,8 @@ class CourseRepository {
         id: 'python-essentials',
         title: 'Python Essentials',
         shortDescription: 'Learn Python programming from scratch',
-        longDescription: 'Comprehensive Python course covering basics to intermediate concepts with practical exercises.',
+        longDescription:
+            'Comprehensive Python course covering basics to intermediate concepts with practical exercises.',
         category: LearningCategory.programmingLanguages,
         difficulty: DifficultyLevel.beginner,
         thumbnailUrl: '',
@@ -89,7 +91,7 @@ class CourseRepository {
         learningOutcomes: [
           'Write clean, efficient Python code',
           'Work with data structures and algorithms',
-          'Build Python applications for various domains'
+          'Build Python applications for various domains',
         ],
         tags: ['python', 'programming', 'backend'],
         isFeatured: true,
@@ -102,8 +104,10 @@ class CourseRepository {
       Course(
         id: 'data-structures',
         title: 'Data Structures',
-        shortDescription: 'Master arrays, linked lists, stacks, queues, and hash maps',
-        longDescription: 'Learn fundamental data structures with hands-on exercises. Understand when to use each structure and their time complexities.',
+        shortDescription:
+            'Master arrays, linked lists, stacks, queues, and hash maps',
+        longDescription:
+            'Learn fundamental data structures with hands-on exercises. Understand when to use each structure and their time complexities.',
         category: LearningCategory.programmingLanguages,
         difficulty: DifficultyLevel.beginner,
         thumbnailUrl: '',
@@ -115,7 +119,7 @@ class CourseRepository {
         learningOutcomes: [
           'Understand arrays, linked lists, stacks, queues, and hash maps',
           'Analyze time and space complexity of operations',
-          'Choose the right data structure for any problem'
+          'Choose the right data structure for any problem',
         ],
         tags: ['data-structures', 'algorithms', 'computer-science'],
         isFeatured: true,
@@ -129,7 +133,8 @@ class CourseRepository {
         id: 'sql-basics',
         title: 'SQL Basics',
         shortDescription: 'Learn to query and manipulate data with SQL',
-        longDescription: 'Master SQL fundamentals: SELECT, WHERE, JOINs, and aggregations. Query real datasets and build analytical skills.',
+        longDescription:
+            'Master SQL fundamentals: SELECT, WHERE, JOINs, and aggregations. Query real datasets and build analytical skills.',
         category: LearningCategory.databases,
         difficulty: DifficultyLevel.beginner,
         thumbnailUrl: '',
@@ -141,7 +146,7 @@ class CourseRepository {
         learningOutcomes: [
           'Write SELECT queries with filtering and sorting',
           'Join multiple tables to answer complex questions',
-          'Aggregate data with GROUP BY and window functions'
+          'Aggregate data with GROUP BY and window functions',
         ],
         tags: ['sql', 'databases', 'data-analysis'],
         isFeatured: true,
@@ -155,7 +160,8 @@ class CourseRepository {
         id: 'flutter-from-zero',
         title: 'Flutter from Zero',
         shortDescription: 'Build beautiful mobile apps with Flutter',
-        longDescription: 'Learn Flutter development from basics to building production-ready iOS and Android apps.',
+        longDescription:
+            'Learn Flutter development from basics to building production-ready iOS and Android apps.',
         category: LearningCategory.mobileDevelopment,
         difficulty: DifficultyLevel.intermediate,
         thumbnailUrl: '',
@@ -167,7 +173,7 @@ class CourseRepository {
         learningOutcomes: [
           'Build cross-platform mobile apps with Flutter',
           'Create responsive UI layouts',
-          'Integrate with APIs and backend services'
+          'Integrate with APIs and backend services',
         ],
         tags: ['flutter', 'mobile', 'dart', 'ios', 'android'],
         isFeatured: true,
@@ -181,7 +187,8 @@ class CourseRepository {
         id: 'machine-learning-basics',
         title: 'Machine Learning Basics',
         shortDescription: 'Introduction to ML concepts and algorithms',
-        longDescription: 'Learn the fundamentals of machine learning with practical Python implementations.',
+        longDescription:
+            'Learn the fundamentals of machine learning with practical Python implementations.',
         category: LearningCategory.machineLearning,
         difficulty: DifficultyLevel.intermediate,
         thumbnailUrl: '',
@@ -193,7 +200,7 @@ class CourseRepository {
         learningOutcomes: [
           'Understand supervised and unsupervised learning',
           'Implement ML algorithms from scratch',
-          'Apply ML to real-world problems'
+          'Apply ML to real-world problems',
         ],
         tags: ['machine-learning', 'python', 'ai', 'data-science'],
         isFeatured: true,
@@ -207,7 +214,8 @@ class CourseRepository {
         id: 'networking-fundamentals',
         title: 'Networking Fundamentals',
         shortDescription: 'Understand computer networks and protocols',
-        longDescription: 'Learn how computer networks work from basics to advanced networking concepts.',
+        longDescription:
+            'Learn how computer networks work from basics to advanced networking concepts.',
         category: LearningCategory.networking,
         difficulty: DifficultyLevel.beginner,
         thumbnailUrl: '',
@@ -219,7 +227,7 @@ class CourseRepository {
         learningOutcomes: [
           'Understand TCP/IP networking model',
           'Configure and troubleshoot network devices',
-          'Apply networking concepts to real scenarios'
+          'Apply networking concepts to real scenarios',
         ],
         tags: ['networking', 'tcp-ip', 'ccna', 'it-fundamentals'],
         isFeatured: false,

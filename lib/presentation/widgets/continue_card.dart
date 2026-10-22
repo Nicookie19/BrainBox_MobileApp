@@ -5,11 +5,7 @@ import 'package:brainbox/data/models/learning_models.dart';
 import 'package:brainbox/core/constants/app_colors.dart';
 
 class ContinueCard extends StatelessWidget {
-  const ContinueCard({
-    required this.course,
-    required this.onTap,
-    super.key,
-  });
+  const ContinueCard({required this.course, required this.onTap, super.key});
 
   final Course? course;
   final VoidCallback onTap;
@@ -63,16 +59,14 @@ class ContinueCard extends StatelessWidget {
                       children: [
                         Text(
                           c.title,
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(fontWeight: FontWeight.w700),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           'Lesson 7 · CSS Flexbox',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(color: AppColors.textSecondary),
                         ),
                       ],
                     ),
@@ -127,9 +121,9 @@ class ContinueCard extends StatelessWidget {
                   const Spacer(),
                   Text(
                     '${c.estimatedHours}h total',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppColors.textMuted,
-                    ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodySmall?.copyWith(color: AppColors.textMuted),
                   ),
                 ],
               ),
@@ -161,7 +155,11 @@ class ContinueCard extends StatelessWidget {
                   color: AppColors.accentPrimarySoft,
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: Icon(Icons.school_outlined, color: AppColors.accentPrimary, size: 26),
+                child: Icon(
+                  Icons.school_outlined,
+                  color: AppColors.accentPrimary,
+                  size: 26,
+                ),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -199,13 +197,21 @@ class ContinueCard extends StatelessWidget {
   LinearGradient _getCategoryGradient(LearningCategory category) {
     switch (category) {
       case LearningCategory.webDevelopment:
-        return const LinearGradient(colors: [Color(0xFF06B6D4), Color(0xFF0891B2)]);
+        return const LinearGradient(
+          colors: [Color(0xFF06B6D4), Color(0xFF0891B2)],
+        );
       case LearningCategory.mobileDevelopment:
-        return const LinearGradient(colors: [Color(0xFF8B5CF6), Color(0xFF7C3AED)]);
+        return const LinearGradient(
+          colors: [Color(0xFF8B5CF6), Color(0xFF7C3AED)],
+        );
       case LearningCategory.programmingLanguages:
-        return const LinearGradient(colors: [Color(0xFF10B981), Color(0xFF059669)]);
+        return const LinearGradient(
+          colors: [Color(0xFF10B981), Color(0xFF059669)],
+        );
       case LearningCategory.machineLearning:
-        return const LinearGradient(colors: [Color(0xFFF59E0B), Color(0xFFD97706)]);
+        return const LinearGradient(
+          colors: [Color(0xFFF59E0B), Color(0xFFD97706)],
+        );
       default:
         return AppColors.primaryGradient;
     }

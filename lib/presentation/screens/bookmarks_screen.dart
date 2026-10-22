@@ -56,15 +56,23 @@ class BookmarksScreen extends StatelessWidget {
                         ? SliverToBoxAdapter(child: _buildEmptyState(context))
                         : SliverList.separated(
                             itemCount: bookmarkedLessons.length,
-                            separatorBuilder: (_, _) => const SizedBox(height: 12),
+                            separatorBuilder: (_, _) =>
+                                const SizedBox(height: 12),
                             itemBuilder: (context, index) {
                               final lesson = bookmarkedLessons[index];
                               return _BookmarkLessonTile(
-                                lesson: lesson,
-                                courseTitle: lesson.courseTitle,
-                                onTap: () => context.push('/lesson/${lesson.courseId}?lesson=${lesson.lessonId}'),
-                                onRemove: () => provider.toggleBookmark('${lesson.courseId}:${lesson.lessonId}'),
-                              ).animate().fadeIn(delay: (100 + index * 50).ms).slideY(begin: 0.2, end: 0);
+                                    lesson: lesson,
+                                    courseTitle: lesson.courseTitle,
+                                    onTap: () => context.push(
+                                      '/lesson/${lesson.courseId}?lesson=${lesson.lessonId}',
+                                    ),
+                                    onRemove: () => provider.toggleBookmark(
+                                      '${lesson.courseId}:${lesson.lessonId}',
+                                    ),
+                                  )
+                                  .animate()
+                                  .fadeIn(delay: (100 + index * 50).ms)
+                                  .slideY(begin: 0.2, end: 0);
                             },
                           ),
                   ),
@@ -91,9 +99,9 @@ class BookmarksScreen extends StatelessWidget {
         const SizedBox(height: 8),
         Text(
           '$count lesson${count == 1 ? '' : 's'} bookmarked for quick access',
-          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-            color: AppColors.textSecondary,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyLarge?.copyWith(color: AppColors.textSecondary),
         ),
       ],
     ).animate().fadeIn().slideY(begin: 0.2, end: 0);
@@ -117,16 +125,16 @@ class BookmarksScreen extends StatelessWidget {
           const SizedBox(height: 16),
           Text(
             'No saved lessons yet',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 8),
           Text(
             'Bookmark lessons from the lesson screen to find them here',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: AppColors.textSecondary,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
             textAlign: TextAlign.center,
           ),
         ],
@@ -134,31 +142,36 @@ class BookmarksScreen extends StatelessWidget {
     );
   }
 
-  Future<List<_BookmarkedLesson>> _getBookmarkedLessons(AppProvider provider, List<String> bookmarkedIds) async {
+  Future<List<_BookmarkedLesson>> _getBookmarkedLessons(
+    AppProvider provider,
+    List<String> bookmarkedIds,
+  ) async {
     final lessons = <_BookmarkedLesson>[];
-    
+
     for (final course in provider.courses) {
       final lessonData = await lr.LessonRepository.getCourseLessons(course.id);
       if (lessonData == null) continue;
-      
+
       for (final module in lessonData.modules) {
         for (final lesson in module.lessons) {
           final lessonKey = '${course.id}:${lesson.id}';
           if (bookmarkedIds.contains(lessonKey)) {
-            lessons.add(_BookmarkedLesson(
-              courseId: course.id,
-              courseTitle: course.title,
-              lessonId: lesson.id,
-              lessonTitle: lesson.title,
-              lessonDescription: '',
-              xpReward: lesson.xpReward,
-              stepCount: lesson.steps.length,
-            ));
+            lessons.add(
+              _BookmarkedLesson(
+                courseId: course.id,
+                courseTitle: course.title,
+                lessonId: lesson.id,
+                lessonTitle: lesson.title,
+                lessonDescription: '',
+                xpReward: lesson.xpReward,
+                stepCount: lesson.steps.length,
+              ),
+            );
           }
         }
       }
     }
-    
+
     return lessons;
   }
 }
@@ -219,7 +232,11 @@ class _BookmarkLessonTile extends StatelessWidget {
                   color: AppColors.accentPrimarySoft,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(Icons.menu_book_rounded, color: AppColors.accentPrimary, size: 24),
+                child: Icon(
+                  Icons.menu_book_rounded,
+                  color: AppColors.accentPrimary,
+                  size: 24,
+                ),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -246,23 +263,31 @@ class _BookmarkLessonTile extends StatelessWidget {
                     const SizedBox(height: 8),
                     Row(
                       children: [
-                        Icon(Icons.format_list_numbered_rounded, size: 14, color: AppColors.textMuted),
+                        Icon(
+                          Icons.format_list_numbered_rounded,
+                          size: 14,
+                          color: AppColors.textMuted,
+                        ),
                         const SizedBox(width: 4),
                         Text(
                           '${lesson.stepCount} steps',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.textMuted,
-                          ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: AppColors.textMuted),
                         ),
                         const SizedBox(width: 12),
-                        Icon(Icons.bolt_rounded, size: 14, color: AppColors.accentWarning),
+                        Icon(
+                          Icons.bolt_rounded,
+                          size: 14,
+                          color: AppColors.accentWarning,
+                        ),
                         const SizedBox(width: 4),
                         Text(
                           '${lesson.xpReward} XP',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.accentWarning,
-                            fontWeight: FontWeight.w600,
-                          ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: AppColors.accentWarning,
+                                fontWeight: FontWeight.w600,
+                              ),
                         ),
                       ],
                     ),
@@ -271,7 +296,11 @@ class _BookmarkLessonTile extends StatelessWidget {
               ),
               IconButton(
                 onPressed: onRemove,
-                icon: Icon(Icons.bookmark_rounded, color: AppColors.accentPrimary, size: 24),
+                icon: Icon(
+                  Icons.bookmark_rounded,
+                  color: AppColors.accentPrimary,
+                  size: 24,
+                ),
                 style: IconButton.styleFrom(
                   backgroundColor: AppColors.accentPrimarySoft,
                   foregroundColor: AppColors.accentPrimary,
@@ -317,7 +346,8 @@ class _LoadingSkeleton extends StatelessWidget {
             sliver: SliverList.separated(
               itemCount: 3,
               separatorBuilder: (_, _) => const SizedBox(height: 12),
-              itemBuilder: (_, _) => _skeletonBox(width: double.infinity, height: 100),
+              itemBuilder: (_, _) =>
+                  _skeletonBox(width: double.infinity, height: 100),
             ),
           ),
         ],

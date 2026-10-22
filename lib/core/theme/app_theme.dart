@@ -67,7 +67,10 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadius.md),
-          borderSide: const BorderSide(color: AppColors.accentPrimary, width: 2),
+          borderSide: const BorderSide(
+            color: AppColors.accentPrimary,
+            width: 2,
+          ),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadius.md),
@@ -165,10 +168,7 @@ class AppTheme {
               size: 24,
             );
           }
-          return const IconThemeData(
-            color: AppColors.textMuted,
-            size: 24,
-          );
+          return const IconThemeData(color: AppColors.textMuted, size: 24);
         }),
       ),
       tabBarTheme: TabBarThemeData(
@@ -176,16 +176,24 @@ class AppTheme {
         unselectedLabelColor: AppColors.textMuted,
         indicatorColor: AppColors.accentPrimary,
         indicatorSize: TabBarIndicatorSize.label,
-        labelStyle: _textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600),
-        unselectedLabelStyle: _textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w500),
+        labelStyle: _textTheme.labelLarge?.copyWith(
+          fontWeight: FontWeight.w600,
+        ),
+        unselectedLabelStyle: _textTheme.labelLarge?.copyWith(
+          fontWeight: FontWeight.w500,
+        ),
         dividerColor: AppColors.borderDefault,
       ),
       chipTheme: ChipThemeData(
         backgroundColor: AppColors.bgTertiary,
         selectedColor: AppColors.accentPrimarySoft,
         checkmarkColor: AppColors.accentPrimary,
-        labelStyle: _textTheme.labelMedium?.copyWith(color: AppColors.textSecondary),
-        secondaryLabelStyle: _textTheme.labelMedium?.copyWith(color: AppColors.textOnAccent),
+        labelStyle: _textTheme.labelMedium?.copyWith(
+          color: AppColors.textSecondary,
+        ),
+        secondaryLabelStyle: _textTheme.labelMedium?.copyWith(
+          color: AppColors.textOnAccent,
+        ),
         padding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.md,
           vertical: AppSpacing.sm,
@@ -214,7 +222,9 @@ class AppTheme {
         backgroundColor: AppColors.bgCard,
         surfaceTintColor: Colors.transparent,
         shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xxl)),
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(AppRadius.xxl),
+          ),
         ),
         modalBackgroundColor: AppColors.bgCard,
       ),
@@ -272,7 +282,9 @@ class AppTheme {
         }),
         checkColor: WidgetStateProperty.all(AppColors.textOnAccent),
         side: const BorderSide(color: AppColors.borderDefault, width: 2),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.sm)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.sm),
+        ),
       ),
       radioTheme: RadioThemeData(
         fillColor: WidgetStateProperty.resolveWith((states) {

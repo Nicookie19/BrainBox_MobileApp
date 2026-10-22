@@ -14,7 +14,8 @@ class DailyChallengeScreen extends StatefulWidget {
   State<DailyChallengeScreen> createState() => _DailyChallengeScreenState();
 }
 
-class _DailyChallengeScreenState extends State<DailyChallengeScreen> with TickerProviderStateMixin {
+class _DailyChallengeScreenState extends State<DailyChallengeScreen>
+    with TickerProviderStateMixin {
   late List<ChallengeQuestion> _questions;
   int _currentIndex = 0;
   int _score = 0;
@@ -59,7 +60,9 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> with Ticker
     if (_questions.isEmpty) {
       return Scaffold(
         backgroundColor: AppColors.bgPrimary,
-        body: const Center(child: CircularProgressIndicator(color: AppColors.accentPrimary)),
+        body: const Center(
+          child: CircularProgressIndicator(color: AppColors.accentPrimary),
+        ),
       );
     }
 
@@ -80,9 +83,9 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> with Ticker
         ),
         title: Text(
           _finished ? 'Challenge Complete' : 'Daily Challenge',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w700,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
         ),
         centerTitle: true,
       ),
@@ -146,7 +149,11 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> with Ticker
                     color: AppColors.accentSuccess.withValues(alpha: 0.2),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(Icons.check_circle_rounded, color: AppColors.accentSuccess, size: 48),
+                  child: Icon(
+                    Icons.check_circle_rounded,
+                    color: AppColors.accentSuccess,
+                    size: 48,
+                  ),
                 ),
                 const SizedBox(height: 20),
                 Text(
@@ -199,7 +206,11 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> with Ticker
                   color: AppColors.accentWarningSoft,
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(Icons.bolt_rounded, color: AppColors.accentWarning, size: 20),
+                child: Icon(
+                  Icons.bolt_rounded,
+                  color: AppColors.accentWarning,
+                  size: 20,
+                ),
               ),
               const SizedBox(width: 12),
               Text(
@@ -212,9 +223,9 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> with Ticker
               const Spacer(),
               Text(
                 '${_currentIndex + 1}/${_questions.length}',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppColors.textMuted,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: AppColors.textMuted),
               ),
             ],
           ),
@@ -222,7 +233,8 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> with Ticker
           AnimatedBuilder(
             animation: _progressController,
             builder: (context, child) {
-              final progress = (_currentIndex + (_answered ? 1 : 0)) / _questions.length;
+              final progress =
+                  (_currentIndex + (_answered ? 1 : 0)) / _questions.length;
               return LinearProgressIndicator(
                 value: progress * _progressController.value,
                 minHeight: 8,
@@ -311,7 +323,9 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> with Ticker
                         option,
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                           color: textColor,
-                          fontWeight: isCorrect && _answered ? FontWeight.w600 : FontWeight.w500,
+                          fontWeight: isCorrect && _answered
+                              ? FontWeight.w600
+                              : FontWeight.w500,
                         ),
                       ),
                     ),
@@ -454,7 +468,11 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> with Ticker
               fontWeight: FontWeight.w600,
             ),
           ),
-          child: Text(_currentIndex == _questions.length - 1 ? 'Finish Challenge' : 'Next Question'),
+          child: Text(
+            _currentIndex == _questions.length - 1
+                ? 'Finish Challenge'
+                : 'Next Question',
+          ),
         ),
       ),
     );
@@ -536,7 +554,9 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> with Ticker
               Navigator.pop(context);
               context.pop();
             },
-            style: FilledButton.styleFrom(backgroundColor: AppColors.accentError),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.accentError,
+            ),
             child: const Text('Exit'),
           ),
         ],
@@ -544,4 +564,3 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> with Ticker
     );
   }
 }
-

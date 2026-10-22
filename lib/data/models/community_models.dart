@@ -57,56 +57,56 @@ class CommunityPost {
   bool get hasUserDownvoted => currentUserVote == UserVote.downvote;
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'authorId': authorId,
-        'authorName': authorName,
-        'authorPhotoUrl': authorPhotoUrl,
-        'title': title,
-        'content': content,
-        'type': type.toString(),
-        'tags': tags,
-        'courseIds': courseIds,
-        'upvoteCount': upvoteCount,
-        'downvoteCount': downvoteCount,
-        'replyCount': replyCount,
-        'viewCount': viewCount,
-        'isPinned': isPinned,
-        'isLocked': isLocked,
-        'isReported': isReported,
-        'createdAt': createdAt.toIso8601String(),
-        'updatedAt': updatedAt.toIso8601String(),
-        'currentUserVote': currentUserVote?.toString(),
-      };
+    'id': id,
+    'authorId': authorId,
+    'authorName': authorName,
+    'authorPhotoUrl': authorPhotoUrl,
+    'title': title,
+    'content': content,
+    'type': type.toString(),
+    'tags': tags,
+    'courseIds': courseIds,
+    'upvoteCount': upvoteCount,
+    'downvoteCount': downvoteCount,
+    'replyCount': replyCount,
+    'viewCount': viewCount,
+    'isPinned': isPinned,
+    'isLocked': isLocked,
+    'isReported': isReported,
+    'createdAt': createdAt.toIso8601String(),
+    'updatedAt': updatedAt.toIso8601String(),
+    'currentUserVote': currentUserVote?.toString(),
+  };
 
   factory CommunityPost.fromJson(Map<String, dynamic> json) => CommunityPost(
-        id: json['id'],
-        authorId: json['authorId'],
-        authorName: json['authorName'],
-        authorPhotoUrl: json['authorPhotoUrl'],
-        title: json['title'],
-        content: json['content'],
-        type: PostType.values.firstWhere(
-          (e) => e.toString() == 'PostType.${json['type']}',
-          orElse: () => PostType.discussion,
-        ),
-        tags: List<String>.from(json['tags'] ?? []),
-        courseIds: List<String>.from(json['courseIds'] ?? []),
-        upvoteCount: json['upvoteCount'] ?? 0,
-        downvoteCount: json['downvoteCount'] ?? 0,
-        replyCount: json['replyCount'] ?? 0,
-        viewCount: json['viewCount'] ?? 0,
-        isPinned: json['isPinned'] ?? false,
-        isLocked: json['isLocked'] ?? false,
-        isReported: json['isReported'] ?? false,
-        createdAt: DateTime.parse(json['createdAt']),
-        updatedAt: DateTime.parse(json['updatedAt']),
-        currentUserVote: json['currentUserVote'] != null
-            ? UserVote.values.firstWhere(
-                (e) => e.toString() == json['currentUserVote'],
-                orElse: () => UserVote.none,
-              )
-            : null,
-      );
+    id: json['id'],
+    authorId: json['authorId'],
+    authorName: json['authorName'],
+    authorPhotoUrl: json['authorPhotoUrl'],
+    title: json['title'],
+    content: json['content'],
+    type: PostType.values.firstWhere(
+      (e) => e.toString() == 'PostType.${json['type']}',
+      orElse: () => PostType.discussion,
+    ),
+    tags: List<String>.from(json['tags'] ?? []),
+    courseIds: List<String>.from(json['courseIds'] ?? []),
+    upvoteCount: json['upvoteCount'] ?? 0,
+    downvoteCount: json['downvoteCount'] ?? 0,
+    replyCount: json['replyCount'] ?? 0,
+    viewCount: json['viewCount'] ?? 0,
+    isPinned: json['isPinned'] ?? false,
+    isLocked: json['isLocked'] ?? false,
+    isReported: json['isReported'] ?? false,
+    createdAt: DateTime.parse(json['createdAt']),
+    updatedAt: DateTime.parse(json['updatedAt']),
+    currentUserVote: json['currentUserVote'] != null
+        ? UserVote.values.firstWhere(
+            (e) => e.toString() == json['currentUserVote'],
+            orElse: () => UserVote.none,
+          )
+        : null,
+  );
 
   CommunityPost copyWith({
     int? upvoteCount,
@@ -116,28 +116,28 @@ class CommunityPost {
     DateTime? updatedAt,
     Object? currentUserVote = _notProvided,
   }) => CommunityPost(
-        id: id,
-        authorId: authorId,
-        authorName: authorName,
-        authorPhotoUrl: authorPhotoUrl,
-        title: title,
-        content: content,
-        type: type,
-        tags: tags,
-        courseIds: courseIds,
-        upvoteCount: upvoteCount ?? this.upvoteCount,
-        downvoteCount: downvoteCount ?? this.downvoteCount,
-        replyCount: replyCount ?? this.replyCount,
-        viewCount: viewCount,
-        isPinned: isPinned,
-        isLocked: isLocked,
-        isReported: isReported ?? this.isReported,
-        createdAt: createdAt,
-        updatedAt: updatedAt ?? this.updatedAt,
-        currentUserVote: currentUserVote == _notProvided
-            ? this.currentUserVote
-            : currentUserVote as UserVote?,
-      );
+    id: id,
+    authorId: authorId,
+    authorName: authorName,
+    authorPhotoUrl: authorPhotoUrl,
+    title: title,
+    content: content,
+    type: type,
+    tags: tags,
+    courseIds: courseIds,
+    upvoteCount: upvoteCount ?? this.upvoteCount,
+    downvoteCount: downvoteCount ?? this.downvoteCount,
+    replyCount: replyCount ?? this.replyCount,
+    viewCount: viewCount,
+    isPinned: isPinned,
+    isLocked: isLocked,
+    isReported: isReported ?? this.isReported,
+    createdAt: createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    currentUserVote: currentUserVote == _notProvided
+        ? this.currentUserVote
+        : currentUserVote as UserVote?,
+  );
 }
 
 enum PostType {
@@ -201,46 +201,47 @@ class PostReply {
   bool get isNested => parentReplyId != null;
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'postId': postId,
-        'authorId': authorId,
-        'authorName': authorName,
-        'authorPhotoUrl': authorPhotoUrl,
-        'content': content,
-        'parentReplyId': parentReplyId,
-        'upvoteCount': upvoteCount,
-        'downvoteCount': downvoteCount,
-        'isAcceptedAnswer': isAcceptedAnswer,
-        'isReported': isReported,
-        'createdAt': createdAt.toIso8601String(),
-        'updatedAt': updatedAt.toIso8601String(),
-        'currentUserVote': currentUserVote?.toString(),
-        'replies': replies.map((r) => r.toJson()).toList(),
-      };
+    'id': id,
+    'postId': postId,
+    'authorId': authorId,
+    'authorName': authorName,
+    'authorPhotoUrl': authorPhotoUrl,
+    'content': content,
+    'parentReplyId': parentReplyId,
+    'upvoteCount': upvoteCount,
+    'downvoteCount': downvoteCount,
+    'isAcceptedAnswer': isAcceptedAnswer,
+    'isReported': isReported,
+    'createdAt': createdAt.toIso8601String(),
+    'updatedAt': updatedAt.toIso8601String(),
+    'currentUserVote': currentUserVote?.toString(),
+    'replies': replies.map((r) => r.toJson()).toList(),
+  };
 
   factory PostReply.fromJson(Map<String, dynamic> json) => PostReply(
-        id: json['id'],
-        postId: json['postId'],
-        authorId: json['authorId'],
-        authorName: json['authorName'],
-        authorPhotoUrl: json['authorPhotoUrl'],
-        content: json['content'],
-        parentReplyId: json['parentReplyId'],
-        upvoteCount: json['upvoteCount'] ?? 0,
-        downvoteCount: json['downvoteCount'] ?? 0,
-        isAcceptedAnswer: json['isAcceptedAnswer'] ?? false,
-        isReported: json['isReported'] ?? false,
-        createdAt: DateTime.parse(json['createdAt']),
-        updatedAt: DateTime.parse(json['updatedAt']),
-        currentUserVote: json['currentUserVote'] != null
-            ? UserVote.values.firstWhere(
-                (e) => e.toString() == json['currentUserVote'],
-                orElse: () => UserVote.none,
-              )
-            : null,
-        replies: List<PostReply>.from(
-            json['replies']?.map((r) => PostReply.fromJson(r)) ?? []),
-      );
+    id: json['id'],
+    postId: json['postId'],
+    authorId: json['authorId'],
+    authorName: json['authorName'],
+    authorPhotoUrl: json['authorPhotoUrl'],
+    content: json['content'],
+    parentReplyId: json['parentReplyId'],
+    upvoteCount: json['upvoteCount'] ?? 0,
+    downvoteCount: json['downvoteCount'] ?? 0,
+    isAcceptedAnswer: json['isAcceptedAnswer'] ?? false,
+    isReported: json['isReported'] ?? false,
+    createdAt: DateTime.parse(json['createdAt']),
+    updatedAt: DateTime.parse(json['updatedAt']),
+    currentUserVote: json['currentUserVote'] != null
+        ? UserVote.values.firstWhere(
+            (e) => e.toString() == json['currentUserVote'],
+            orElse: () => UserVote.none,
+          )
+        : null,
+    replies: List<PostReply>.from(
+      json['replies']?.map((r) => PostReply.fromJson(r)) ?? [],
+    ),
+  );
 
   PostReply copyWith({
     String? id,
@@ -301,26 +302,29 @@ class CommunityCategory {
   });
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'description': description,
-        'icon': icon.toString(),
-      'color': color.toARGB32(),
-        'postCount': postCount,
-        'memberCount': memberCount,
-        'isJoined': isJoined,
-      };
+    'id': id,
+    'name': name,
+    'description': description,
+    'icon': icon.toString(),
+    'color': color.toARGB32(),
+    'postCount': postCount,
+    'memberCount': memberCount,
+    'isJoined': isJoined,
+  };
 
-  factory CommunityCategory.fromJson(Map<String, dynamic> json) => CommunityCategory(
-        id: json['id'],
-        name: json['name'],
-        description: json['description'],
-        icon: Icons.category_rounded, // Default icon, in a real app we'd map this properly
-        color: Color(json['color']),
-        postCount: json['postCount'] ?? 0,
-        memberCount: json['memberCount'] ?? 0,
-        isJoined: json['isJoined'] ?? false,
-      );
+  factory CommunityCategory.fromJson(
+    Map<String, dynamic> json,
+  ) => CommunityCategory(
+    id: json['id'],
+    name: json['name'],
+    description: json['description'],
+    icon: Icons
+        .category_rounded, // Default icon, in a real app we'd map this properly
+    color: Color(json['color']),
+    postCount: json['postCount'] ?? 0,
+    memberCount: json['memberCount'] ?? 0,
+    isJoined: json['isJoined'] ?? false,
+  );
 }
 
 class UserActivity {
@@ -347,31 +351,31 @@ class UserActivity {
   });
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'userId': userId,
-        'type': type.toString(),
-        'title': title,
-        'description': description,
-        'relatedCourseId': relatedCourseId,
-        'relatedPostId': relatedPostId,
-        'xpEarned': xpEarned,
-        'createdAt': createdAt.toIso8601String(),
-      };
+    'id': id,
+    'userId': userId,
+    'type': type.toString(),
+    'title': title,
+    'description': description,
+    'relatedCourseId': relatedCourseId,
+    'relatedPostId': relatedPostId,
+    'xpEarned': xpEarned,
+    'createdAt': createdAt.toIso8601String(),
+  };
 
   factory UserActivity.fromJson(Map<String, dynamic> json) => UserActivity(
-        id: json['id'],
-        userId: json['userId'],
-        type: ActivityType.values.firstWhere(
-          (e) => e.toString() == 'ActivityType.${json['type']}',
-          orElse: () => ActivityType.courseCompleted,
-        ),
-        title: json['title'],
-        description: json['description'],
-        relatedCourseId: json['relatedCourseId'],
-        relatedPostId: json['relatedPostId'],
-        xpEarned: json['xpEarned'] ?? 0,
-        createdAt: DateTime.parse(json['createdAt']),
-      );
+    id: json['id'],
+    userId: json['userId'],
+    type: ActivityType.values.firstWhere(
+      (e) => e.toString() == 'ActivityType.${json['type']}',
+      orElse: () => ActivityType.courseCompleted,
+    ),
+    title: json['title'],
+    description: json['description'],
+    relatedCourseId: json['relatedCourseId'],
+    relatedPostId: json['relatedPostId'],
+    xpEarned: json['xpEarned'] ?? 0,
+    createdAt: DateTime.parse(json['createdAt']),
+  );
 }
 
 enum ActivityType {

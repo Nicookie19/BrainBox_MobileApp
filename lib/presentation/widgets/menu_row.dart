@@ -19,8 +19,12 @@ class MenuRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final iconColor = isDestructive ? AppColors.accentError : AppColors.textSecondary;
-    final titleColor = isDestructive ? AppColors.accentError : AppColors.textPrimary;
+    final iconColor = isDestructive
+        ? AppColors.accentError
+        : AppColors.textSecondary;
+    final titleColor = isDestructive
+        ? AppColors.accentError
+        : AppColors.textPrimary;
 
     return Material(
       color: Colors.transparent,

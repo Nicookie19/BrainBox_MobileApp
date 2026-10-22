@@ -26,7 +26,9 @@ class _DailyChallengeTestScreen extends StatelessWidget {
 }
 
 void main() {
-  testWidgets('BrainBox app launches without crashing', (WidgetTester tester) async {
+  testWidgets('BrainBox app launches without crashing', (
+    WidgetTester tester,
+  ) async {
     SharedPreferences.setMockInitialValues({});
     await StorageService.init();
     await tester.pumpWidget(const BrainBoxApp());
@@ -38,17 +40,19 @@ void main() {
     expect(find.byType(MaterialApp), findsOneWidget);
   });
 
-  testWidgets('Daily challenge screen works with fixed seed', (WidgetTester tester) async {
+  testWidgets('Daily challenge screen works with fixed seed', (
+    WidgetTester tester,
+  ) async {
     SharedPreferences.setMockInitialValues({});
     await StorageService.init();
-    
+
     // Use a fixed date for deterministic testing
     final fixedDate = DateTime(2024, 1, 15);
-    
+
     // Get the questions for this fixed date
     final questions = DailyChallengeRepository.getDailyQuestions(fixedDate);
     expect(questions.length, 5);
-    
+
     // Directly test daily challenge screen with fixed date
     await tester.pumpWidget(
       MaterialApp(home: _DailyChallengeTestScreen(fixedDate: fixedDate)),
@@ -56,18 +60,20 @@ void main() {
     await tester.pumpAndSettle();
 
     // Verify daily challenge screen loads with first question from fixed date
-    final firstQuestion = DailyChallengeRepository.getDailyQuestions(fixedDate).first.text;
+    final firstQuestion = DailyChallengeRepository.getDailyQuestions(
+      fixedDate,
+    ).first.text;
     expect(find.text(firstQuestion), findsOneWidget);
 
     // Answer all 5 questions correctly
     for (int i = 0; i < 5; i++) {
       final question = DailyChallengeRepository.getDailyQuestions(fixedDate)[i];
       final correctAnswer = question.options[question.answer];
-      
+
       await tester.tap(find.text(correctAnswer));
       await tester.pump();
       expect(find.text(question.explanation), findsOneWidget);
-      
+
       if (i < 4) {
         await tester.tap(find.text('Next Question'));
         await tester.pumpAndSettle();

@@ -18,9 +18,10 @@ class CommunityRepository {
     try {
       final decoded = jsonDecode(encoded) as List<dynamic>;
       final posts = decoded
-          .map((item) => CommunityPost.fromJson(
-                Map<String, dynamic>.from(item as Map),
-              ))
+          .map(
+            (item) =>
+                CommunityPost.fromJson(Map<String, dynamic>.from(item as Map)),
+          )
           .toList();
       if (posts.isEmpty) {
         final seeded = _seedPosts();
@@ -50,7 +51,9 @@ class CommunityRepository {
     final trimmedContent = content.trim();
     final trimmedTitle = title.trim();
     if (trimmedContent.length < 5) {
-      throw const FormatException('Post content must be at least 5 characters.');
+      throw const FormatException(
+        'Post content must be at least 5 characters.',
+      );
     }
     if (trimmedTitle.isEmpty) {
       throw const FormatException('Post title cannot be empty.');
@@ -74,10 +77,7 @@ class CommunityRepository {
     return post;
   }
 
-  static Future<CommunityPost> toggleVote(
-    String postId,
-    UserVote vote,
-  ) async {
+  static Future<CommunityPost> toggleVote(String postId, UserVote vote) async {
     final posts = await getPosts();
     final index = posts.indexWhere((post) => post.id == postId);
     if (index == -1) throw StateError('Post not found: $postId');
@@ -124,16 +124,20 @@ class CommunityRepository {
     try {
       final decoded = jsonDecode(encoded) as List<dynamic>;
       return decoded
-          .map((item) => PostReply.fromJson(
-                Map<String, dynamic>.from(item as Map),
-              ))
+          .map(
+            (item) =>
+                PostReply.fromJson(Map<String, dynamic>.from(item as Map)),
+          )
           .toList();
     } catch (_) {
       return [];
     }
   }
 
-  static Future<void> saveReplies(String postId, List<PostReply> replies) async {
+  static Future<void> saveReplies(
+    String postId,
+    List<PostReply> replies,
+  ) async {
     await StorageService.setString(
       '$_repliesKey$postId',
       jsonEncode(replies.map((reply) => reply.toJson()).toList()),
@@ -195,26 +199,36 @@ class CommunityRepository {
     final replies = await getReplies(postId);
     final updatedReplies = _toggleReplyVoteRecursive(replies, replyId, vote);
     await saveReplies(postId, updatedReplies);
-    
+
     // Find and return the updated reply
     final updated = _findReplyById(updatedReplies, replyId);
     if (updated == null) throw StateError('Reply not found: $replyId');
     return updated;
   }
 
-  static List<PostReply> _addNestedReply(List<PostReply> replies, String parentId, PostReply newReply) {
+  static List<PostReply> _addNestedReply(
+    List<PostReply> replies,
+    String parentId,
+    PostReply newReply,
+  ) {
     return replies.map((reply) {
       if (reply.id == parentId) {
         return reply.copyWith(replies: [...reply.replies, newReply]);
       }
       if (reply.replies.isNotEmpty) {
-        return reply.copyWith(replies: _addNestedReply(reply.replies, parentId, newReply));
+        return reply.copyWith(
+          replies: _addNestedReply(reply.replies, parentId, newReply),
+        );
       }
       return reply;
     }).toList();
   }
 
-  static List<PostReply> _toggleReplyVoteRecursive(List<PostReply> replies, String replyId, UserVote vote) {
+  static List<PostReply> _toggleReplyVoteRecursive(
+    List<PostReply> replies,
+    String replyId,
+    UserVote vote,
+  ) {
     return replies.map((reply) {
       if (reply.id == replyId) {
         final nextVote = reply.currentUserVote == vote ? null : vote;
@@ -224,7 +238,7 @@ class CommunityRepository {
         if (reply.currentUserVote == UserVote.downvote) downvotes--;
         if (nextVote == UserVote.upvote) upvotes++;
         if (nextVote == UserVote.downvote) downvotes++;
-        
+
         return reply.copyWith(
           upvoteCount: upvotes,
           downvoteCount: downvotes,
@@ -233,7 +247,9 @@ class CommunityRepository {
         );
       }
       if (reply.replies.isNotEmpty) {
-        return reply.copyWith(replies: _toggleReplyVoteRecursive(reply.replies, replyId, vote));
+        return reply.copyWith(
+          replies: _toggleReplyVoteRecursive(reply.replies, replyId, vote),
+        );
       }
       return reply;
     }).toList();
@@ -254,19 +270,24 @@ class CommunityRepository {
     final replies = await getReplies(postId);
     final updatedReplies = _acceptAnswerRecursive(replies, replyId);
     await saveReplies(postId, updatedReplies);
-    
+
     final updated = _findReplyById(updatedReplies, replyId);
     if (updated == null) throw StateError('Reply not found: $replyId');
     return updated;
   }
 
-  static List<PostReply> _acceptAnswerRecursive(List<PostReply> replies, String replyId) {
+  static List<PostReply> _acceptAnswerRecursive(
+    List<PostReply> replies,
+    String replyId,
+  ) {
     return replies.map((reply) {
       if (reply.id == replyId) {
         return reply.copyWith(isAcceptedAnswer: true);
       }
       if (reply.replies.isNotEmpty) {
-        return reply.copyWith(replies: _acceptAnswerRecursive(reply.replies, replyId));
+        return reply.copyWith(
+          replies: _acceptAnswerRecursive(reply.replies, replyId),
+        );
       }
       return reply;
     }).toList();
@@ -280,7 +301,8 @@ class CommunityRepository {
         authorId: 'user1',
         authorName: 'Mika Santos',
         title: 'What finally made CSS positioning click for you?',
-        content: 'I understand flexbox, but I still get confused about relative, absolute, and fixed.',
+        content:
+            'I understand flexbox, but I still get confused about relative, absolute, and fixed.',
         type: PostType.question,
         tags: const ['css', 'frontend'],
         courseIds: const ['frontend-foundations'],
@@ -295,7 +317,8 @@ class CommunityRepository {
         authorId: 'user2',
         authorName: 'Jordan Lee',
         title: 'My first automation project!',
-        content: 'I made a script that organizes my downloads folder by file type. Tiny win, but I am proud of it!',
+        content:
+            'I made a script that organizes my downloads folder by file type. Tiny win, but I am proud of it!',
         type: PostType.project,
         tags: const ['python', 'automation'],
         courseIds: const ['python-essentials'],

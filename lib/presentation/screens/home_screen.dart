@@ -91,26 +91,29 @@ class HomeScreen extends StatelessWidget {
       children: [
         const BrandMark(size: 40),
         const SizedBox(width: 10),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'BrainBox',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.w700,
-                letterSpacing: -0.5,
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Good morning,',
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.5,
+                ),
+                overflow: TextOverflow.ellipsis,
               ),
-            ),
-            Text(
-              'Daily Practice',
-              style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                color: AppColors.textMuted,
-                letterSpacing: 0.5,
+              Text(
+                provider.profile?.displayName ?? 'Nico 👋',
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                  color: AppColors.textMuted,
+                  letterSpacing: 0.5,
+                ),
+                overflow: TextOverflow.ellipsis,
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-        const Spacer(),
         IconButton(
           onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('You\'re all caught up.')),
@@ -152,18 +155,8 @@ class HomeScreen extends StatelessWidget {
   }
 
   Widget _buildGreeting(BuildContext context) {
-    final hour = DateTime.now().hour;
-    String greeting;
-    if (hour < 12) {
-      greeting = 'Good morning';
-    } else if (hour < 17) {
-      greeting = 'Good afternoon';
-    } else {
-      greeting = 'Good evening';
-    }
-
     return Text(
-      '$greeting. Ready to learn?',
+      'Ready to grow today?',
       style: Theme.of(context).textTheme.displaySmall?.copyWith(
         fontWeight: FontWeight.w700,
         letterSpacing: -0.5,
@@ -173,7 +166,7 @@ class HomeScreen extends StatelessWidget {
 
   Widget _buildSubtitle(BuildContext context) {
     return Text(
-      'Master new concepts through interactive problem-solving',
+      'Small lessons. Big possibilities.',
       style: Theme.of(
         context,
       ).textTheme.bodyLarge?.copyWith(color: AppColors.textSecondary),
@@ -183,20 +176,24 @@ class HomeScreen extends StatelessWidget {
   Widget _buildStats(BuildContext context, AppProvider provider) {
     return Row(
       children: [
-        StatPill(
-          icon: Icons.local_fire_department_rounded,
-          value: '${provider.currentStreak} day streak',
-          color: AppColors.accentWarning,
-          background: AppColors.accentWarningSoft,
-        ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.2, end: 0),
+        Flexible(
+          child: StatPill(
+            icon: Icons.local_fire_department_rounded,
+            value: '${provider.currentStreak} day streak',
+            color: AppColors.accentWarning,
+            background: AppColors.accentWarningSoft,
+          ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.2, end: 0),
+        ),
         const SizedBox(width: 12),
-        StatPill(
-          icon: Icons.bolt_rounded,
-          value: '${provider.xp} XP',
-          color: AppColors.accentPrimary,
-          background: AppColors.accentPrimarySoft,
-        ).animate().fadeIn(delay: 500.ms).slideY(begin: 0.2, end: 0),
-        const Spacer(),
+        Flexible(
+          child: StatPill(
+            icon: Icons.bolt_rounded,
+            value: '${provider.xp} XP',
+            color: AppColors.accentPrimary,
+            background: AppColors.accentPrimarySoft,
+          ).animate().fadeIn(delay: 500.ms).slideY(begin: 0.2, end: 0),
+        ),
+        const SizedBox(width: 12),
         _buildLevelBadge(context, provider),
       ],
     );

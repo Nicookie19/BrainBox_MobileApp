@@ -88,7 +88,10 @@ class DailyChallengeCard extends StatelessWidget {
               ),
               if (!isCompleted)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.accentWarning,
                     borderRadius: BorderRadius.circular(20),
@@ -103,10 +106,7 @@ class DailyChallengeCard extends StatelessWidget {
                   ),
                 )
               else
-                Icon(
-                  Icons.chevron_right_rounded,
-                  color: AppColors.textMuted,
-                ),
+                Icon(Icons.chevron_right_rounded, color: AppColors.textMuted),
             ],
           ),
         ),

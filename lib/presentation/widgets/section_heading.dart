@@ -16,13 +16,16 @@ class SectionHeading extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Row(
     children: [
-      Text(
-        title,
-        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-          fontWeight: FontWeight.w700,
+      Expanded(
+        child: Text(
+          title,
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+          overflow: TextOverflow.ellipsis,
         ),
       ),
-      const Spacer(),
+      const SizedBox(width: 8),
       TextButton(
         onPressed: onPressed,
         style: TextButton.styleFrom(

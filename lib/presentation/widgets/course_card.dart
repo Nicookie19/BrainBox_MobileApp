@@ -4,11 +4,7 @@ import 'package:brainbox/data/models/learning_models.dart';
 import 'package:brainbox/core/constants/app_colors.dart';
 
 class CourseCard extends StatelessWidget {
-  const CourseCard({
-    required this.course,
-    required this.onTap,
-    super.key,
-  });
+  const CourseCard({required this.course, required this.onTap, super.key});
 
   final Course course;
   final VoidCallback onTap;
@@ -52,16 +48,18 @@ class CourseCard extends StatelessWidget {
                         Expanded(
                           child: Text(
                             course.title,
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w700,
-                            ),
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(fontWeight: FontWeight.w700),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
                         if (course.isNew)
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
                             decoration: BoxDecoration(
                               color: AppColors.accentPrimary,
                               borderRadius: BorderRadius.circular(6),
@@ -121,16 +119,14 @@ class CourseCard extends StatelessWidget {
                         const SizedBox(width: 4),
                         Text(
                           course.rating.toStringAsFixed(1),
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(fontWeight: FontWeight.w600),
                         ),
                         const SizedBox(width: 8),
                         Text(
                           '${_formatNumber(course.enrollmentCount)} learners',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.textMuted,
-                          ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: AppColors.textMuted),
                         ),
                       ],
                     ),
@@ -149,15 +145,16 @@ class CourseCard extends StatelessWidget {
     );
   }
 
-  Widget _buildMetaItem(BuildContext context, IconData icon, String text, {Color? color}) {
+  Widget _buildMetaItem(
+    BuildContext context,
+    IconData icon,
+    String text, {
+    Color? color,
+  }) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(
-          icon,
-          size: 14,
-          color: color ?? AppColors.textMuted,
-        ),
+        Icon(icon, size: 14, color: color ?? AppColors.textMuted),
         const SizedBox(width: 4),
         Text(
           text,
@@ -173,21 +170,37 @@ class CourseCard extends StatelessWidget {
   LinearGradient _getCategoryGradient(LearningCategory category) {
     switch (category) {
       case LearningCategory.webDevelopment:
-        return const LinearGradient(colors: [Color(0xFF06B6D4), Color(0xFF0891B2)]);
+        return const LinearGradient(
+          colors: [Color(0xFF06B6D4), Color(0xFF0891B2)],
+        );
       case LearningCategory.mobileDevelopment:
-        return const LinearGradient(colors: [Color(0xFF8B5CF6), Color(0xFF7C3AED)]);
+        return const LinearGradient(
+          colors: [Color(0xFF8B5CF6), Color(0xFF7C3AED)],
+        );
       case LearningCategory.programmingLanguages:
-        return const LinearGradient(colors: [Color(0xFF10B981), Color(0xFF059669)]);
+        return const LinearGradient(
+          colors: [Color(0xFF10B981), Color(0xFF059669)],
+        );
       case LearningCategory.machineLearning:
-        return const LinearGradient(colors: [Color(0xFFF59E0B), Color(0xFFD97706)]);
+        return const LinearGradient(
+          colors: [Color(0xFFF59E0B), Color(0xFFD97706)],
+        );
       case LearningCategory.networking:
-        return const LinearGradient(colors: [Color(0xFFEF4444), Color(0xFFDC2626)]);
+        return const LinearGradient(
+          colors: [Color(0xFFEF4444), Color(0xFFDC2626)],
+        );
       case LearningCategory.databases:
-        return const LinearGradient(colors: [Color(0xFF84CC16), Color(0xFF65A30D)]);
+        return const LinearGradient(
+          colors: [Color(0xFF84CC16), Color(0xFF65A30D)],
+        );
       case LearningCategory.devops:
-        return const LinearGradient(colors: [Color(0xFFF97316), Color(0xFFEA580C)]);
+        return const LinearGradient(
+          colors: [Color(0xFFF97316), Color(0xFFEA580C)],
+        );
       case LearningCategory.projectManagement:
-        return const LinearGradient(colors: [Color(0xFFEC4899), Color(0xFFDB2777)]);
+        return const LinearGradient(
+          colors: [Color(0xFFEC4899), Color(0xFFDB2777)],
+        );
     }
   }
 
