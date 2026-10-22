@@ -62,9 +62,9 @@ class ProfileScreen extends StatelessWidget {
   Widget _buildSectionTitle(BuildContext context, String title) {
     return Text(
       title,
-      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-        fontWeight: FontWeight.w700,
-      ),
+      style: Theme.of(
+        context,
+      ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
     ).animate().fadeIn().slideY(begin: 0.1, end: 0);
   }
 
@@ -77,7 +77,9 @@ class ProfileScreen extends StatelessWidget {
         final achievement = entry.value;
         return Expanded(
           child: Padding(
-            padding: EdgeInsets.only(right: index == achievements.length - 1 ? 0 : 12),
+            padding: EdgeInsets.only(
+              right: index == achievements.length - 1 ? 0 : 12,
+            ),
             child: AchievementCard(
               icon: _getAchievementIcon(achievement.iconAsset),
               title: achievement.title,
@@ -106,7 +108,9 @@ class ProfileScreen extends StatelessWidget {
           icon: Icons.download_outlined,
           title: 'Downloads',
           subtitle: 'Manage offline content',
-          onTap: () {},
+          onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('No lessons are downloaded yet.')),
+          ),
         ),
         MenuRow(
           icon: Icons.dark_mode_outlined,
@@ -124,7 +128,11 @@ class ProfileScreen extends StatelessWidget {
           icon: Icons.help_outline_rounded,
           title: 'Help & Support',
           subtitle: 'FAQs, contact us, feedback',
-          onTap: () {},
+          onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Support is available at support@brainbox.app'),
+            ),
+          ),
         ),
         MenuRow(
           icon: Icons.logout_rounded,
@@ -163,14 +171,19 @@ class ProfileScreen extends StatelessWidget {
     }
   }
 
-  Future<void> _showSignOutDialog(BuildContext context, AppProvider provider) async {
+  Future<void> _showSignOutDialog(
+    BuildContext context,
+    AppProvider provider,
+  ) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.bgCard,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text('Sign Out?'),
-        content: const Text('Are you sure you want to sign out? Your progress will be saved locally.'),
+        content: const Text(
+          'Are you sure you want to sign out? Your progress will be saved locally.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -222,11 +235,17 @@ class _LoadingSkeleton extends StatelessWidget {
                 const SizedBox(height: 16),
                 Row(
                   children: [
-                    Expanded(child: _skeletonBox(width: double.infinity, height: 100)),
+                    Expanded(
+                      child: _skeletonBox(width: double.infinity, height: 100),
+                    ),
                     const SizedBox(width: 12),
-                    Expanded(child: _skeletonBox(width: double.infinity, height: 100)),
+                    Expanded(
+                      child: _skeletonBox(width: double.infinity, height: 100),
+                    ),
                     const SizedBox(width: 12),
-                    Expanded(child: _skeletonBox(width: double.infinity, height: 100)),
+                    Expanded(
+                      child: _skeletonBox(width: double.infinity, height: 100),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 28),

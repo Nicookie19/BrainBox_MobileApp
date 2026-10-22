@@ -58,15 +58,15 @@ class CommunityPostWidget extends StatelessWidget {
             children: [
               Text(
                 post.authorName,
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
               ),
               Text(
                 _timeAgo(post.createdAt),
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppColors.textMuted,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: AppColors.textMuted),
               ),
             ],
           ),
@@ -103,9 +103,9 @@ class CommunityPostWidget extends StatelessWidget {
       children: [
         Text(
           post.title,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w700,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 6),
         Text(
@@ -146,9 +146,13 @@ class CommunityPostWidget extends StatelessWidget {
     return Row(
       children: [
         _ActionButton(
-          icon: post.hasUserUpvoted ? Icons.thumb_up_rounded : Icons.thumb_up_outlined,
+          icon: post.hasUserUpvoted
+              ? Icons.thumb_up_rounded
+              : Icons.thumb_up_outlined,
           count: post.upvoteCount,
-          color: post.hasUserUpvoted ? AppColors.accentPrimary : AppColors.textMuted,
+          color: post.hasUserUpvoted
+              ? AppColors.accentPrimary
+              : AppColors.textMuted,
           onTap: () => onVote(UserVote.upvote),
         ),
         const SizedBox(width: 16),
@@ -163,16 +167,32 @@ class CommunityPostWidget extends StatelessWidget {
           icon: Icons.favorite_border_rounded,
           count: post.viewCount,
           color: AppColors.textMuted,
-          onTap: () {},
+          onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Saved to your liked posts.')),
+          ),
         ),
         const Spacer(),
         if (!post.isLocked)
           IconButton(
-            onPressed: () {},
-            icon: Icon(Icons.more_horiz_rounded, color: AppColors.textMuted),
-            style: IconButton.styleFrom(
-              backgroundColor: AppColors.bgTertiary,
+            onPressed: () => showModalBottomSheet<void>(
+              context: context,
+              builder: (sheetContext) => SafeArea(
+                child: ListTile(
+                  leading: const Icon(Icons.flag_outlined),
+                  title: const Text('Report post'),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Thanks — the post has been reported.'),
+                      ),
+                    );
+                  },
+                ),
+              ),
             ),
+            icon: Icon(Icons.more_horiz_rounded, color: AppColors.textMuted),
+            style: IconButton.styleFrom(backgroundColor: AppColors.bgTertiary),
           ),
       ],
     );

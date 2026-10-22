@@ -3,22 +3,22 @@ import 'package:flutter/material.dart';
 class AppColors {
   // BrainBox design system: deep navy surfaces with violet content and teal
   // navigation accents, derived from the supplied mobile designs.
-  static const Color bgPrimary = Color(0xFF080F38);
-  static const Color bgSecondary = Color(0xFF0C174A);
-  static const Color bgTertiary = Color(0xFF142463);
-  static const Color bgCard = Color(0xFF111E59);
-  static const Color bgCardHover = Color(0xFF18296C);
+  static const Color bgPrimary = Color(0xFF0B0D1A);
+  static const Color bgSecondary = Color(0xFF13162B);
+  static const Color bgTertiary = Color(0xFF1F2440);
+  static const Color bgCard = Color(0xFF1A1E36);
+  static const Color bgCardHover = Color(0xFF252B4A);
 
   // Accent colors (Brilliant uses purple/blue as primary)
-  static const Color accentPrimary = Color(0xFF9146E8);
-  static const Color accentPrimaryLight = Color(0xFFB67AF6);
-  static const Color accentPrimaryDark = Color(0xFF6D2EBB);
-  static const Color accentPrimarySoft = Color(0xFF35206A);
+  static const Color accentPrimary = Color(0xFF7C3AED);
+  static const Color accentPrimaryLight = Color(0xFF9D5FF8);
+  static const Color accentPrimaryDark = Color(0xFF5B21B6);
+  static const Color accentPrimarySoft = Color(0xFF2D1B69);
 
-  static const Color accentSecondary = Color(0xFF12D9C3);
-  static const Color accentSecondaryLight = Color(0xFF57F0DE);
-  static const Color accentSecondaryDark = Color(0xFF0AA894);
-  static const Color accentSecondarySoft = Color(0xFF123F5C);
+  static const Color accentSecondary = Color(0xFF06B6D4);
+  static const Color accentSecondaryLight = Color(0xFF67E8F9);
+  static const Color accentSecondaryDark = Color(0xFF0891B2);
+  static const Color accentSecondarySoft = Color(0xFF0C3345);
 
   static const Color accentSuccess = Color(0xFF10B981);
   static const Color accentSuccessLight = Color(0xFF34D399);
@@ -30,15 +30,15 @@ class AppColors {
   static const Color accentErrorSoft = Color(0xFF7F1D1D);
 
   // Text colors
-  static const Color textPrimary = Color(0xFFF8FAFF);
-  static const Color textSecondary = Color(0xFFAEB8E3);
-  static const Color textMuted = Color(0xFF7180B8);
-  static const Color textOnAccent = Color(0xFF081039);
+  static const Color textPrimary = Color(0xFFF0F2FF);
+  static const Color textSecondary = Color(0xFFB6BEDF);
+  static const Color textMuted = Color(0xFF8891B8);
+  static const Color textOnAccent = Color(0xFFFFFFFF);
 
   // Border
-  static const Color borderDefault = Color(0xFF283975);
-  static const Color borderMuted = Color(0xFF17245A);
-  static const Color borderAccent = Color(0xFF9146E8);
+  static const Color borderDefault = Color(0x1FFFFFFF);
+  static const Color borderMuted = Color(0x12FFFFFF);
+  static const Color borderAccent = Color(0xFF7C3AED);
 
   // Legacy aliases for migration
   static const Color aquaBlue = accentSecondary;

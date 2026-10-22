@@ -38,7 +38,14 @@ class LearningScreen extends StatelessWidget {
                     SectionHeading(
                       title: 'In Progress',
                       action: 'Sort',
-                      onPressed: () {},
+                      onPressed: () =>
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Courses are sorted by your progress.',
+                              ),
+                            ),
+                          ),
                     ),
                     const SizedBox(height: 16),
                     _buildInProgressCourses(context, provider),
@@ -46,7 +53,14 @@ class LearningScreen extends StatelessWidget {
                     SectionHeading(
                       title: 'Completed',
                       action: 'View All',
-                      onPressed: () {},
+                      onPressed: () =>
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'All completed courses are shown below.',
+                              ),
+                            ),
+                          ),
                     ),
                     const SizedBox(height: 16),
                     _buildCompletedCourses(context),
@@ -54,7 +68,14 @@ class LearningScreen extends StatelessWidget {
                     SectionHeading(
                       title: 'Weekly Activity',
                       action: 'Details',
-                      onPressed: () {},
+                      onPressed: () =>
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Weekly activity details are coming soon.',
+                              ),
+                            ),
+                          ),
                     ),
                     const SizedBox(height: 16),
                     const WeekActivity(),
@@ -92,9 +113,9 @@ class LearningScreen extends StatelessWidget {
         const SizedBox(height: 8),
         Text(
           'BrainBox remembers the ideas you\'ve started',
-          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-            color: AppColors.textSecondary,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyLarge?.copyWith(color: AppColors.textSecondary),
         ),
       ],
     ).animate().fadeIn().slideY(begin: 0.2, end: 0);
@@ -143,7 +164,9 @@ class LearningScreen extends StatelessWidget {
 
   Widget _buildInProgressCourses(BuildContext context, AppProvider provider) {
     final enrolledCourses = provider.courses
-        .where((c) => provider.profile?.enrolledCourseIds.contains(c.id) ?? false)
+        .where(
+          (c) => provider.profile?.enrolledCourseIds.contains(c.id) ?? false,
+        )
         .toList();
 
     if (enrolledCourses.isEmpty) {
@@ -155,10 +178,13 @@ class LearningScreen extends StatelessWidget {
         final index = entry.key;
         final course = entry.value;
         return LearningCourseTile(
-          course: course,
-          progress: _getCourseProgress(course.id),
-          onTap: () => context.go('/lesson/${course.id}'),
-        ).animate().fadeIn(delay: (300 + index * 100).ms).slideY(begin: 0.2, end: 0);
+              course: course,
+              progress: _getCourseProgress(course.id),
+              onTap: () => context.go('/lesson/${course.id}'),
+            )
+            .animate()
+            .fadeIn(delay: (300 + index * 100).ms)
+            .slideY(begin: 0.2, end: 0);
       }).toList(),
     );
   }
@@ -173,24 +199,20 @@ class LearningScreen extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Icon(
-            Icons.school_outlined,
-            size: 48,
-            color: AppColors.textMuted,
-          ),
+          Icon(Icons.school_outlined, size: 48, color: AppColors.textMuted),
           const SizedBox(height: 12),
           Text(
             'No courses in progress',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 4),
           Text(
             'Start a course from Explore to see it here',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: AppColors.textSecondary,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
             textAlign: TextAlign.center,
           ),
         ],
@@ -223,7 +245,9 @@ class LearningScreen extends StatelessWidget {
         updatedAt: DateTime.now(),
       ),
       progress: 1.0,
-      onTap: () {},
+      onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Course details are being prepared.')),
+      ),
       isCompleted: true,
     ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.2, end: 0);
   }
@@ -314,11 +338,17 @@ class _LoadingSkeleton extends StatelessWidget {
                 const SizedBox(height: 16),
                 Row(
                   children: [
-                    Expanded(child: _skeletonBox(width: double.infinity, height: 80)),
+                    Expanded(
+                      child: _skeletonBox(width: double.infinity, height: 80),
+                    ),
                     const SizedBox(width: 12),
-                    Expanded(child: _skeletonBox(width: double.infinity, height: 80)),
+                    Expanded(
+                      child: _skeletonBox(width: double.infinity, height: 80),
+                    ),
                     const SizedBox(width: 12),
-                    Expanded(child: _skeletonBox(width: double.infinity, height: 80)),
+                    Expanded(
+                      child: _skeletonBox(width: double.infinity, height: 80),
+                    ),
                   ],
                 ),
               ],

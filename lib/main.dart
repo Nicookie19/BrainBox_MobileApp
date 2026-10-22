@@ -1,24 +1,25 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
+import 'core/constants/app_colors.dart';
 import 'core/theme/app_theme.dart';
+import 'data/repositories/course_repository.dart';
 import 'data/services/storage_service.dart';
 import 'data/services/supabase_service.dart';
-import 'presentation/screens/auth_screen.dart';
-import 'data/repositories/course_repository.dart';
-import 'presentation/screens/home_screen.dart';
-import 'presentation/screens/explore_screen.dart';
-import 'presentation/screens/learning_screen.dart';
-import 'presentation/screens/community_screen.dart';
-import 'presentation/screens/profile_screen.dart';
-import 'presentation/screens/lesson_screen.dart';
-import 'presentation/screens/daily_challenge_screen.dart';
-import 'presentation/screens/course_detail_screen.dart';
-import 'presentation/screens/settings_screen.dart';
-import 'presentation/screens/bookmarks_screen.dart';
-import 'presentation/widgets/app_shell.dart';
 import 'presentation/providers/app_provider.dart';
+import 'presentation/screens/auth_screen.dart';
+import 'presentation/screens/bookmarks_screen.dart';
+import 'presentation/screens/community_screen.dart';
+import 'presentation/screens/course_detail_screen.dart';
+import 'presentation/screens/daily_challenge_screen.dart';
+import 'presentation/screens/explore_screen.dart';
+import 'presentation/screens/home_screen.dart';
+import 'presentation/screens/learning_screen.dart';
+import 'presentation/screens/lesson_screen.dart';
+import 'presentation/screens/profile_screen.dart';
+import 'presentation/screens/settings_screen.dart';
+import 'presentation/widgets/app_shell.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -39,7 +40,45 @@ class BrainBoxApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.darkTheme,
       routerConfig: _router,
+      builder: (context, child) =>
+          _MobileAppFrame(child: child ?? const SizedBox.shrink()),
     ),
+  );
+}
+
+/// Keeps the web and desktop previews faithful to the phone-first product.
+/// On actual phones the app remains full screen; wider viewports receive a
+/// centered handset canvas instead of a stretched tablet/desktop layout.
+class _MobileAppFrame extends StatelessWidget {
+  const _MobileAppFrame({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) {
+      if (constraints.maxWidth <= 600) return child;
+      return ColoredBox(
+        color: AppColors.bgPrimary,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 430, maxHeight: 900),
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: AppColors.bgPrimary,
+                borderRadius: BorderRadius.circular(32),
+                border: Border.all(color: AppColors.borderDefault),
+                boxShadow: AppShadows.cardElevated,
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(32),
+                child: child,
+              ),
+            ),
+          ),
+        ),
+      );
+    },
   );
 }
 
