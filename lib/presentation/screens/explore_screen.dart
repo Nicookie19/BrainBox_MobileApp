@@ -8,6 +8,7 @@ import 'package:brainbox/presentation/widgets/filter_chips.dart';
 import 'package:brainbox/data/models/course_models.dart';
 import 'package:brainbox/data/models/learning_models.dart';
 import 'package:brainbox/core/constants/app_colors.dart';
+import 'package:brainbox/presentation/widgets/async_state_view.dart';
 
 class ExploreScreen extends StatefulWidget {
   const ExploreScreen({super.key});
@@ -43,57 +44,69 @@ class _ExploreScreenState extends State<ExploreScreen> {
   Widget build(BuildContext context) {
     return Consumer<AppProvider>(
       builder: (context, provider, _) {
-        if (provider.isLoading) {
-          return const _LoadingSkeleton();
-        }
-
-        final filteredCourses = _filterCourses(provider.courses);
-
-        return CustomScrollView(
-          slivers: [
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildHeader(context),
-                    const SizedBox(height: 24),
-                    _buildSearchBar(context),
-                    const SizedBox(height: 16),
-                    _buildDifficultyFilter(context),
-                    const SizedBox(height: 16),
-                    _buildCategoryFilter(context),
-                    const SizedBox(height: 20),
-                    _buildResultsCount(context, filteredCourses.length),
-                    const SizedBox(height: 16),
-                  ],
-                ),
-              ),
-            ),
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
-              sliver: SliverList.separated(
-                itemCount: filteredCourses.isEmpty ? 1 : filteredCourses.length,
-                separatorBuilder: (_, _) => const SizedBox(height: 12),
-                itemBuilder: (context, index) {
-                  if (filteredCourses.isEmpty) {
-                    return _buildEmptyState();
-                  }
-                  return CourseCard(
-                        course: filteredCourses[index],
-                        onTap: () =>
-                            context.go('/course/${filteredCourses[index].id}'),
-                      )
-                      .animate()
-                      .fadeIn(delay: (100 + index * 50).ms)
-                      .slideY(begin: 0.2, end: 0);
-                },
-              ),
-            ),
-          ],
+        return AsyncStateView<List<Course>>(
+          futureBuilder: () async => provider.courses,
+          onSuccess: (context, courses) {
+            final filteredCourses = _filterCourses(courses);
+            return _buildExploreContent(context, provider, filteredCourses);
+          },
+          onError: (context, error, retry) =>
+              _buildErrorState(context, error, retry),
+          loadingBuilder: (context) => const _LoadingSkeleton(),
         );
       },
+    );
+  }
+
+  Widget _buildExploreContent(
+    BuildContext context,
+    AppProvider provider,
+    List<Course> filteredCourses,
+  ) {
+    return CustomScrollView(
+      slivers: [
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildHeader(context),
+                const SizedBox(height: 24),
+                _buildSearchBar(context),
+                const SizedBox(height: 16),
+                _buildDifficultyFilter(context),
+                const SizedBox(height: 16),
+                _buildCategoryFilter(context),
+                const SizedBox(height: 20),
+                _buildResultsCount(context, filteredCourses.length),
+                const SizedBox(height: 16),
+              ],
+            ),
+          ),
+        ),
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
+          sliver: filteredCourses.isEmpty
+              ? SliverToBoxAdapter(
+                  child: _buildEmptyState(context, filteredCourses.length == 0),
+                )
+              : SliverList.separated(
+                  itemCount: filteredCourses.length,
+                  separatorBuilder: (_, _) => const SizedBox(height: 12),
+                  itemBuilder: (context, index) =>
+                      CourseCard(
+                            course: filteredCourses[index],
+                            onTap: () => context.go(
+                              '/course/${filteredCourses[index].id}',
+                            ),
+                          )
+                          .animate()
+                          .fadeIn(delay: (100 + index * 50).ms)
+                          .slideY(begin: 0.2, end: 0),
+                ),
+        ),
+      ],
     );
   }
 
@@ -195,7 +208,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
     }).toList();
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(BuildContext context, bool isEmpty) {
+    if (!isEmpty) return const SizedBox.shrink();
     return Container(
       padding: const EdgeInsets.all(48),
       decoration: BoxDecoration(
@@ -221,7 +235,71 @@ class _ExploreScreenState extends State<ExploreScreen> {
             ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
             textAlign: TextAlign.center,
           ),
+          const SizedBox(height: 16),
+          FilledButton.icon(
+            onPressed: () {
+              setState(() {
+                _searchQuery = '';
+                _selectedCategory = 'All';
+                _selectedDifficulty = null;
+                _searchController.clear();
+              });
+            },
+            icon: const Icon(Icons.filter_alt_off_rounded),
+            label: const Text('Clear all filters'),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.accentPrimary,
+            ),
+          ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildErrorState(
+    BuildContext context,
+    String error,
+    VoidCallback? retry,
+  ) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(48),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.cloud_off_rounded,
+              size: 64,
+              color: AppColors.accentError,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Unable to load courses',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              error,
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            FilledButton.icon(
+              onPressed: retry,
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text('Retry'),
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.accentPrimary,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
