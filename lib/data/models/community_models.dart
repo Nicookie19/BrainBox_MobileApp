@@ -175,9 +175,9 @@ class PostReply {
   final DateTime createdAt;
   final DateTime updatedAt;
   final UserVote? currentUserVote;
-  final List<PostReply> replies;
+  List<PostReply> replies;
 
-  const PostReply({
+  PostReply({
     required this.id,
     required this.postId,
     required this.authorId,
