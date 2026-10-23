@@ -14,6 +14,7 @@ class UserProfile {
   final List<String> completedCourseIds;
   final List<String> enrolledCourseIds;
   final List<String> bookmarkedLessonIds;
+  final List<String> downloadedLessonIds;
   final List<String> completedLessonIds;
   final List<Achievement> achievements;
   final UserStats stats;
@@ -34,6 +35,7 @@ class UserProfile {
     required this.completedCourseIds,
     required this.enrolledCourseIds,
     required this.bookmarkedLessonIds,
+    required this.downloadedLessonIds,
     required this.completedLessonIds,
     required this.achievements,
     required this.stats,
@@ -65,6 +67,7 @@ class UserProfile {
     'completedCourseIds': completedCourseIds,
     'enrolledCourseIds': enrolledCourseIds,
     'bookmarkedLessonIds': bookmarkedLessonIds,
+    'downloadedLessonIds': downloadedLessonIds,
     'completedLessonIds': completedLessonIds,
     'achievements': achievements.map((a) => a.toJson()).toList(),
     'stats': stats.toJson(),
@@ -86,6 +89,7 @@ class UserProfile {
     completedCourseIds: List<String>.from(json['completedCourseIds'] ?? []),
     enrolledCourseIds: List<String>.from(json['enrolledCourseIds'] ?? []),
     bookmarkedLessonIds: List<String>.from(json['bookmarkedLessonIds'] ?? []),
+    downloadedLessonIds: List<String>.from(json['downloadedLessonIds'] ?? []),
     completedLessonIds: List<String>.from(json['completedLessonIds'] ?? []),
     achievements: List<Achievement>.from(
       json['achievements']?.map((a) => Achievement.fromJson(a)) ?? [],
@@ -111,6 +115,7 @@ class UserProfile {
     List<String>? completedCourseIds,
     List<String>? enrolledCourseIds,
     List<String>? bookmarkedLessonIds,
+    List<String>? downloadedLessonIds,
     List<String>? completedLessonIds,
     List<Achievement>? achievements,
     UserStats? stats,
@@ -131,6 +136,7 @@ class UserProfile {
       completedCourseIds: completedCourseIds ?? this.completedCourseIds,
       enrolledCourseIds: enrolledCourseIds ?? this.enrolledCourseIds,
       bookmarkedLessonIds: bookmarkedLessonIds ?? this.bookmarkedLessonIds,
+      downloadedLessonIds: downloadedLessonIds ?? this.downloadedLessonIds,
       completedLessonIds: completedLessonIds ?? this.completedLessonIds,
       achievements: achievements ?? this.achievements,
       stats: stats ?? this.stats,

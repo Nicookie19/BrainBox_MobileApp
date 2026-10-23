@@ -8,8 +8,8 @@ import 'package:brainbox/presentation/widgets/profile_stats.dart';
 import 'package:brainbox/presentation/widgets/week_activity.dart';
 import 'package:brainbox/presentation/widgets/achievement_card.dart';
 import 'package:brainbox/presentation/widgets/menu_row.dart';
-import 'package:brainbox/data/models/user_models.dart';
 import 'package:brainbox/data/services/storage_service.dart';
+import 'package:brainbox/data/models/user_models.dart';
 import 'package:brainbox/core/constants/app_colors.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -102,37 +102,31 @@ class ProfileScreen extends StatelessWidget {
           icon: Icons.bookmark_outline_rounded,
           title: 'Saved Lessons',
           subtitle: 'Access your bookmarked content',
-          onTap: () => context.push('/bookmarks'),
+          onTap: () => context.go('/saved-lessons'),
         ),
         MenuRow(
           icon: Icons.download_outlined,
           title: 'Downloads',
           subtitle: 'Manage offline content',
-          onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('No lessons are downloaded yet.')),
-          ),
+          onTap: () => context.go('/downloads'),
         ),
         MenuRow(
           icon: Icons.dark_mode_outlined,
           title: 'Appearance',
           subtitle: 'Customize theme and display',
-          onTap: () => context.push('/settings'),
+          onTap: () => context.go('/settings'),
         ),
         MenuRow(
           icon: Icons.notifications_outlined,
           title: 'Notifications',
           subtitle: 'Manage reminders and alerts',
-          onTap: () => context.push('/settings'),
+          onTap: () => context.go('/settings'),
         ),
         MenuRow(
           icon: Icons.help_outline_rounded,
           title: 'Help & Support',
           subtitle: 'FAQs, contact us, feedback',
-          onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Support is available at support@brainbox.app'),
-            ),
-          ),
+          onTap: () => context.go('/help'),
         ),
         MenuRow(
           icon: Icons.logout_rounded,
@@ -175,33 +169,63 @@ class ProfileScreen extends StatelessWidget {
     BuildContext context,
     AppProvider provider,
   ) async {
+    bool deleteData = false;
+
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.bgCard,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Sign Out?'),
-        content: const Text(
-          'Are you sure you want to sign out? Your progress will be saved locally.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          backgroundColor: AppColors.bgCard,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
           ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.accentError,
+          title: const Text('Sign Out?'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Are you sure you want to sign out? You\'ll return to the onboarding screen.',
+              ),
+              const SizedBox(height: 12),
+              CheckboxListTile(
+                value: deleteData,
+                onChanged: (value) =>
+                    setState(() => deleteData = value ?? false),
+                title: const Text('Also delete my learning data'),
+                subtitle: const Text(
+                  'This will permanently delete XP, streak, completed lessons, and achievements.',
+                ),
+                controlAffinity: ListTileControlAffinity.leading,
+                contentPadding: EdgeInsets.zero,
+                dense: true,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel'),
             ),
-            child: const Text('Sign Out'),
-          ),
-        ],
+            FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.accentError,
+              ),
+              child: const Text('Sign Out'),
+            ),
+          ],
+        ),
       ),
     );
 
     if (confirmed == true && context.mounted) {
-      await StorageService.clearAll();
+      if (deleteData) {
+        await StorageService.clearAll();
+      } else {
+        // Clear session but keep learning data
+        await StorageService.clearUserProfile();
+      }
       provider.initialize();
       if (context.mounted) {
         context.go('/');

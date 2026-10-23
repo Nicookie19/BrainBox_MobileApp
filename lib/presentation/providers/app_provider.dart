@@ -78,6 +78,7 @@ class AppProvider extends ChangeNotifier {
       completedCourseIds: [],
       enrolledCourseIds: ['frontend-foundations'],
       bookmarkedLessonIds: [],
+      downloadedLessonIds: [],
       completedLessonIds: [],
       achievements: _defaultAchievements(),
       stats: UserStats.empty(),

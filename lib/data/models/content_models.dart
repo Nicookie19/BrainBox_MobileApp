@@ -69,12 +69,14 @@ class LearningPath {
 class CourseContent {
   final String courseId;
   final String learningPathId;
+  final String title;
   final int version;
   final List<ModuleContent> modules;
 
   CourseContent({
     required this.courseId,
     required this.learningPathId,
+    required this.title,
     required this.version,
     required this.modules,
   });
@@ -82,6 +84,7 @@ class CourseContent {
   factory CourseContent.fromJson(Map<String, dynamic> json) => CourseContent(
     courseId: json['courseId'] as String,
     learningPathId: json['learningPathId'] as String,
+    title: json['title'] as String? ?? '',
     version: json['version'] as int? ?? 1,
     modules: (json['modules'] as List<dynamic>)
         .map((m) => ModuleContent.fromJson(m as Map<String, dynamic>))
@@ -91,6 +94,7 @@ class CourseContent {
   Map<String, dynamic> toJson() => {
     'courseId': courseId,
     'learningPathId': learningPathId,
+    'title': title,
     'version': version,
     'modules': modules.map((m) => m.toJson()).toList(),
   };
