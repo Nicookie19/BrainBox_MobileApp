@@ -3,11 +3,12 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:brainbox/presentation/providers/app_provider.dart';
-import 'package:brainbox/data/repositories/lesson_repository.dart' as lr;
 import 'package:brainbox/data/repositories/lesson_progress_repository.dart';
 import 'package:brainbox/data/repositories/course_repository.dart';
+import 'package:brainbox/data/repositories/content_loader.dart';
 import 'package:brainbox/data/services/storage_service.dart';
 import 'package:brainbox/data/models/course_models.dart';
+import 'package:brainbox/data/models/content_models.dart';
 import 'package:brainbox/core/constants/app_colors.dart';
 
 class LessonScreen extends StatefulWidget {
@@ -23,8 +24,8 @@ class LessonScreen extends StatefulWidget {
 class _LessonScreenState extends State<LessonScreen>
     with TickerProviderStateMixin {
   Course? _course;
-  lr.LessonModuleData? _lessonData;
-  List<lr.Lesson> _allLessons = [];
+  CourseContent? _courseContent;
+  List<LessonContent> _allLessons = [];
   int _currentLessonIndex = 0;
   int _currentStepIndex = 0;
   late AnimationController _progressController;
@@ -33,14 +34,14 @@ class _LessonScreenState extends State<LessonScreen>
   bool _lessonNotFound = false;
 
   // Answer state for interactive steps
-  int? _selectedAnswer;
+  Object? _selectedAnswer;
   String? _fillInBlankAnswer;
   List<int>? _codeOrderAnswer;
   bool _stepAnswered = false;
   bool _stepCorrect = false;
 
   // Persistence: track answered steps for resume
-  Map<int, int> _answeredSteps = {}; // stepIndex -> selectedAnswerIndex
+  Map<int, Object> _answeredSteps = {}; // stepIndex -> selectedAnswer
   final _answerController = TextEditingController();
 
   @override
@@ -62,19 +63,22 @@ class _LessonScreenState extends State<LessonScreen>
 
   Future<void> _loadData() async {
     final course = await CourseRepository.getCourseById(widget.courseId);
-    final lessonData = await lr.LessonRepository.getCourseLessons(
-      widget.courseId,
-    );
+    final courseContent = ContentLoader.getCourse(widget.courseId);
 
     if (mounted) {
       setState(() {
         _course = course;
-        _lessonData = lessonData;
+        _courseContent = courseContent;
         _courseNotFound = course == null;
-        _lessonNotFound = lessonData == null || lessonData.modules.isEmpty;
+        _lessonNotFound =
+            courseContent == null || courseContent.modules.isEmpty;
 
-        if (course != null && lessonData != null) {
-          _allLessons = lessonData.modules.expand((m) => m.lessons).toList();
+        if (course != null && courseContent != null) {
+          // Flatten all lessons from all modules in order
+          _allLessons = [];
+          for (final module in courseContent.modules) {
+            _allLessons.addAll(module.lessons);
+          }
 
           // Find initial lesson index
           if (widget.initialLessonId != null) {
@@ -113,14 +117,14 @@ class _LessonScreenState extends State<LessonScreen>
     }
   }
 
-  lr.Lesson? _getCurrentLesson() {
+  LessonContent? _getCurrentLesson() {
     if (_allLessons.isEmpty || _currentLessonIndex >= _allLessons.length) {
       return null;
     }
     return _allLessons[_currentLessonIndex];
   }
 
-  lr.LessonStep? _getCurrentStep() {
+  LessonStepContent? _getCurrentStep() {
     final lesson = _getCurrentLesson();
     if (lesson == null || _currentStepIndex >= lesson.steps.length) {
       return null;
@@ -155,7 +159,7 @@ class _LessonScreenState extends State<LessonScreen>
       );
     }
 
-    if (_course == null || _lessonData == null) {
+    if (_course == null || _courseContent == null) {
       return Scaffold(
         backgroundColor: AppColors.bgPrimary,
         body: const Center(
@@ -346,7 +350,7 @@ class _LessonScreenState extends State<LessonScreen>
     );
   }
 
-  Widget _buildLessonHeader(lr.Lesson lesson) {
+  Widget _buildLessonHeader(LessonContent lesson) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -371,20 +375,22 @@ class _LessonScreenState extends State<LessonScreen>
     ).animate().fadeIn().slideY(begin: 0.2, end: 0);
   }
 
-  Widget _buildStepContent(lr.LessonStep step) {
+  Widget _buildStepContent(LessonStepContent step) {
     switch (step.type) {
-      case lr.LessonStepType.explanation:
+      case StepType.explanation:
         return _buildExplanationStep(step);
-      case lr.LessonStepType.multipleChoice:
+      case StepType.multipleChoice:
         return _buildMultipleChoiceStep(step);
-      case lr.LessonStepType.fillInBlank:
+      case StepType.trueFalse:
+        return _buildTrueFalseStep(step);
+      case StepType.fillInBlank:
         return _buildFillInBlankStep(step);
-      case lr.LessonStepType.codeOrdering:
+      case StepType.codeOrdering:
         return _buildCodeOrderingStep(step);
     }
   }
 
-  Widget _buildExplanationStep(lr.LessonStep step) {
+  Widget _buildExplanationStep(LessonStepContent step) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
@@ -408,7 +414,7 @@ class _LessonScreenState extends State<LessonScreen>
     ).animate().fadeIn().slideY(begin: 0.2, end: 0);
   }
 
-  Widget _buildMultipleChoiceStep(lr.LessonStep step) {
+  Widget _buildMultipleChoiceStep(LessonStepContent step) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -496,7 +502,98 @@ class _LessonScreenState extends State<LessonScreen>
     ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.2, end: 0);
   }
 
-  Widget _buildFillInBlankStep(lr.LessonStep step) {
+  Widget _buildTrueFalseStep(LessonStepContent step) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          step.question ?? '',
+          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+            fontWeight: FontWeight.w700,
+            height: 1.3,
+          ),
+        ),
+        const SizedBox(height: 20),
+        ...[
+          {'label': 'True', 'value': true},
+          {'label': 'False', 'value': false},
+        ].asMap().entries.map((entry) {
+          final label = entry.value['label'] as String;
+          final value = entry.value['value'] as bool;
+          final isCorrect = value == step.correctAnswerBool;
+          final isSelected = _selectedAnswer == value;
+
+          Color borderColor = AppColors.borderDefault;
+          Color bgColor = AppColors.bgCard;
+          Color textColor = AppColors.textPrimary;
+          IconData? trailingIcon;
+
+          if (_stepAnswered) {
+            if (isCorrect) {
+              borderColor = AppColors.accentSuccess;
+              bgColor = AppColors.accentSuccessSoft;
+              textColor = AppColors.accentSuccess;
+              trailingIcon = Icons.check_circle_rounded;
+            } else if (isSelected) {
+              borderColor = AppColors.accentError;
+              bgColor = AppColors.accentErrorSoft;
+              textColor = AppColors.accentError;
+              trailingIcon = Icons.cancel_rounded;
+            }
+          } else if (isSelected) {
+            borderColor = AppColors.accentPrimary;
+          }
+
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: _stepAnswered
+                    ? null
+                    : () => _selectTrueFalseAnswer(value, isCorrect),
+                borderRadius: BorderRadius.circular(14),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(18),
+                  decoration: BoxDecoration(
+                    color: bgColor,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: borderColor, width: 2),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          label,
+                          style: Theme.of(context).textTheme.bodyLarge
+                              ?.copyWith(
+                                color: textColor,
+                                fontWeight: isCorrect && _stepAnswered
+                                    ? FontWeight.w600
+                                    : FontWeight.w500,
+                              ),
+                        ),
+                      ),
+                      if (trailingIcon != null)
+                        Icon(trailingIcon, color: textColor, size: 24),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        }),
+        if (_stepAnswered) ...[
+          const SizedBox(height: 16),
+          _buildExplanationCard(step),
+        ],
+      ],
+    ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.2, end: 0);
+  }
+
+  Widget _buildFillInBlankStep(LessonStepContent step) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -549,7 +646,7 @@ class _LessonScreenState extends State<LessonScreen>
     ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.2, end: 0);
   }
 
-  void _checkFillInBlank(lr.LessonStep step) {
+  void _checkFillInBlank(LessonStepContent step) {
     final userAnswer = _fillInBlankAnswer?.trim().toLowerCase() ?? '';
     if (userAnswer.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -557,7 +654,9 @@ class _LessonScreenState extends State<LessonScreen>
       );
       return;
     }
-    final correct = userAnswer == step.answer?.toLowerCase();
+    final normalizedAccepted =
+        step.acceptedAnswers?.map((a) => a.trim().toLowerCase()).toList() ?? [];
+    final correct = normalizedAccepted.contains(userAnswer);
     setState(() {
       _stepAnswered = true;
       _stepCorrect = correct;
@@ -566,7 +665,7 @@ class _LessonScreenState extends State<LessonScreen>
     _saveProgress();
   }
 
-  Widget _buildCodeOrderingStep(lr.LessonStep step) {
+  Widget _buildCodeOrderingStep(LessonStepContent step) {
     final snippets = step.snippets ?? [];
     final currentOrder =
         _codeOrderAnswer ?? List.generate(snippets.length, (i) => i);
@@ -689,7 +788,7 @@ class _LessonScreenState extends State<LessonScreen>
     }
   }
 
-  bool _isCodeOrderCorrect(lr.LessonStep step) {
+  bool _isCodeOrderCorrect(LessonStepContent step) {
     return _isOrderCorrect(_codeOrderAnswer, step.correctOrder);
   }
 
@@ -702,7 +801,7 @@ class _LessonScreenState extends State<LessonScreen>
     return true;
   }
 
-  void _checkCodeOrder(lr.LessonStep step) {
+  void _checkCodeOrder(LessonStepContent step) {
     final order =
         _codeOrderAnswer ??
         List.generate(step.snippets?.length ?? 0, (index) => index);
@@ -716,7 +815,7 @@ class _LessonScreenState extends State<LessonScreen>
     _saveProgress();
   }
 
-  Widget _buildExplanationCard(lr.LessonStep step) {
+  Widget _buildExplanationCard(LessonStepContent step) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -767,6 +866,16 @@ class _LessonScreenState extends State<LessonScreen>
     _saveProgress();
   }
 
+  void _selectTrueFalseAnswer(bool value, bool isCorrect) {
+    setState(() {
+      _selectedAnswer = value;
+      _stepAnswered = true;
+      _stepCorrect = isCorrect;
+      _answeredSteps[_currentStepIndex] = value ? 1 : 0;
+    });
+    _saveProgress();
+  }
+
   Widget _buildBottomAction() {
     final lesson = _getCurrentLesson();
     final step = _getCurrentStep();
@@ -781,7 +890,7 @@ class _LessonScreenState extends State<LessonScreen>
 
     final isLastStep = _currentStepIndex == lesson.steps.length - 1;
     final isLastLesson = _currentLessonIndex == _allLessons.length - 1;
-    final isExplanation = step.type == lr.LessonStepType.explanation;
+    final isExplanation = step.type == StepType.explanation;
 
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
@@ -795,9 +904,9 @@ class _LessonScreenState extends State<LessonScreen>
           children: [
             if (!_stepAnswered && !isExplanation)
               Text(
-                step.type == lr.LessonStepType.fillInBlank
+                step.type == StepType.fillInBlank
                     ? 'Enter and check your answer to continue'
-                    : step.type == lr.LessonStepType.codeOrdering
+                    : step.type == StepType.codeOrdering
                     ? 'Arrange and check the code to continue'
                     : 'Select an answer to continue',
                 style: Theme.of(

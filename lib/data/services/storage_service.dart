@@ -492,7 +492,7 @@ class StorageService {
     required String courseId,
     required String lessonId,
     required int currentStepIndex,
-    required Map<int, int> answeredSteps,
+    required Map<int, Object> answeredSteps,
     required bool isFinished,
   }) async {
     try {
@@ -537,7 +537,7 @@ class StorageService {
         LessonProgress(
           currentStepIndex: data['currentStepIndex'] as int? ?? 0,
           answeredSteps: answers.map(
-            (key, value) => MapEntry(int.parse(key), value as int),
+            (key, value) => MapEntry(int.parse(key), value),
           ),
           isFinished: data['isFinished'] as bool? ?? false,
           contentVersion: data['contentVersion'] as int? ?? 1,
@@ -669,7 +669,7 @@ class StorageService {
 
 class LessonProgress {
   final int currentStepIndex;
-  final Map<int, int> answeredSteps;
+  final Map<int, Object> answeredSteps;
   final bool isFinished;
   final int contentVersion;
 

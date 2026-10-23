@@ -6,7 +6,7 @@ class LessonProgressRepository {
     required String courseId,
     required String lessonId,
     required int currentStepIndex,
-    required Map<int, int> answeredSteps,
+    required Map<int, Object> answeredSteps,
     required bool isFinished,
   }) async {
     final result = await StorageService.saveLessonProgress(
