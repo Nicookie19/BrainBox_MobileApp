@@ -1,12 +1,15 @@
-import 'dart:math';
+import 'dart:async';
 
 import '../services/storage_service.dart';
 
 class DailyChallengeRepository {
   static const String _completionKey = 'daily_challenge_completed_';
   static const String _scoreKey = 'daily_challenge_score_';
+  static const String _xpAwardedKey = 'daily_challenge_xp_awarded_';
+  static const String _lastPickKey = 'daily_challenge_last_pick_';
+  static const int _questionsPerDay = 5;
 
-  // Large pool of questions for daily rotation
+  // Pool of at least 30 questions
   static final List<ChallengeQuestion> _questionPool = [
     // JavaScript
     ChallengeQuestion(
@@ -178,21 +181,153 @@ class DailyChallengeRepository {
       0,
       'SQL stands for Structured Query Language.',
     ),
+
+    // Additional questions to reach 30+
+    ChallengeQuestion(
+      'What does HTML stand for?',
+      [
+        'HyperText Markup Language',
+        'HighText Machine Language',
+        'HyperTool Markup Language',
+        'HyperText Machine Language',
+      ],
+      0,
+      'HTML stands for HyperText Markup Language.',
+    ),
+    ChallengeQuestion(
+      'Which CSS property changes text color?',
+      ['text-color', 'font-color', 'color', 'text-style'],
+      2,
+      'The color property sets the text color.',
+    ),
+    ChallengeQuestion(
+      'What is the purpose of the alt attribute in HTML img tags?',
+      [
+        'Alternative text for accessibility',
+        'Image alignment',
+        'Image size',
+        'Image format',
+      ],
+      0,
+      'The alt attribute provides alternative text for screen readers and when images fail to load.',
+    ),
+    ChallengeQuestion(
+      'Which HTTP method is used to create a resource?',
+      ['GET', 'POST', 'PUT', 'DELETE'],
+      1,
+      'POST is used to create new resources on the server.',
+    ),
+    ChallengeQuestion(
+      'What does API stand for?',
+      [
+        'Application Programming Interface',
+        'Automated Program Integration',
+        'Advanced Programming Interface',
+        'Application Process Integration',
+      ],
+      0,
+      'API stands for Application Programming Interface.',
+    ),
+    ChallengeQuestion(
+      'What is the correct way to declare a constant in Dart?',
+      ['var x = 10', 'final x = 10', 'const x = 10', 'static x = 10'],
+      2,
+      'const declares a compile-time constant in Dart.',
+    ),
+    ChallengeQuestion(
+      'What is the time complexity of accessing an element in a hash map?',
+      ['O(1)', 'O(log n)', 'O(n)', 'O(n²)'],
+      0,
+      'Hash maps provide average O(1) lookup by computing hash(key) to find the bucket directly.',
+    ),
+    ChallengeQuestion(
+      'Which keyword is used to handle exceptions in Dart?',
+      ['catch', 'try', 'throw', 'except'],
+      0,
+      'catch is used to catch exceptions thrown in a try block.',
+    ),
+    ChallengeQuestion(
+      'What does the "async" keyword do in Dart?',
+      [
+        'Makes function synchronous',
+        'Marks function as returning a Future',
+        'Creates a new thread',
+        'Pauses execution',
+      ],
+      1,
+      'async marks a function as asynchronous and automatically wraps the return value in a Future.',
+    ),
+    ChallengeQuestion(
+      'Which data structure is best for implementing a cache with LRU eviction?',
+      ['Array', 'Linked List', 'Hash Map + Doubly Linked List', 'Binary Tree'],
+      2,
+      'Hash map for O(1) lookup + doubly linked list for O(1) move-to-front and eviction.',
+    ),
   ];
 
-  /// Gets the daily challenge questions for a specific date
-  static List<ChallengeQuestion> getDailyQuestions(DateTime date) {
-    final seed = _dateToSeed(date);
-    final random = Random(seed);
-    final shuffled = List<ChallengeQuestion>.from(_questionPool);
-    shuffled.shuffle(random);
-    return shuffled.take(5).toList();
+  /// FNV-1a 32-bit hash for deterministic selection
+  static int _fnv1aHash(String input) {
+    int hash = 0x811c9dc5;
+    for (int i = 0; i < input.length; i++) {
+      hash ^= input.codeUnitAt(i);
+      hash = (hash * 0x01000193) & 0xFFFFFFFF;
+    }
+    return hash;
   }
 
-  /// Converts a date to a deterministic seed
-  static int _dateToSeed(DateTime date) {
-    final utcDate = DateTime(date.year, date.month, date.day);
-    return utcDate.millisecondsSinceEpoch ~/ 86400000; // Days since epoch
+  /// Gets the daily challenge questions for a specific date
+  /// Uses FNV-1a hash of date key for deterministic, stable selection
+  static List<ChallengeQuestion> getDailyQuestions(DateTime date) {
+    final dateKey = _dateToString(date);
+
+    // Check if we need to avoid repeating yesterday's pick
+    final lastPickDate = _getLastPickDate();
+    int startIndex = _fnv1aHash(dateKey) % _questionPool.length;
+
+    // If this pick would be the same as yesterday's, advance by 1
+    if (lastPickDate != null && _isConsecutiveDay(lastPickDate, date)) {
+      final yesterdayKey = _dateToString(
+        date.subtract(const Duration(days: 1)),
+      );
+      final yesterdayIndex = _fnv1aHash(yesterdayKey) % _questionPool.length;
+      if (startIndex == yesterdayIndex) {
+        startIndex = (startIndex + 1) % _questionPool.length;
+      }
+    }
+
+    // Save this pick for next day's comparison
+    _saveLastPickDate(date);
+
+    // Select questions starting from startIndex
+    final questions = <ChallengeQuestion>[];
+    for (int i = 0; i < _questionsPerDay; i++) {
+      final index = (startIndex + i) % _questionPool.length;
+      questions.add(_questionPool[index]);
+    }
+    return questions;
+  }
+
+  /// Checks if two dates are consecutive days
+  static bool _isConsecutiveDay(DateTime date1, DateTime date2) {
+    final d1 = DateTime(date1.year, date1.month, date1.day);
+    final d2 = DateTime(date2.year, date2.month, date2.day);
+    return d1.difference(d2).inDays.abs() == 1;
+  }
+
+  /// Gets the last date a pick was made
+  static DateTime? _getLastPickDate() {
+    final str = StorageService.getString(_lastPickKey);
+    if (str == null) return null;
+    try {
+      return DateTime.parse(str);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Saves the last pick date
+  static Future<void> _saveLastPickDate(DateTime date) async {
+    await StorageService.setString(_lastPickKey, date.toIso8601String());
   }
 
   /// Checks if the daily challenge has been completed for a given date
@@ -203,16 +338,40 @@ class DailyChallengeRepository {
 
   /// Marks the daily challenge as completed for a given date
   static Future<void> markCompletedForDate(DateTime date, int score) async {
-    final completionKey = '$_completionKey${_dateToString(date)}';
-    final scoreKey = '$_scoreKey${_dateToString(date)}';
+    final dateKey = _dateToString(date);
+    final completionKey = '$_completionKey$dateKey';
+    final scoreKey = '$_scoreKey$dateKey';
+    final xpKey = '$_xpAwardedKey$dateKey';
+
     await StorageService.setBool(completionKey, true);
     await StorageService.setInt(scoreKey, score);
+    await StorageService.setInt(xpKey, _calculateXp(score));
+  }
+
+  /// Calculates XP based on score (max 50 for 5/5)
+  static int _calculateXp(int score) {
+    return (score * 10).clamp(0, 50);
   }
 
   /// Gets the score for a completed daily challenge
   static int getScoreForDate(DateTime date) {
     final key = '$_scoreKey${_dateToString(date)}';
     return StorageService.getInt(key, defaultValue: 0);
+  }
+
+  /// Gets the XP awarded for a completed daily challenge
+  static int getXpAwardedForDate(DateTime date) {
+    final key = '$_xpAwardedKey${_dateToString(date)}';
+    return StorageService.getInt(key, defaultValue: 0);
+  }
+
+  /// Checks if the date has rolled over since last check
+  /// Returns true if a new day has started
+  static bool hasDateRolledOver(DateTime lastCheck) {
+    final now = DateTime.now();
+    final lastLocal = DateTime(lastCheck.year, lastCheck.month, lastCheck.day);
+    final nowLocal = DateTime(now.year, now.month, now.day);
+    return nowLocal.isAfter(lastLocal);
   }
 
   static String _dateToString(DateTime date) {
