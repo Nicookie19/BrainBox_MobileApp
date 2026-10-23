@@ -493,7 +493,9 @@ class StorageService {
     required String lessonId,
     required int currentStepIndex,
     required Map<int, Object> answeredSteps,
+    required Map<int, int> hintsUsed,
     required bool isFinished,
+    required int contentVersion,
   }) async {
     try {
       final data = <String, dynamic>{
@@ -501,9 +503,10 @@ class StorageService {
         'answeredSteps': answeredSteps.map(
           (key, value) => MapEntry('$key', value),
         ),
+        'hintsUsed': hintsUsed.map((key, value) => MapEntry('$key', value)),
         'isFinished': isFinished,
         'lastUpdated': _clock.now().toIso8601String(),
-        'contentVersion': 1,
+        'contentVersion': contentVersion,
       };
       await prefs.setString(
         _lessonProgressKey(courseId, lessonId),
@@ -533,14 +536,21 @@ class StorageService {
       final answers = Map<String, dynamic>.from(
         data['answeredSteps'] as Map? ?? {},
       );
+      final hints = Map<String, dynamic>.from(data['hintsUsed'] as Map? ?? {});
       return StorageResult.success(
         LessonProgress(
           currentStepIndex: data['currentStepIndex'] as int? ?? 0,
           answeredSteps: answers.map(
             (key, value) => MapEntry(int.parse(key), value),
           ),
+          hintsUsed: hints.map(
+            (key, value) => MapEntry(int.parse(key), value as int),
+          ),
           isFinished: data['isFinished'] as bool? ?? false,
           contentVersion: data['contentVersion'] as int? ?? 1,
+          lastUpdated: data['lastUpdated'] != null
+              ? DateTime.tryParse(data['lastUpdated'] as String)
+              : null,
         ),
       );
     } catch (e) {
@@ -670,13 +680,17 @@ class StorageService {
 class LessonProgress {
   final int currentStepIndex;
   final Map<int, Object> answeredSteps;
+  final Map<int, int> hintsUsed; // stepIndex -> hints used count
   final bool isFinished;
   final int contentVersion;
+  final DateTime? lastUpdated;
 
   LessonProgress({
     required this.currentStepIndex,
     required this.answeredSteps,
+    required this.hintsUsed,
     required this.isFinished,
     this.contentVersion = 1,
+    this.lastUpdated,
   });
 }

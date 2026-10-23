@@ -144,6 +144,7 @@ class LessonContent {
   final int estimatedMinutes;
   final int xpReward;
   final List<LessonStepContent> steps;
+  final int contentVersion;
 
   LessonContent({
     required this.id,
@@ -153,6 +154,7 @@ class LessonContent {
     required this.estimatedMinutes,
     required this.xpReward,
     required this.steps,
+    this.contentVersion = 1,
   });
 
   factory LessonContent.fromJson(Map<String, dynamic> json) => LessonContent(
@@ -165,6 +167,7 @@ class LessonContent {
     steps: (json['steps'] as List<dynamic>)
         .map((s) => LessonStepContent.fromJson(s as Map<String, dynamic>))
         .toList(),
+    contentVersion: json['contentVersion'] as int? ?? 1,
   );
 
   Map<String, dynamic> toJson() => {
@@ -175,6 +178,7 @@ class LessonContent {
     'estimatedMinutes': estimatedMinutes,
     'xpReward': xpReward,
     'steps': steps.map((s) => s.toJson()).toList(),
+    'contentVersion': contentVersion,
   };
 }
 

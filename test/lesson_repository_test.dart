@@ -1,5 +1,4 @@
 import 'package:brainbox/data/repositories/lesson_progress_repository.dart';
-import 'package:brainbox/data/repositories/lesson_repository.dart';
 import 'package:brainbox/data/repositories/content_loader.dart';
 import 'package:brainbox/data/models/content_models.dart';
 import 'package:brainbox/data/services/storage_service.dart';
@@ -50,44 +49,24 @@ void main() {
     ContentLoader.resetForTesting();
     await ContentLoader.initialize();
 
-    // Verify course loads
-    final course = ContentLoader.getCourse('python_essentials');
-    print('Course loaded: ${course?.courseId}');
-    print('Modules: ${course?.modules.length}');
-    if (course != null && course.modules.isNotEmpty) {
-      print('First module lessons: ${course.modules[0].lessons.length}');
-      print('First lesson id: ${course.modules[0].lessons[0].id}');
-    }
-
-    final saveResult = await StorageService.saveLessonProgress(
+    await LessonProgressRepository.saveProgressImmediate(
       courseId: 'python_essentials',
       lessonId: 'lesson_1',
       currentStepIndex: 3,
       answeredSteps: {2: 1, 3: 'test'},
+      hintsUsed: {2: 1},
       isFinished: false,
+      contentVersion: 1,
     );
-    print('Save result: $saveResult');
-
-    final dataString = StorageService.prefs.getString(
-      'lesson_progress_python_essentials:lesson_1',
-    );
-    print('Stored data: $dataString');
-
-    final loadResult = StorageService.loadLessonProgress(
-      'python_essentials',
-      'lesson_1',
-    );
-    print('Load result: $loadResult');
-    print('Load value: ${loadResult.value}');
-    print('Load error: ${loadResult.error}');
 
     final restored = await LessonProgressRepository.loadProgress(
       'python_essentials',
       'lesson_1',
     );
-    print('Restored: $restored');
     expect(restored?.currentStepIndex, 3);
     expect(restored?.answeredSteps, {2: 1, 3: 'test'});
+    expect(restored?.hintsUsed, {2: 1});
     expect(restored?.isFinished, isFalse);
+    expect(restored?.contentVersion, 1);
   });
 }

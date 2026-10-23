@@ -104,17 +104,131 @@ class _LessonScreenState extends State<LessonScreen>
         lesson.id,
       );
       if (progress != null) {
-        setState(() {
-          _currentStepIndex = progress.currentStepIndex;
-          _answeredSteps = progress.answeredSteps;
-          // Restore answer state for current step
-          if (progress.answeredSteps.containsKey(_currentStepIndex)) {
-            _selectedAnswer = progress.answeredSteps[_currentStepIndex];
-            _stepAnswered = true;
+        // Check if progress is valid (content version matches)
+        final isValid = progress.contentVersion == lesson.contentVersion;
+
+        if (isValid && !progress.isFinished) {
+          // Show Resume/Start over dialog
+          if (mounted) {
+            final shouldResume = await _showResumeDialog(progress, lesson);
+            if (shouldResume) {
+              setState(() {
+                _currentStepIndex = progress.currentStepIndex;
+                _answeredSteps = progress.answeredSteps;
+                _hintsUsed = progress.hintsUsed;
+                // Restore answer state for current step
+                if (progress.answeredSteps.containsKey(_currentStepIndex)) {
+                  _selectedAnswer = progress.answeredSteps[_currentStepIndex];
+                  _stepAnswered = true;
+                }
+              });
+            } else {
+              // Start over - clear progress
+              await LessonProgressRepository.clearProgress(
+                widget.courseId,
+                lesson.id,
+              );
+            }
           }
-        });
+        } else if (progress.isFinished) {
+          // Lesson already completed, clear progress
+          await LessonProgressRepository.clearProgress(
+            widget.courseId,
+            lesson.id,
+          );
+        } else {
+          // Version mismatch - clear progress and start fresh
+          await LessonProgressRepository.clearProgress(
+            widget.courseId,
+            lesson.id,
+          );
+        }
       }
     }
+  }
+
+  // Track hints used per step
+  Map<int, int> _hintsUsed = {};
+
+  Future<bool> _showResumeDialog(
+    LessonProgress progress,
+    LessonContent lesson,
+  ) async {
+    final completedSteps = progress.answeredSteps.length;
+    final totalSteps = lesson.steps.length;
+    final progressPercent = totalSteps > 0 ? completedSteps / totalSteps : 0.0;
+
+    return await showDialog<bool>(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => AlertDialog(
+            backgroundColor: AppColors.bgCard,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            title: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    gradient: AppColors.primaryGradient,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: const Icon(
+                    Icons.history_rounded,
+                    color: Colors.white,
+                    size: 28,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                const Expanded(child: Text('Resume Lesson?')),
+              ],
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'You left off at step ${progress.currentStepIndex + 1} of $totalSteps (${(progressPercent * 100).round()}% complete).',
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Last updated: ${_formatDateTime(progress.lastUpdated)}',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: AppColors.textMuted),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Start Over'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(context, true),
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.accentPrimary,
+                ),
+                child: const Text('Resume'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+  }
+
+  String _formatDateTime(DateTime? dateTime) {
+    if (dateTime == null) return 'Unknown';
+    final now = DateTime.now();
+    final difference = now.difference(dateTime);
+    if (difference.inMinutes < 1) return 'Just now';
+    if (difference.inHours < 1) return '${difference.inMinutes}m ago';
+    if (difference.inDays < 1) return '${difference.inHours}h ago';
+    return '${difference.inDays}d ago';
   }
 
   LessonContent? _getCurrentLesson() {
@@ -284,6 +398,9 @@ class _LessonScreenState extends State<LessonScreen>
           '${widget.courseId}:${lesson.id}',
         );
 
+    final step = _getCurrentStep();
+    final hasHints = step?.hints != null && step!.hints!.isNotEmpty;
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
       child: Row(
@@ -291,6 +408,24 @@ class _LessonScreenState extends State<LessonScreen>
           backButton,
           const SizedBox(width: 12),
           Expanded(child: titleColumn),
+          if (hasHints)
+            IconButton(
+              onPressed: _stepAnswered ? null : _showHint,
+              icon: Icon(
+                Icons.lightbulb_outline_rounded,
+                color: _stepAnswered
+                    ? AppColors.textMuted
+                    : AppColors.accentWarning,
+              ),
+              style: IconButton.styleFrom(
+                backgroundColor: AppColors.bgCard,
+                foregroundColor: _stepAnswered
+                    ? AppColors.textMuted
+                    : AppColors.accentWarning,
+              ),
+              tooltip: 'Show hint',
+            ),
+          if (hasHints) const SizedBox(width: 8),
           IconButton(
             onPressed: lesson != null
                 ? () => context.read<AppProvider>().toggleBookmark(
@@ -1027,7 +1162,9 @@ class _LessonScreenState extends State<LessonScreen>
       lessonId: lesson.id,
       currentStepIndex: _currentStepIndex,
       answeredSteps: _answeredSteps,
+      hintsUsed: _hintsUsed,
       isFinished: _isCompleted,
+      contentVersion: lesson.contentVersion,
     );
   }
 
@@ -1087,6 +1224,77 @@ class _LessonScreenState extends State<LessonScreen>
               minimumSize: const Size(double.infinity, 48),
             ),
             child: const Text('Continue'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showHint() {
+    final step = _getCurrentStep();
+    if (step == null || step.hints == null || step.hints!.isEmpty) return;
+
+    final hintsUsed = _hintsUsed[_currentStepIndex] ?? 0;
+    final availableHints = step.hints!.skip(hintsUsed).toList();
+    if (availableHints.isEmpty) return;
+
+    final newHintsUsed = hintsUsed + 1;
+
+    setState(() {
+      _hintsUsed[_currentStepIndex] = newHintsUsed;
+    });
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.bgCard,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.accentWarningSoft,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: const Icon(
+                Icons.lightbulb_rounded,
+                color: AppColors.accentWarning,
+                size: 28,
+              ),
+            ),
+            const SizedBox(width: 12),
+            const Expanded(child: Text('Hint')),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              availableHints.first,
+              style: Theme.of(
+                context,
+              ).textTheme.bodyLarge?.copyWith(color: AppColors.textPrimary),
+            ),
+            if (newHintsUsed < step.hints!.length) ...[
+              const SizedBox(height: 12),
+              Text(
+                '${step.hints!.length - newHintsUsed} hint${step.hints!.length - newHintsUsed > 1 ? 's' : ''} remaining',
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: AppColors.textMuted),
+              ),
+            ],
+          ],
+        ),
+        actions: [
+          FilledButton(
+            onPressed: () => Navigator.pop(context),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.accentPrimary,
+            ),
+            child: const Text('Got it'),
           ),
         ],
       ),
