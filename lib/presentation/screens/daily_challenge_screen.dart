@@ -489,12 +489,17 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen>
         top: false,
         child: FilledButton(
           onPressed: () async {
-            final today = widget.fixedDate ?? DateTime.now();
-            await DailyChallengeRepository.markCompletedForDate(today, _score);
+            final result = await context
+                .read<AppProvider>()
+                .completeDailyChallenge(score: _score);
             if (!mounted) return;
-            context.read<AppProvider>().completeChallenge();
-            if (!mounted) return;
-            context.pop();
+            if (result.success) {
+              context.pop();
+            } else if (result.error != null) {
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text(result.error!)));
+            }
           },
           style: FilledButton.styleFrom(
             backgroundColor: AppColors.accentPrimary,
