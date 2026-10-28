@@ -134,10 +134,12 @@ class ContinueCard extends StatelessWidget {
               const SizedBox(height: 12),
               Row(
                 children: [
-                  Icon(
-                    Icons.bolt_rounded,
-                    size: 14,
-                    color: AppColors.accentWarning,
+                  SizedBox.square(
+                    dimension: 14,
+                    child: Image.asset(
+                      'assets/ui/bolt.png',
+                      fit: BoxFit.contain,
+                    ),
                   ),
                   const SizedBox(width: 6),
                   Text(
@@ -191,9 +193,8 @@ class ContinueCard extends StatelessWidget {
                   color: AppColors.accentPrimarySoft,
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: Icon(
-                  Icons.school_outlined,
-                  color: AppColors.accentPrimary,
+                child: CourseArtwork(
+                  category: LearningCategory.webDevelopment,
                   size: 26,
                 ),
               ),

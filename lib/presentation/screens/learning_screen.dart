@@ -68,14 +68,13 @@ class LearningScreen extends StatelessWidget {
                     SectionHeading(
                       title: 'Weekly Activity',
                       action: 'Details',
-                      onPressed: () =>
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                '${provider.weeklyStudyMinutes} min studied this week.',
-                              ),
-                            ),
+                      onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            '${provider.weeklyStudyMinutes} min studied this week.',
                           ),
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 16),
                     WeekActivity(activity: provider.weekActivity),
@@ -135,7 +134,7 @@ class LearningScreen extends StatelessWidget {
             child: StatSummary(
               value: _formatMinutes(provider.weeklyStudyMinutes),
               label: 'This Week',
-              icon: Icons.schedule_rounded,
+              asset: 'assets/ui/fire.png',
               color: AppColors.accentSecondary,
             ),
           ),
@@ -144,7 +143,7 @@ class LearningScreen extends StatelessWidget {
             child: StatSummary(
               value: '${provider.profile?.stats.totalLessonsCompleted ?? 0}',
               label: 'Lessons Done',
-              icon: Icons.menu_book_rounded,
+              asset: 'assets/ui/code_brackets.png',
               color: AppColors.accentPrimary,
             ),
           ),
@@ -153,7 +152,7 @@ class LearningScreen extends StatelessWidget {
             child: StatSummary(
               value: '${provider.xp}',
               label: 'Total XP',
-              icon: Icons.bolt_rounded,
+              asset: 'assets/ui/bolt.png',
               color: AppColors.accentWarning,
             ),
           ),
@@ -190,7 +189,9 @@ class LearningScreen extends StatelessWidget {
     if (!provider.hasLessons(course.id)) {
       context.push('/course/${course.id}');
     } else if (next == null) {
-      context.push('/lesson/${course.id}?lesson=${provider.lessonsFor(course.id).first.id}');
+      context.push(
+        '/lesson/${course.id}?lesson=${provider.lessonsFor(course.id).first.id}',
+      );
     } else {
       context.push('/lesson/${course.id}?lesson=$next');
     }
@@ -257,14 +258,17 @@ class LearningScreen extends StatelessWidget {
     return Column(
       children: completed.asMap().entries.map((entry) {
         return Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: LearningCourseTile(
-            course: entry.value,
-            progress: 1.0,
-            isCompleted: true,
-            onTap: () => context.push('/course/${entry.value.id}'),
-          ),
-        ).animate().fadeIn(delay: (400 + entry.key * 100).ms).slideY(begin: 0.2, end: 0);
+              padding: const EdgeInsets.only(bottom: 12),
+              child: LearningCourseTile(
+                course: entry.value,
+                progress: 1.0,
+                isCompleted: true,
+                onTap: () => context.push('/course/${entry.value.id}'),
+              ),
+            )
+            .animate()
+            .fadeIn(delay: (400 + entry.key * 100).ms)
+            .slideY(begin: 0.2, end: 0);
       }).toList(),
     );
   }

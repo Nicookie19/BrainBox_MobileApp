@@ -397,7 +397,7 @@ class HomeScreen extends StatelessWidget {
         for (var i = 0; i < recommended.length; i++) ...[
           if (i > 0) const SizedBox(height: 12),
           RecommendationTile(
-            icon: recommended[i].category.icon,
+            category: recommended[i].category,
             title: recommended[i].title,
             subtitle:
                 '${recommended[i].lessonCount} lessons · ${recommended[i].difficulty.label}',

@@ -23,7 +23,7 @@ class ProfileStats extends StatelessWidget {
             child: _StatItem(
               value: '${AppProvider.effectiveStreak(profile)}',
               label: 'Day Streak',
-              icon: Icons.local_fire_department_rounded,
+              asset: 'assets/ui/fire.png',
               color: AppColors.accentWarning,
             ),
           ),
@@ -32,7 +32,7 @@ class ProfileStats extends StatelessWidget {
             child: _StatItem(
               value: '${profile.totalXp}',
               label: 'Total XP',
-              icon: Icons.bolt_rounded,
+              asset: 'assets/ui/bolt.png',
               color: AppColors.accentPrimary,
             ),
           ),
@@ -41,7 +41,7 @@ class ProfileStats extends StatelessWidget {
             child: _StatItem(
               value: '${profile.enrolledCourseIds.length}',
               label: 'Active Paths',
-              icon: Icons.school_rounded,
+              asset: 'assets/ui/nav_learn_active.png',
               color: AppColors.accentSecondary,
             ),
           ),
@@ -50,7 +50,7 @@ class ProfileStats extends StatelessWidget {
             child: _StatItem(
               value: '${profile.stats.totalCoursesCompleted}',
               label: 'Completed',
-              icon: Icons.check_circle_rounded,
+              asset: 'assets/ui/badge_gold.png',
               color: AppColors.accentSuccess,
             ),
           ),
@@ -64,13 +64,13 @@ class _StatItem extends StatelessWidget {
   const _StatItem({
     required this.value,
     required this.label,
-    required this.icon,
+    required this.asset,
     required this.color,
   });
 
   final String value;
   final String label;
-  final IconData icon;
+  final String asset;
   final Color color;
 
   @override
@@ -83,21 +83,24 @@ class _StatItem extends StatelessWidget {
             color: color.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Icon(icon, color: color, size: 22),
+          child: SizedBox.square(
+            dimension: 22,
+            child: Image.asset(asset, fit: BoxFit.contain),
+          ),
         ),
         const SizedBox(height: 10),
         Text(
           value,
-          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.w700,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 2),
         Text(
           label,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: AppColors.textMuted,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: AppColors.textMuted),
           textAlign: TextAlign.center,
         ),
       ],
