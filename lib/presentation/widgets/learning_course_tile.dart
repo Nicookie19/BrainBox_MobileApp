@@ -44,10 +44,7 @@ class LearningCourseTile extends StatelessWidget {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: isCompleted
-                        ? [
-                            AppColors.accentSuccess,
-                            AppColors.accentSuccess.withValues(alpha: 0.7),
-                          ]
+                        ? [AppColors.accentSuccess, AppColors.accentSuccess.withValues(alpha: 0.7)]
                         : colors,
                   ),
                   borderRadius: BorderRadius.circular(14),
@@ -68,16 +65,14 @@ class LearningCourseTile extends StatelessWidget {
                         Expanded(
                           child: Text(
                             course.title,
-                            style: Theme.of(context).textTheme.titleMedium
-                                ?.copyWith(fontWeight: FontWeight.w700),
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                         ),
                         if (isCompleted)
                           Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 2,
-                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                             decoration: BoxDecoration(
                               color: AppColors.accentSuccessSoft,
                               borderRadius: BorderRadius.circular(6),
@@ -110,9 +105,7 @@ class LearningCourseTile extends StatelessWidget {
                         value: progress,
                         minHeight: 7,
                         backgroundColor: AppColors.bgTertiary,
-                        color: isCompleted
-                            ? AppColors.accentSuccess
-                            : colors[0],
+                        color: isCompleted ? AppColors.accentSuccess : colors[0],
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -121,20 +114,18 @@ class LearningCourseTile extends StatelessWidget {
                       children: [
                         Text(
                           '${(progress * 100).round()}% complete',
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(
-                                color: AppColors.textMuted,
-                                fontWeight: FontWeight.w500,
-                              ),
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: AppColors.textMuted,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                         if (!isCompleted)
                           Text(
                             '+${25 * course.lessonCount} XP total',
-                            style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(
-                                  color: AppColors.accentPrimary,
-                                  fontWeight: FontWeight.w600,
-                                ),
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: AppColors.accentPrimary,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                       ],
                     ),

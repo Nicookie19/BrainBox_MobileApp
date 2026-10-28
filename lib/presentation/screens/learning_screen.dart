@@ -7,8 +7,9 @@ import 'package:brainbox/presentation/widgets/learning_course_tile.dart';
 import 'package:brainbox/presentation/widgets/section_heading.dart';
 import 'package:brainbox/presentation/widgets/week_activity.dart';
 import 'package:brainbox/presentation/widgets/achievement_card.dart';
+import 'package:brainbox/presentation/widgets/achievement_style.dart';
 import 'package:brainbox/presentation/widgets/stat_summary.dart';
-import 'package:brainbox/data/models/user_models.dart';
+import 'package:brainbox/data/models/course_models.dart';
 import 'package:brainbox/core/constants/app_colors.dart';
 
 class LearningScreen extends StatelessWidget {
@@ -67,10 +68,17 @@ class LearningScreen extends StatelessWidget {
                     SectionHeading(
                       title: 'Weekly Activity',
                       action: 'Details',
-                      onPressed: () => context.go('/profile'),
+                      onPressed: () =>
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                '${provider.weeklyStudyMinutes} min studied this week.',
+                              ),
+                            ),
+                          ),
                     ),
                     const SizedBox(height: 16),
-                    const WeekActivity(),
+                    WeekActivity(activity: provider.weekActivity),
                     const SizedBox(height: 28),
                     SectionHeading(
                       title: 'Achievements',
@@ -125,8 +133,7 @@ class LearningScreen extends StatelessWidget {
         children: [
           Expanded(
             child: StatSummary(
-              value:
-                  '${(provider.profile?.stats.totalStudyMinutes ?? 0) ~/ 60}h',
+              value: _formatMinutes(provider.weeklyStudyMinutes),
               label: 'This Week',
               icon: Icons.schedule_rounded,
               color: AppColors.accentSecondary,
@@ -156,30 +163,42 @@ class LearningScreen extends StatelessWidget {
   }
 
   Widget _buildInProgressCourses(BuildContext context, AppProvider provider) {
-    final enrolledCourses = provider.courses
-        .where(
-          (c) => provider.profile?.enrolledCourseIds.contains(c.id) ?? false,
-        )
-        .toList();
+    final courses = provider.inProgressCourses;
 
-    if (enrolledCourses.isEmpty) {
+    if (courses.isEmpty) {
       return _buildEmptyInProgress(context);
     }
 
     return Column(
-      children: enrolledCourses.asMap().entries.map((entry) {
+      children: courses.asMap().entries.map((entry) {
         final index = entry.key;
         final course = entry.value;
         return LearningCourseTile(
               course: course,
-              progress: _getCourseProgress(provider, course.id),
-              onTap: () => context.go('/lesson/${course.id}'),
+              progress: provider.courseProgress(course.id),
+              onTap: () => _openCourse(context, provider, course),
             )
             .animate()
             .fadeIn(delay: (300 + index * 100).ms)
             .slideY(begin: 0.2, end: 0);
       }).toList(),
     );
+  }
+
+  void _openCourse(BuildContext context, AppProvider provider, Course course) {
+    final next = provider.nextLessonIdFor(course.id);
+    if (!provider.hasLessons(course.id)) {
+      context.push('/course/${course.id}');
+    } else if (next == null) {
+      context.push('/lesson/${course.id}?lesson=${provider.lessonsFor(course.id).first.id}');
+    } else {
+      context.push('/lesson/${course.id}?lesson=$next');
+    }
+  }
+
+  String _formatMinutes(int minutes) {
+    if (minutes < 60) return '${minutes}m';
+    return '${(minutes / 60).toStringAsFixed(1)}h';
   }
 
   Widget _buildEmptyInProgress(BuildContext context) {
@@ -214,54 +233,66 @@ class LearningScreen extends StatelessWidget {
   }
 
   Widget _buildCompletedCourses(BuildContext context, AppProvider provider) {
-    final completed = provider.courses
-        .where(
-          (course) =>
-              provider.profile?.completedCourseIds.contains(course.id) ?? false,
-        )
-        .toList();
-    if (completed.isEmpty) return _buildEmptyInProgress(context);
+    final completed = provider.completedCourses;
+
+    if (completed.isEmpty) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: AppColors.bgCard,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.borderDefault),
+        ),
+        child: Text(
+          'Finish every lesson in a course and it will show up here.',
+          textAlign: TextAlign.center,
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
+        ),
+      ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.2, end: 0);
+    }
+
     return Column(
-      children: completed
-          .map(
-            (course) => LearningCourseTile(
-              course: course,
-              progress: 1,
-              isCompleted: true,
-              onTap: () => context.go('/lesson/${course.id}'),
-            ),
-          )
-          .toList(),
+      children: completed.asMap().entries.map((entry) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: LearningCourseTile(
+            course: entry.value,
+            progress: 1.0,
+            isCompleted: true,
+            onTap: () => context.push('/course/${entry.value.id}'),
+          ),
+        ).animate().fadeIn(delay: (400 + entry.key * 100).ms).slideY(begin: 0.2, end: 0);
+      }).toList(),
     );
   }
 
   Widget _buildAchievements(BuildContext context, AppProvider provider) {
     final achievements = provider.profile?.achievements ?? const [];
-    final shown = achievements.take(3).toList();
-    return Row(
-      children: shown
-          .map(
-            (achievement) => Expanded(
-              child: AchievementCard(
-                icon: achievement.type == AchievementType.streakDays
-                    ? Icons.local_fire_department_rounded
-                    : Icons.emoji_events_rounded,
-                title: achievement.title,
-                subtitle: achievement.description,
-                color: AppColors.accentPrimary,
-                isUnlocked: achievement.isUnlocked,
-                progress: achievement.progress.toDouble(),
-                target: achievement.target.toDouble(),
-              ),
-            ),
-          )
-          .toList(),
-    ).animate().fadeIn(delay: 500.ms).slideY(begin: 0.2, end: 0);
-  }
 
-  double _getCourseProgress(AppProvider provider, String courseId) {
-    final progress = provider.courseProgress[courseId];
-    return progress?.overallProgress ?? 0;
+    return Row(
+      children: achievements.asMap().entries.map((entry) {
+        final achievement = entry.value;
+        return Expanded(
+          child: Padding(
+            padding: EdgeInsets.only(
+              right: entry.key == achievements.length - 1 ? 0 : 12,
+            ),
+            child: AchievementCard(
+              icon: achievementIcon(achievement.iconAsset),
+              title: achievement.title,
+              subtitle: achievement.description,
+              color: achievementColor(achievement.type),
+              isUnlocked: achievement.isUnlocked,
+              progress: achievement.progress.toDouble(),
+              target: achievement.target.toDouble(),
+            ),
+          ),
+        );
+      }).toList(),
+    ).animate().fadeIn(delay: 500.ms).slideY(begin: 0.2, end: 0);
   }
 }
 

@@ -47,7 +47,13 @@
                 ".container {",
                 "}"
               ],
-              "correctOrder": [3, 0, 1, 2, 4],
+              "correctOrder": [
+                3,
+                0,
+                1,
+                2,
+                4
+              ],
               "explanation": "First declare the container, then make it a flex container, then center on both axes."
             }
           ],
@@ -69,14 +75,24 @@
             {
               "type": "multiple_choice",
               "question": "What is the default flex-direction?",
-              "options": ["row", "column", "row-reverse", "column-reverse"],
+              "options": [
+                "row",
+                "column",
+                "row-reverse",
+                "column-reverse"
+              ],
               "correctAnswer": 0,
               "explanation": "The default flex-direction is 'row', which lays out items left-to-right horizontally."
             },
             {
               "type": "multiple_choice",
               "question": "If flex-direction is column, which axis is the main axis?",
-              "options": ["Horizontal", "Vertical", "Diagonal", "Depends on writing mode"],
+              "options": [
+                "Horizontal",
+                "Vertical",
+                "Diagonal",
+                "Depends on writing mode"
+              ],
               "correctAnswer": 1,
               "explanation": "With flex-direction: column, the main axis runs vertically (top to bottom), and the cross axis runs horizontally."
             },
@@ -90,7 +106,13 @@
                 ".container {",
                 "}"
               ],
-              "correctOrder": [3, 2, 0, 1, 4],
+              "correctOrder": [
+                3,
+                2,
+                0,
+                1,
+                4
+              ],
               "explanation": "Container → flex → column direction → align to start of main axis (top)."
             },
             {
@@ -118,7 +140,12 @@
             {
               "type": "multiple_choice",
               "question": "Which justify-content value places the first item at the start and last at the end with equal spacing between?",
-              "options": ["flex-start", "center", "space-between", "space-around"],
+              "options": [
+                "flex-start",
+                "center",
+                "space-between",
+                "space-around"
+              ],
               "correctAnswer": 2,
               "explanation": "space-between puts first item at main-start, last at main-end, and distributes remaining space equally between items."
             },
@@ -143,7 +170,12 @@
                 ".container {",
                 "}"
               ],
-              "correctOrder": [2, 1, 0, 3],
+              "correctOrder": [
+                2,
+                1,
+                0,
+                3
+              ],
               "explanation": "Container → flex → space-between distribution."
             },
             {
@@ -171,7 +203,12 @@
             {
               "type": "multiple_choice",
               "question": "What is the default align-items value?",
-              "options": ["flex-start", "center", "stretch", "baseline"],
+              "options": [
+                "flex-start",
+                "center",
+                "stretch",
+                "baseline"
+              ],
               "correctAnswer": 2,
               "explanation": "stretch is the default, making flex items fill the cross axis (equal height in row, equal width in column)."
             },
@@ -197,7 +234,13 @@
                 ".container {",
                 "}"
               ],
-              "correctOrder": [3, 2, 0, 1, 4],
+              "correctOrder": [
+                3,
+                2,
+                0,
+                1,
+                4
+              ],
               "explanation": "Container → flex → center on main axis → center on cross axis = perfectly centered."
             },
             {

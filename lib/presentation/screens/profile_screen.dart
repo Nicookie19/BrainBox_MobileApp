@@ -7,8 +7,8 @@ import 'package:brainbox/presentation/widgets/profile_header.dart';
 import 'package:brainbox/presentation/widgets/profile_stats.dart';
 import 'package:brainbox/presentation/widgets/week_activity.dart';
 import 'package:brainbox/presentation/widgets/achievement_card.dart';
+import 'package:brainbox/presentation/widgets/achievement_style.dart';
 import 'package:brainbox/presentation/widgets/menu_row.dart';
-import 'package:brainbox/data/services/storage_service.dart';
 import 'package:brainbox/data/models/user_models.dart';
 import 'package:brainbox/core/constants/app_colors.dart';
 
@@ -39,7 +39,7 @@ class ProfileScreen extends StatelessWidget {
                     const SizedBox(height: 28),
                     _buildSectionTitle(context, 'Your Progress'),
                     const SizedBox(height: 16),
-                    const WeekActivity(),
+                    WeekActivity(activity: provider.weekActivity),
                     const SizedBox(height: 28),
                     _buildSectionTitle(context, 'Achievements'),
                     const SizedBox(height: 16),
@@ -81,10 +81,10 @@ class ProfileScreen extends StatelessWidget {
               right: index == achievements.length - 1 ? 0 : 12,
             ),
             child: AchievementCard(
-              icon: _getAchievementIcon(achievement.iconAsset),
+              icon: achievementIcon(achievement.iconAsset),
               title: achievement.title,
               subtitle: achievement.description,
-              color: _getAchievementColor(achievement.type),
+              color: achievementColor(achievement.type),
               isUnlocked: achievement.isUnlocked,
               progress: achievement.progress.toDouble(),
               target: achievement.target.toDouble(),
@@ -102,135 +102,38 @@ class ProfileScreen extends StatelessWidget {
           icon: Icons.bookmark_outline_rounded,
           title: 'Saved Lessons',
           subtitle: 'Access your bookmarked content',
-          onTap: () => context.go('/saved-lessons'),
+          onTap: () => context.push('/bookmarks'),
         ),
         MenuRow(
           icon: Icons.download_outlined,
           title: 'Downloads',
           subtitle: 'Manage offline content',
-          onTap: () => context.go('/downloads'),
+          onTap: () => context.push('/downloads'),
         ),
         MenuRow(
           icon: Icons.dark_mode_outlined,
           title: 'Appearance',
           subtitle: 'Customize theme and display',
-          onTap: () => context.go('/settings'),
+          onTap: () => context.push('/settings'),
         ),
         MenuRow(
           icon: Icons.notifications_outlined,
           title: 'Notifications',
           subtitle: 'Manage reminders and alerts',
-          onTap: () => context.go('/settings'),
+          onTap: () => context.push('/settings'),
         ),
         MenuRow(
           icon: Icons.help_outline_rounded,
           title: 'Help & Support',
           subtitle: 'FAQs, contact us, feedback',
-          onTap: () => context.go('/help'),
-        ),
-        MenuRow(
-          icon: Icons.logout_rounded,
-          title: 'Sign Out',
-          subtitle: 'Log out of your account',
-          onTap: () => _showSignOutDialog(context, provider),
-          isDestructive: true,
+          onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Support is available at support@brainbox.app'),
+            ),
+          ),
         ),
       ],
     ).animate().fadeIn(delay: 500.ms).slideY(begin: 0.1, end: 0);
-  }
-
-  IconData _getAchievementIcon(String asset) {
-    switch (asset) {
-      case 'local_fire_department':
-        return Icons.local_fire_department_rounded;
-      case 'rocket_launch':
-        return Icons.rocket_launch_rounded;
-      case 'menu_book':
-        return Icons.menu_book_rounded;
-      default:
-        return Icons.emoji_events_rounded;
-    }
-  }
-
-  Color _getAchievementColor(AchievementType type) {
-    switch (type) {
-      case AchievementType.streakDays:
-        return AppColors.accentWarning;
-      case AchievementType.coursesCompleted:
-        return AppColors.accentPrimary;
-      case AchievementType.lessonsCompleted:
-        return AppColors.accentSecondary;
-      default:
-        return AppColors.accentPrimary;
-    }
-  }
-
-  Future<void> _showSignOutDialog(
-    BuildContext context,
-    AppProvider provider,
-  ) async {
-    bool deleteData = false;
-
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          backgroundColor: AppColors.bgCard,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          title: const Text('Sign Out?'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Are you sure you want to sign out? You\'ll return to the onboarding screen.',
-              ),
-              const SizedBox(height: 12),
-              CheckboxListTile(
-                value: deleteData,
-                onChanged: (value) =>
-                    setState(() => deleteData = value ?? false),
-                title: const Text('Also delete my learning data'),
-                subtitle: const Text(
-                  'This will permanently delete XP, streak, completed lessons, and achievements.',
-                ),
-                controlAffinity: ListTileControlAffinity.leading,
-                contentPadding: EdgeInsets.zero,
-                dense: true,
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(context, true),
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColors.accentError,
-              ),
-              child: const Text('Sign Out'),
-            ),
-          ],
-        ),
-      ),
-    );
-
-    if (confirmed == true && context.mounted) {
-      if (deleteData) {
-        await StorageService.clearAll();
-      } else {
-        // Clear session but keep learning data
-        await StorageService.clearUserProfile();
-      }
-      provider.initialize();
-      if (context.mounted) {
-        context.go('/');
-      }
-    }
   }
 }
 

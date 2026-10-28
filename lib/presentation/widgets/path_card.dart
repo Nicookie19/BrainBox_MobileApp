@@ -14,7 +14,7 @@ class PathCard extends StatelessWidget {
     final colors = _getCourseColors(course.category);
 
     return InkWell(
-      onTap: () => context.go('/course/${course.id}'),
+      onTap: () => context.push('/course/${course.id}'),
       borderRadius: BorderRadius.circular(20),
       child: Container(
         width: 170,

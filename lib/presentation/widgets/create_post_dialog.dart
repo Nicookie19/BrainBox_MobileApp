@@ -4,10 +4,12 @@ import 'package:brainbox/data/models/community_models.dart';
 import 'package:brainbox/core/constants/app_colors.dart';
 
 class CreatePostDialog extends StatefulWidget {
-  const CreatePostDialog({required this.onSubmit, super.key});
+  const CreatePostDialog({
+    required this.onSubmit,
+    super.key,
+  });
 
-  final Future<void> Function(String title, String content, PostType type)
-  onSubmit;
+  final Future<void> Function(String title, String content, PostType type) onSubmit;
 
   @override
   State<CreatePostDialog> createState() => _CreatePostDialogState();
@@ -43,9 +45,9 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
               children: [
                 Text(
                   'Create Post',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
                 const Spacer(),
                 IconButton(
@@ -91,9 +93,7 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
               children: [
                 Expanded(
                   child: OutlinedButton(
-                    onPressed: _isSubmitting
-                        ? null
-                        : () => Navigator.pop(context),
+                    onPressed: _isSubmitting ? null : () => Navigator.pop(context),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
@@ -155,10 +155,7 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
               borderRadius: BorderRadius.circular(12),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 10,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 decoration: BoxDecoration(
                   color: isSelected
                       ? type.color.withValues(alpha: 0.2)
@@ -171,21 +168,13 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      type.icon,
-                      size: 16,
-                      color: isSelected ? type.color : AppColors.textMuted,
-                    ),
+                    Icon(type.icon, size: 16, color: isSelected ? type.color : AppColors.textMuted),
                     const SizedBox(width: 6),
                     Text(
                       type.label,
                       style: TextStyle(
-                        color: isSelected
-                            ? type.color
-                            : AppColors.textSecondary,
-                        fontWeight: isSelected
-                            ? FontWeight.w600
-                            : FontWeight.w500,
+                        color: isSelected ? type.color : AppColors.textSecondary,
+                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                       ),
                     ),
                   ],

@@ -46,21 +46,14 @@ class FilterChips<T> extends StatelessWidget {
                 selectedColor: AppColors.accentPrimarySoft,
                 checkmarkColor: AppColors.accentPrimary,
                 labelStyle: TextStyle(
-                  color: isSelected
-                      ? AppColors.accentPrimary
-                      : AppColors.textSecondary,
+                  color: isSelected ? AppColors.accentPrimary : AppColors.textSecondary,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                 ),
                 side: BorderSide(
-                  color: isSelected
-                      ? AppColors.accentPrimary
-                      : AppColors.borderDefault,
+                  color: isSelected ? AppColors.accentPrimary : AppColors.borderDefault,
                 ),
                 backgroundColor: AppColors.bgTertiary,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20),
                 ),

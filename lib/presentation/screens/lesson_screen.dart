@@ -3,12 +3,11 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:brainbox/presentation/providers/app_provider.dart';
+import 'package:brainbox/data/repositories/lesson_repository.dart' as lr;
 import 'package:brainbox/data/repositories/lesson_progress_repository.dart';
 import 'package:brainbox/data/repositories/course_repository.dart';
-import 'package:brainbox/data/repositories/content_loader.dart';
 import 'package:brainbox/data/services/storage_service.dart';
 import 'package:brainbox/data/models/course_models.dart';
-import 'package:brainbox/data/models/content_models.dart';
 import 'package:brainbox/core/constants/app_colors.dart';
 
 class LessonScreen extends StatefulWidget {
@@ -24,8 +23,8 @@ class LessonScreen extends StatefulWidget {
 class _LessonScreenState extends State<LessonScreen>
     with TickerProviderStateMixin {
   Course? _course;
-  CourseContent? _courseContent;
-  List<LessonContent> _allLessons = [];
+  lr.LessonModuleData? _lessonData;
+  List<lr.Lesson> _allLessons = [];
   int _currentLessonIndex = 0;
   int _currentStepIndex = 0;
   late AnimationController _progressController;
@@ -34,14 +33,14 @@ class _LessonScreenState extends State<LessonScreen>
   bool _lessonNotFound = false;
 
   // Answer state for interactive steps
-  Object? _selectedAnswer;
+  int? _selectedAnswer;
   String? _fillInBlankAnswer;
   List<int>? _codeOrderAnswer;
   bool _stepAnswered = false;
   bool _stepCorrect = false;
 
   // Persistence: track answered steps for resume
-  Map<int, Object> _answeredSteps = {}; // stepIndex -> selectedAnswer
+  Map<int, int> _answeredSteps = {}; // stepIndex -> selectedAnswerIndex
   final _answerController = TextEditingController();
 
   @override
@@ -63,22 +62,19 @@ class _LessonScreenState extends State<LessonScreen>
 
   Future<void> _loadData() async {
     final course = await CourseRepository.getCourseById(widget.courseId);
-    final courseContent = ContentLoader.getCourse(widget.courseId);
+    final lessonData = await lr.LessonRepository.getCourseLessons(
+      widget.courseId,
+    );
 
     if (mounted) {
       setState(() {
         _course = course;
-        _courseContent = courseContent;
+        _lessonData = lessonData;
         _courseNotFound = course == null;
-        _lessonNotFound =
-            courseContent == null || courseContent.modules.isEmpty;
+        _lessonNotFound = lessonData == null || lessonData.modules.isEmpty;
 
-        if (course != null && courseContent != null) {
-          // Flatten all lessons from all modules in order
-          _allLessons = [];
-          for (final module in courseContent.modules) {
-            _allLessons.addAll(module.lessons);
-          }
+        if (course != null && lessonData != null) {
+          _allLessons = lessonData.modules.expand((m) => m.lessons).toList();
 
           // Find initial lesson index
           if (widget.initialLessonId != null) {
@@ -86,6 +82,14 @@ class _LessonScreenState extends State<LessonScreen>
               (l) => l.id == widget.initialLessonId,
             );
             if (_currentLessonIndex == -1) _currentLessonIndex = 0;
+          } else {
+            final next = context.read<AppProvider>().nextLessonIdFor(
+              widget.courseId,
+            );
+            if (next != null) {
+              final i = _allLessons.indexWhere((l) => l.id == next);
+              if (i >= 0) _currentLessonIndex = i;
+            }
           }
 
           // Load progress
@@ -104,141 +108,27 @@ class _LessonScreenState extends State<LessonScreen>
         lesson.id,
       );
       if (progress != null) {
-        // Check if progress is valid (content version matches)
-        final isValid = progress.contentVersion == lesson.contentVersion;
-
-        if (isValid && !progress.isFinished) {
-          // Show Resume/Start over dialog
-          if (mounted) {
-            final shouldResume = await _showResumeDialog(progress, lesson);
-            if (shouldResume) {
-              setState(() {
-                _currentStepIndex = progress.currentStepIndex;
-                _answeredSteps = progress.answeredSteps;
-                _hintsUsed = progress.hintsUsed;
-                // Restore answer state for current step
-                if (progress.answeredSteps.containsKey(_currentStepIndex)) {
-                  _selectedAnswer = progress.answeredSteps[_currentStepIndex];
-                  _stepAnswered = true;
-                }
-              });
-            } else {
-              // Start over - clear progress
-              await LessonProgressRepository.clearProgress(
-                widget.courseId,
-                lesson.id,
-              );
-            }
+        setState(() {
+          _currentStepIndex = progress.currentStepIndex;
+          _answeredSteps = progress.answeredSteps;
+          // Restore answer state for current step
+          if (progress.answeredSteps.containsKey(_currentStepIndex)) {
+            _selectedAnswer = progress.answeredSteps[_currentStepIndex];
+            _stepAnswered = true;
           }
-        } else if (progress.isFinished) {
-          // Lesson already completed, clear progress
-          await LessonProgressRepository.clearProgress(
-            widget.courseId,
-            lesson.id,
-          );
-        } else {
-          // Version mismatch - clear progress and start fresh
-          await LessonProgressRepository.clearProgress(
-            widget.courseId,
-            lesson.id,
-          );
-        }
+        });
       }
     }
   }
 
-  // Track hints used per step
-  Map<int, int> _hintsUsed = {};
-
-  Future<bool> _showResumeDialog(
-    LessonProgress progress,
-    LessonContent lesson,
-  ) async {
-    final completedSteps = progress.answeredSteps.length;
-    final totalSteps = lesson.steps.length;
-    final progressPercent = totalSteps > 0 ? completedSteps / totalSteps : 0.0;
-
-    return await showDialog<bool>(
-          context: context,
-          barrierDismissible: false,
-          builder: (context) => AlertDialog(
-            backgroundColor: AppColors.bgCard,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            title: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    gradient: AppColors.primaryGradient,
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: const Icon(
-                    Icons.history_rounded,
-                    color: Colors.white,
-                    size: 28,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                const Expanded(child: Text('Resume Lesson?')),
-              ],
-            ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'You left off at step ${progress.currentStepIndex + 1} of $totalSteps (${(progressPercent * 100).round()}% complete).',
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'Last updated: ${_formatDateTime(progress.lastUpdated)}',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodySmall?.copyWith(color: AppColors.textMuted),
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text('Start Over'),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.pop(context, true),
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.accentPrimary,
-                ),
-                child: const Text('Resume'),
-              ),
-            ],
-          ),
-        ) ??
-        false;
-  }
-
-  String _formatDateTime(DateTime? dateTime) {
-    if (dateTime == null) return 'Unknown';
-    final now = DateTime.now();
-    final difference = now.difference(dateTime);
-    if (difference.inMinutes < 1) return 'Just now';
-    if (difference.inHours < 1) return '${difference.inMinutes}m ago';
-    if (difference.inDays < 1) return '${difference.inHours}h ago';
-    return '${difference.inDays}d ago';
-  }
-
-  LessonContent? _getCurrentLesson() {
+  lr.Lesson? _getCurrentLesson() {
     if (_allLessons.isEmpty || _currentLessonIndex >= _allLessons.length) {
       return null;
     }
     return _allLessons[_currentLessonIndex];
   }
 
-  LessonStepContent? _getCurrentStep() {
+  lr.LessonStep? _getCurrentStep() {
     final lesson = _getCurrentLesson();
     if (lesson == null || _currentStepIndex >= lesson.steps.length) {
       return null;
@@ -259,6 +149,8 @@ class _LessonScreenState extends State<LessonScreen>
 
   @override
   Widget build(BuildContext context) {
+    // Listen so the bookmark/progress state in the app bar stays current.
+    context.watch<AppProvider>();
     if (_courseNotFound) {
       return _buildErrorScreen(
         'Course Not Found',
@@ -273,7 +165,7 @@ class _LessonScreenState extends State<LessonScreen>
       );
     }
 
-    if (_course == null || _courseContent == null) {
+    if (_course == null || _lessonData == null) {
       return Scaffold(
         backgroundColor: AppColors.bgPrimary,
         body: const Center(
@@ -392,14 +284,16 @@ class _LessonScreenState extends State<LessonScreen>
       ],
     );
 
+    final isDownloaded =
+        lesson != null &&
+        StorageService.getDownloadedContent().containsKey(
+          '${widget.courseId}:${lesson.id}',
+        );
     final isBookmarked =
         lesson != null &&
         context.read<AppProvider>().isBookmarked(
           '${widget.courseId}:${lesson.id}',
         );
-
-    final step = _getCurrentStep();
-    final hasHints = step?.hints != null && step!.hints!.isNotEmpty;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
@@ -408,24 +302,6 @@ class _LessonScreenState extends State<LessonScreen>
           backButton,
           const SizedBox(width: 12),
           Expanded(child: titleColumn),
-          if (hasHints)
-            IconButton(
-              onPressed: _stepAnswered ? null : _showHint,
-              icon: Icon(
-                Icons.lightbulb_outline_rounded,
-                color: _stepAnswered
-                    ? AppColors.textMuted
-                    : AppColors.accentWarning,
-              ),
-              style: IconButton.styleFrom(
-                backgroundColor: AppColors.bgCard,
-                foregroundColor: _stepAnswered
-                    ? AppColors.textMuted
-                    : AppColors.accentWarning,
-              ),
-              tooltip: 'Show hint',
-            ),
-          if (hasHints) const SizedBox(width: 8),
           IconButton(
             onPressed: lesson != null
                 ? () => context.read<AppProvider>().toggleBookmark(
@@ -447,10 +323,16 @@ class _LessonScreenState extends State<LessonScreen>
           const SizedBox(width: 8),
           IconButton(
             onPressed: lesson == null ? null : _downloadCurrentLesson,
-            icon: const Icon(Icons.download_outlined),
+            icon: Icon(
+              isDownloaded
+                  ? Icons.download_done_rounded
+                  : Icons.download_outlined,
+            ),
             style: IconButton.styleFrom(
               backgroundColor: AppColors.bgCard,
-              foregroundColor: AppColors.textSecondary,
+              foregroundColor: isDownloaded
+                  ? AppColors.accentPrimary
+                  : AppColors.textSecondary,
             ),
           ),
         ],
@@ -485,7 +367,7 @@ class _LessonScreenState extends State<LessonScreen>
     );
   }
 
-  Widget _buildLessonHeader(LessonContent lesson) {
+  Widget _buildLessonHeader(lr.Lesson lesson) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -510,22 +392,20 @@ class _LessonScreenState extends State<LessonScreen>
     ).animate().fadeIn().slideY(begin: 0.2, end: 0);
   }
 
-  Widget _buildStepContent(LessonStepContent step) {
+  Widget _buildStepContent(lr.LessonStep step) {
     switch (step.type) {
-      case StepType.explanation:
+      case lr.LessonStepType.explanation:
         return _buildExplanationStep(step);
-      case StepType.multipleChoice:
+      case lr.LessonStepType.multipleChoice:
         return _buildMultipleChoiceStep(step);
-      case StepType.trueFalse:
-        return _buildTrueFalseStep(step);
-      case StepType.fillInBlank:
+      case lr.LessonStepType.fillInBlank:
         return _buildFillInBlankStep(step);
-      case StepType.codeOrdering:
+      case lr.LessonStepType.codeOrdering:
         return _buildCodeOrderingStep(step);
     }
   }
 
-  Widget _buildExplanationStep(LessonStepContent step) {
+  Widget _buildExplanationStep(lr.LessonStep step) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
@@ -549,7 +429,7 @@ class _LessonScreenState extends State<LessonScreen>
     ).animate().fadeIn().slideY(begin: 0.2, end: 0);
   }
 
-  Widget _buildMultipleChoiceStep(LessonStepContent step) {
+  Widget _buildMultipleChoiceStep(lr.LessonStep step) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -637,98 +517,7 @@ class _LessonScreenState extends State<LessonScreen>
     ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.2, end: 0);
   }
 
-  Widget _buildTrueFalseStep(LessonStepContent step) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          step.question ?? '',
-          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.w700,
-            height: 1.3,
-          ),
-        ),
-        const SizedBox(height: 20),
-        ...[
-          {'label': 'True', 'value': true},
-          {'label': 'False', 'value': false},
-        ].asMap().entries.map((entry) {
-          final label = entry.value['label'] as String;
-          final value = entry.value['value'] as bool;
-          final isCorrect = value == step.correctAnswerBool;
-          final isSelected = _selectedAnswer == value;
-
-          Color borderColor = AppColors.borderDefault;
-          Color bgColor = AppColors.bgCard;
-          Color textColor = AppColors.textPrimary;
-          IconData? trailingIcon;
-
-          if (_stepAnswered) {
-            if (isCorrect) {
-              borderColor = AppColors.accentSuccess;
-              bgColor = AppColors.accentSuccessSoft;
-              textColor = AppColors.accentSuccess;
-              trailingIcon = Icons.check_circle_rounded;
-            } else if (isSelected) {
-              borderColor = AppColors.accentError;
-              bgColor = AppColors.accentErrorSoft;
-              textColor = AppColors.accentError;
-              trailingIcon = Icons.cancel_rounded;
-            }
-          } else if (isSelected) {
-            borderColor = AppColors.accentPrimary;
-          }
-
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: _stepAnswered
-                    ? null
-                    : () => _selectTrueFalseAnswer(value, isCorrect),
-                borderRadius: BorderRadius.circular(14),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(18),
-                  decoration: BoxDecoration(
-                    color: bgColor,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: borderColor, width: 2),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          label,
-                          style: Theme.of(context).textTheme.bodyLarge
-                              ?.copyWith(
-                                color: textColor,
-                                fontWeight: isCorrect && _stepAnswered
-                                    ? FontWeight.w600
-                                    : FontWeight.w500,
-                              ),
-                        ),
-                      ),
-                      if (trailingIcon != null)
-                        Icon(trailingIcon, color: textColor, size: 24),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          );
-        }),
-        if (_stepAnswered) ...[
-          const SizedBox(height: 16),
-          _buildExplanationCard(step),
-        ],
-      ],
-    ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.2, end: 0);
-  }
-
-  Widget _buildFillInBlankStep(LessonStepContent step) {
+  Widget _buildFillInBlankStep(lr.LessonStep step) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -781,7 +570,7 @@ class _LessonScreenState extends State<LessonScreen>
     ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.2, end: 0);
   }
 
-  void _checkFillInBlank(LessonStepContent step) {
+  void _checkFillInBlank(lr.LessonStep step) {
     final userAnswer = _fillInBlankAnswer?.trim().toLowerCase() ?? '';
     if (userAnswer.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -789,9 +578,7 @@ class _LessonScreenState extends State<LessonScreen>
       );
       return;
     }
-    final normalizedAccepted =
-        step.acceptedAnswers?.map((a) => a.trim().toLowerCase()).toList() ?? [];
-    final correct = normalizedAccepted.contains(userAnswer);
+    final correct = userAnswer == step.answer?.toLowerCase();
     setState(() {
       _stepAnswered = true;
       _stepCorrect = correct;
@@ -800,7 +587,7 @@ class _LessonScreenState extends State<LessonScreen>
     _saveProgress();
   }
 
-  Widget _buildCodeOrderingStep(LessonStepContent step) {
+  Widget _buildCodeOrderingStep(lr.LessonStep step) {
     final snippets = step.snippets ?? [];
     final currentOrder =
         _codeOrderAnswer ?? List.generate(snippets.length, (i) => i);
@@ -923,7 +710,7 @@ class _LessonScreenState extends State<LessonScreen>
     }
   }
 
-  bool _isCodeOrderCorrect(LessonStepContent step) {
+  bool _isCodeOrderCorrect(lr.LessonStep step) {
     return _isOrderCorrect(_codeOrderAnswer, step.correctOrder);
   }
 
@@ -936,7 +723,7 @@ class _LessonScreenState extends State<LessonScreen>
     return true;
   }
 
-  void _checkCodeOrder(LessonStepContent step) {
+  void _checkCodeOrder(lr.LessonStep step) {
     final order =
         _codeOrderAnswer ??
         List.generate(step.snippets?.length ?? 0, (index) => index);
@@ -950,7 +737,7 @@ class _LessonScreenState extends State<LessonScreen>
     _saveProgress();
   }
 
-  Widget _buildExplanationCard(LessonStepContent step) {
+  Widget _buildExplanationCard(lr.LessonStep step) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -1001,16 +788,6 @@ class _LessonScreenState extends State<LessonScreen>
     _saveProgress();
   }
 
-  void _selectTrueFalseAnswer(bool value, bool isCorrect) {
-    setState(() {
-      _selectedAnswer = value;
-      _stepAnswered = true;
-      _stepCorrect = isCorrect;
-      _answeredSteps[_currentStepIndex] = value ? 1 : 0;
-    });
-    _saveProgress();
-  }
-
   Widget _buildBottomAction() {
     final lesson = _getCurrentLesson();
     final step = _getCurrentStep();
@@ -1025,7 +802,7 @@ class _LessonScreenState extends State<LessonScreen>
 
     final isLastStep = _currentStepIndex == lesson.steps.length - 1;
     final isLastLesson = _currentLessonIndex == _allLessons.length - 1;
-    final isExplanation = step.type == StepType.explanation;
+    final isExplanation = step.type == lr.LessonStepType.explanation;
 
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
@@ -1039,9 +816,9 @@ class _LessonScreenState extends State<LessonScreen>
           children: [
             if (!_stepAnswered && !isExplanation)
               Text(
-                step.type == StepType.fillInBlank
+                step.type == lr.LessonStepType.fillInBlank
                     ? 'Enter and check your answer to continue'
-                    : step.type == StepType.codeOrdering
+                    : step.type == lr.LessonStepType.codeOrdering
                     ? 'Arrange and check the code to continue'
                     : 'Select an answer to continue',
                 style: Theme.of(
@@ -1109,9 +886,12 @@ class _LessonScreenState extends State<LessonScreen>
     final lesson = _getCurrentLesson();
     if (lesson == null) return;
 
-    // Mark lesson as completed
+    // Mark lesson as completed and drop its saved step progress so a replay
+    // starts clean.
+    LessonProgressRepository.clearProgress(widget.courseId, lesson.id);
     if (_currentLessonIndex < _allLessons.length - 1) {
       setState(() {
+        _answeredSteps = {};
         _currentLessonIndex++;
         _currentStepIndex = 0;
         _selectedAnswer = null;
@@ -1138,17 +918,31 @@ class _LessonScreenState extends State<LessonScreen>
   Future<void> _downloadCurrentLesson() async {
     final lesson = _getCurrentLesson();
     if (lesson == null) return;
-    await context
-        .read<AppProvider>()
-        .saveDownload('${widget.courseId}:${lesson.id}', {
-          'courseId': widget.courseId,
-          'lessonId': lesson.id,
-          'title': lesson.title,
-          'downloadedAt': DateTime.now().toIso8601String(),
-        });
+    final key = '${widget.courseId}:${lesson.id}';
+    final alreadyDownloaded = StorageService.getDownloadedContent().containsKey(
+      key,
+    );
+    if (alreadyDownloaded) {
+      await StorageService.removeDownload(key);
+    } else {
+      await StorageService.saveDownloadedContent(key, {
+        'courseId': widget.courseId,
+        'lessonId': lesson.id,
+        'title': lesson.title,
+        'courseTitle': _course?.title ?? '',
+        'downloadedAt': DateTime.now().toIso8601String(),
+      });
+    }
     if (!mounted) return;
+    setState(() {});
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Lesson saved for offline access.')),
+      SnackBar(
+        content: Text(
+          alreadyDownloaded
+              ? 'Removed from downloads.'
+              : 'Lesson saved for offline access.',
+        ),
+      ),
     );
   }
 
@@ -1161,9 +955,7 @@ class _LessonScreenState extends State<LessonScreen>
       lessonId: lesson.id,
       currentStepIndex: _currentStepIndex,
       answeredSteps: _answeredSteps,
-      hintsUsed: _hintsUsed,
       isFinished: _isCompleted,
-      contentVersion: lesson.contentVersion,
     );
   }
 
@@ -1223,77 +1015,6 @@ class _LessonScreenState extends State<LessonScreen>
               minimumSize: const Size(double.infinity, 48),
             ),
             child: const Text('Continue'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showHint() {
-    final step = _getCurrentStep();
-    if (step == null || step.hints == null || step.hints!.isEmpty) return;
-
-    final hintsUsed = _hintsUsed[_currentStepIndex] ?? 0;
-    final availableHints = step.hints!.skip(hintsUsed).toList();
-    if (availableHints.isEmpty) return;
-
-    final newHintsUsed = hintsUsed + 1;
-
-    setState(() {
-      _hintsUsed[_currentStepIndex] = newHintsUsed;
-    });
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.bgCard,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppColors.accentWarningSoft,
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: const Icon(
-                Icons.lightbulb_rounded,
-                color: AppColors.accentWarning,
-                size: 28,
-              ),
-            ),
-            const SizedBox(width: 12),
-            const Expanded(child: Text('Hint')),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              availableHints.first,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyLarge?.copyWith(color: AppColors.textPrimary),
-            ),
-            if (newHintsUsed < step.hints!.length) ...[
-              const SizedBox(height: 12),
-              Text(
-                '${step.hints!.length - newHintsUsed} hint${step.hints!.length - newHintsUsed > 1 ? 's' : ''} remaining',
-                style: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.copyWith(color: AppColors.textMuted),
-              ),
-            ],
-          ],
-        ),
-        actions: [
-          FilledButton(
-            onPressed: () => Navigator.pop(context),
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.accentPrimary,
-            ),
-            child: const Text('Got it'),
           ),
         ],
       ),

@@ -39,9 +39,9 @@ class StatSummary extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           label,
-          style: Theme.of(
-            context,
-          ).textTheme.bodySmall?.copyWith(color: AppColors.textMuted),
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: AppColors.textMuted,
+          ),
           textAlign: TextAlign.center,
         ).animate().fadeIn(delay: 300.ms),
       ],

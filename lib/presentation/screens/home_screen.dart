@@ -11,6 +11,8 @@ import 'package:brainbox/presentation/widgets/section_heading.dart';
 import 'package:brainbox/presentation/widgets/stat_pill.dart';
 import 'package:brainbox/presentation/widgets/brand_mark.dart';
 import 'package:brainbox/core/constants/app_colors.dart';
+import 'package:brainbox/data/models/course_models.dart';
+import 'package:brainbox/data/repositories/daily_challenge_repository.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -33,10 +35,12 @@ class HomeScreen extends StatelessWidget {
                   children: [
                     _buildHeader(context, provider),
                     const SizedBox(height: 24),
-                    _buildGreeting(context),
+                    _buildGreeting(context, provider),
                     const SizedBox(height: 8),
                     _buildSubtitle(context),
                     const SizedBox(height: 20),
+                    _buildLevelCard(context, provider),
+                    const SizedBox(height: 16),
                     _buildStats(context, provider),
                     const SizedBox(height: 28),
                     SectionHeading(
@@ -46,18 +50,38 @@ class HomeScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 16),
                     ContinueCard(
-                      course: provider.courses.isNotEmpty
-                          ? provider.courses.firstWhere(
-                              (c) => c.id == 'frontend-foundations',
-                              orElse: () => provider.courses.first,
-                            )
-                          : null,
-                      onTap: () => context.go('/lesson/frontend-foundations'),
+                      course: provider.continueCourse,
+                      progress: provider.continueCourse == null
+                          ? 0.0
+                          : provider.courseProgress(
+                              provider.continueCourse!.id,
+                            ),
+                      subtitle: provider.continueCourse == null
+                          ? ''
+                          : _continueSubtitle(
+                              provider,
+                              provider.continueCourse!,
+                            ),
+                      onTap: () {
+                        final course = provider.continueCourse;
+                        if (course == null) {
+                          context.go('/explore');
+                          return;
+                        }
+                        final next = provider.nextLessonIdFor(course.id);
+                        context.push(
+                          next == null
+                              ? '/lesson/${course.id}'
+                              : '/lesson/${course.id}?lesson=$next',
+                        );
+                      },
                     ),
                     const SizedBox(height: 24),
                     DailyChallengeCard(
-                      onTap: () => context.go('/challenge'),
-                      isCompleted: false,
+                      onTap: () => context.push('/challenge'),
+                      isCompleted: DailyChallengeRepository.isCompletedForDate(
+                        DateTime.now(),
+                      ),
                     ),
                     const SizedBox(height: 28),
                     SectionHeading(
@@ -70,7 +94,7 @@ class HomeScreen extends StatelessWidget {
                     const SizedBox(height: 28),
                     SectionHeading(
                       title: 'Recommended for You',
-                      action: 'Refresh',
+                      action: 'Explore',
                       onPressed: () => context.go('/explore'),
                     ),
                     const SizedBox(height: 16),
@@ -91,29 +115,26 @@ class HomeScreen extends StatelessWidget {
       children: [
         const BrandMark(size: 40),
         const SizedBox(width: 10),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Good morning,',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: -0.5,
-                ),
-                overflow: TextOverflow.ellipsis,
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'BrainBox',
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+                letterSpacing: -0.5,
               ),
-              Text(
-                provider.profile?.displayName ?? 'Nico 👋',
-                style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  color: AppColors.textMuted,
-                  letterSpacing: 0.5,
-                ),
-                overflow: TextOverflow.ellipsis,
+            ),
+            Text(
+              'Daily Practice',
+              style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                color: AppColors.textMuted,
+                letterSpacing: 0.5,
               ),
-            ],
-          ),
+            ),
+          ],
         ),
+        const Spacer(),
         IconButton(
           onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('You\'re all caught up.')),
@@ -155,9 +176,19 @@ class HomeScreen extends StatelessWidget {
     ).animate().scale(delay: 300.ms);
   }
 
-  Widget _buildGreeting(BuildContext context) {
+  Widget _buildGreeting(BuildContext context, AppProvider provider) {
+    final hour = DateTime.now().hour;
+    String greeting;
+    if (hour < 12) {
+      greeting = 'Good morning';
+    } else if (hour < 17) {
+      greeting = 'Good afternoon';
+    } else {
+      greeting = 'Good evening';
+    }
+
     return Text(
-      'Ready to grow today?',
+      '$greeting, ${_firstName(provider)} 👋',
       style: Theme.of(context).textTheme.displaySmall?.copyWith(
         fontWeight: FontWeight.w700,
         letterSpacing: -0.5,
@@ -165,13 +196,168 @@ class HomeScreen extends StatelessWidget {
     ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.2, end: 0);
   }
 
+  String _firstName(AppProvider provider) {
+    final name = provider.profile?.displayName.trim() ?? '';
+    return name.isEmpty ? 'Learner' : name.split(RegExp(r'\s+')).first;
+  }
+
   Widget _buildSubtitle(BuildContext context) {
     return Text(
-      'Small lessons. Big possibilities.',
+      'Master new concepts through interactive problem-solving',
       style: Theme.of(
         context,
       ).textTheme.bodyLarge?.copyWith(color: AppColors.textSecondary),
     ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.2, end: 0);
+  }
+
+  /// Mirrors the Figma dashboard's level panel while using the persisted
+  /// profile values, so this always reflects actual learning progress.
+  Widget _buildLevelCard(BuildContext context, AppProvider provider) {
+    final profile = provider.profile;
+    final level = provider.level;
+    final currentXp = profile?.xp ?? provider.xp;
+    final nextXp = profile == null
+        ? currentXp
+        : currentXp + profile.xpToNextLevel;
+    final progress = profile?.levelProgress ?? 0.0;
+    final mastered = provider.completedCourses.length;
+
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppColors.bgCard,
+            AppColors.accentPrimarySoft.withValues(alpha: 0.9),
+            AppColors.accentSecondarySoft.withValues(alpha: 0.55),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: AppColors.accentPrimary.withValues(alpha: 0.35),
+        ),
+        boxShadow: AppShadows.glow(AppColors.accentPrimary),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              _levelMetric(
+                context,
+                label: 'LEVEL',
+                value: '${level.number}',
+                color: AppColors.accentPrimaryLight,
+                alignment: CrossAxisAlignment.start,
+              ),
+              Expanded(
+                child: _levelMetric(
+                  context,
+                  label: 'COURSES',
+                  value: '$mastered',
+                  suffix: ' completed',
+                  color: AppColors.accentWarning,
+                  alignment: CrossAxisAlignment.center,
+                ),
+              ),
+              _levelMetric(
+                context,
+                label: 'TOTAL XP',
+                value: '${provider.xp}',
+                suffix: ' XP',
+                color: AppColors.textPrimary,
+                alignment: CrossAxisAlignment.end,
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(99),
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: 8,
+              backgroundColor: Colors.white.withValues(alpha: 0.1),
+              valueColor: const AlwaysStoppedAnimation(
+                AppColors.accentSecondary,
+              ),
+            ),
+          ),
+          const SizedBox(height: 7),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  '$currentXp XP earned',
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: AppColors.textMuted,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Flexible(
+                child: Text(
+                  nextXp > currentXp
+                      ? '$nextXp XP to next level'
+                      : 'Top level reached',
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: AppColors.textMuted,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.end,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    ).animate().fadeIn(delay: 350.ms).slideY(begin: 0.12, end: 0);
+  }
+
+  Widget _levelMetric(
+    BuildContext context, {
+    required String label,
+    required String value,
+    required Color color,
+    required CrossAxisAlignment alignment,
+    String suffix = '',
+  }) {
+    return Column(
+      crossAxisAlignment: alignment,
+      children: [
+        Text(
+          label,
+          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+            color: AppColors.textMuted,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.8,
+          ),
+        ),
+        const SizedBox(height: 3),
+        RichText(
+          text: TextSpan(
+            text: value,
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+              color: color,
+              fontWeight: FontWeight.w800,
+            ),
+            children: [
+              if (suffix.isNotEmpty)
+                TextSpan(
+                  text: suffix,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: color.withValues(alpha: 0.85),
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
   }
 
   Widget _buildStats(BuildContext context, AppProvider provider) {
@@ -185,7 +371,7 @@ class HomeScreen extends StatelessWidget {
             background: AppColors.accentWarningSoft,
           ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.2, end: 0),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: 8),
         Flexible(
           child: StatPill(
             icon: Icons.bolt_rounded,
@@ -194,7 +380,7 @@ class HomeScreen extends StatelessWidget {
             background: AppColors.accentPrimarySoft,
           ).animate().fadeIn(delay: 500.ms).slideY(begin: 0.2, end: 0),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: 8),
         _buildLevelBadge(context, provider),
       ],
     );
@@ -244,37 +430,40 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
+  String _continueSubtitle(AppProvider provider, Course course) {
+    final lessons = provider.lessonsFor(course.id);
+    final nextId = provider.nextLessonIdFor(course.id);
+    if (lessons.isEmpty) return course.shortDescription;
+    if (nextId == null) return 'All ${lessons.length} lessons complete';
+    final index = lessons.indexWhere((l) => l.id == nextId);
+    final title = index >= 0 ? lessons[index].title : '';
+    return 'Lesson ${index + 1} · $title';
+  }
+
   Widget _buildRecommendations(BuildContext context, AppProvider provider) {
-    final courses = provider.courses
-        .where(
-          (course) => !provider.profile!.completedCourseIds.contains(course.id),
-        )
-        .take(3)
-        .toList();
+    final recommended = provider.recommendedCourses;
+    if (recommended.isEmpty) {
+      return Text(
+        'You\'re all caught up. New courses will show up here.',
+        style: Theme.of(
+          context,
+        ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
+      );
+    }
     return Column(
-      children: courses
-          .asMap()
-          .entries
-          .map(
-            (entry) => Padding(
-              padding: EdgeInsets.only(
-                bottom: entry.key == courses.length - 1 ? 0 : 12,
-              ),
-              child:
-                  RecommendationTile(
-                        icon: Icons.school_rounded,
-                        title: entry.value.title,
-                        subtitle:
-                            '${entry.value.estimatedHours}h · ${entry.value.difficulty.label}',
-                        color: AppColors.accentPrimary,
-                        onTap: () => context.go('/course/${entry.value.id}'),
-                      )
-                      .animate()
-                      .fadeIn(delay: (800 + entry.key * 100).ms)
-                      .slideY(begin: 0.2, end: 0),
-            ),
-          )
-          .toList(),
+      children: [
+        for (var i = 0; i < recommended.length; i++) ...[
+          if (i > 0) const SizedBox(height: 12),
+          RecommendationTile(
+            icon: recommended[i].category.icon,
+            title: recommended[i].title,
+            subtitle:
+                '${recommended[i].lessonCount} lessons · ${recommended[i].difficulty.label}',
+            color: recommended[i].category.color,
+            onTap: () => context.push('/course/${recommended[i].id}'),
+          ).animate().fadeIn(delay: (800 + i * 100).ms).slideY(begin: 0.2, end: 0),
+        ],
+      ],
     );
   }
 }

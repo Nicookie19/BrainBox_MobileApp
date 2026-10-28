@@ -3,13 +3,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:brainbox/data/models/community_models.dart';
 import 'package:brainbox/data/repositories/community_repository.dart';
+import 'package:brainbox/data/services/storage_backend.dart';
 import 'package:brainbox/data/services/storage_service.dart';
 
 void main() {
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
     StorageService.resetForTesting();
-    await StorageService.init();
+    await StorageService.init(backend: MemoryStorageBackend());
     await StorageService.clearAll();
   });
 
@@ -115,10 +116,7 @@ void main() {
     final reloaded = await CommunityRepository.getPosts();
 
     expect(reloaded.any((post) => post.id == created.id), isTrue);
-    expect(
-      reloaded.firstWhere((post) => post.id == created.id).content,
-      contains('practice loops'),
-    );
+    expect(reloaded.firstWhere((post) => post.id == created.id).content, contains('practice loops'));
   });
 
   test('toggles a vote without contradictory counts', () async {

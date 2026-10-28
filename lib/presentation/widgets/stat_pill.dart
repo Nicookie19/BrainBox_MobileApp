@@ -19,7 +19,7 @@ class StatPill extends StatelessWidget {
     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
     decoration: BoxDecoration(
       color: background,
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(20),
       border: Border.all(color: color.withValues(alpha: 0.3)),
     ),
     child: Row(

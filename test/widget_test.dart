@@ -12,6 +12,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:brainbox/main.dart';
 import 'package:brainbox/presentation/screens/daily_challenge_screen.dart';
 import 'package:brainbox/data/repositories/daily_challenge_repository.dart';
+import 'package:brainbox/data/services/storage_backend.dart';
 import 'package:brainbox/data/services/storage_service.dart';
 
 // Test wrapper for daily challenge screen with fixed date
@@ -30,7 +31,7 @@ void main() {
     WidgetTester tester,
   ) async {
     SharedPreferences.setMockInitialValues({});
-    await StorageService.init();
+    await StorageService.init(backend: MemoryStorageBackend());
     await tester.pumpWidget(const BrainBoxApp());
 
     // Wait for async initialization to complete
@@ -44,7 +45,7 @@ void main() {
     WidgetTester tester,
   ) async {
     SharedPreferences.setMockInitialValues({});
-    await StorageService.init();
+    await StorageService.init(backend: MemoryStorageBackend());
 
     // Use a fixed date for deterministic testing
     final fixedDate = DateTime(2024, 1, 15);
@@ -90,7 +91,7 @@ void main() {
 
   testWidgets('Home screen renders without crash', (WidgetTester tester) async {
     SharedPreferences.setMockInitialValues({});
-    await StorageService.init();
+    await StorageService.init(backend: MemoryStorageBackend());
     await tester.pumpWidget(const BrainBoxApp());
     await tester.pumpAndSettle(const Duration(seconds: 5));
 

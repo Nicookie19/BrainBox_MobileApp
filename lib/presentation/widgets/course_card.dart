@@ -20,22 +20,33 @@ class CourseCard extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: AppColors.bgCard,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.borderDefault),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: _getCategoryGradient(
+                course.category,
+              ).colors.first.withValues(alpha: 0.22),
+            ),
           ),
           child: Row(
             children: [
               Container(
-                width: 64,
-                height: 64,
+                width: 60,
+                height: 60,
                 decoration: BoxDecoration(
-                  gradient: _getCategoryGradient(course.category),
-                  borderRadius: BorderRadius.circular(16),
+                  color: _getCategoryGradient(
+                    course.category,
+                  ).colors.first.withValues(alpha: 0.16),
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(
+                    color: _getCategoryGradient(
+                      course.category,
+                    ).colors.first.withValues(alpha: 0.32),
+                  ),
                 ),
                 child: Icon(
                   course.category.icon,
-                  color: Colors.white,
-                  size: 30,
+                  color: _getCategoryGradient(course.category).colors.first,
+                  size: 28,
                 ),
               ),
               const SizedBox(width: 16),
@@ -58,16 +69,21 @@ class CourseCard extends StatelessWidget {
                           Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 8,
-                              vertical: 2,
+                              vertical: 3,
                             ),
                             decoration: BoxDecoration(
-                              color: AppColors.accentPrimary,
-                              borderRadius: BorderRadius.circular(6),
+                              color: AppColors.accentPrimarySoft,
+                              borderRadius: BorderRadius.circular(7),
+                              border: Border.all(
+                                color: AppColors.accentPrimary.withValues(
+                                  alpha: 0.35,
+                                ),
+                              ),
                             ),
                             child: Text(
                               'NEW',
                               style: TextStyle(
-                                color: AppColors.textOnAccent,
+                                color: AppColors.accentPrimaryLight,
                                 fontSize: 10,
                                 fontWeight: FontWeight.w700,
                                 letterSpacing: 0.5,
@@ -108,7 +124,7 @@ class CourseCard extends StatelessWidget {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 10),
                     Row(
                       children: [
                         Icon(

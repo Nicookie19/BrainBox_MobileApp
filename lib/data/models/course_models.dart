@@ -48,56 +48,57 @@ class Course {
   int get totalContentCount => lessonCount + quizCount + projectCount;
 
   Map<String, dynamic> toJson() => {
-    'id': id,
-    'title': title,
-    'shortDescription': shortDescription,
-    'longDescription': longDescription,
-    'category': category.toString(),
-    'difficulty': difficulty.toString(),
-    'thumbnailUrl': thumbnailUrl,
-    'estimatedHours': estimatedHours,
-    'lessonCount': lessonCount,
-    'quizCount': quizCount,
-    'projectCount': projectCount,
-    'prerequisites': prerequisites,
-    'learningOutcomes': learningOutcomes,
-    'tags': tags,
-    'isFeatured': isFeatured,
-    'isNew': isNew,
-    'rating': rating,
-    'enrollmentCount': enrollmentCount,
-    'createdAt': createdAt.toIso8601String(),
-    'updatedAt': updatedAt.toIso8601String(),
-  };
+        'id': id,
+        'title': title,
+        'shortDescription': shortDescription,
+        'longDescription': longDescription,
+        'category': category.toString(),
+        'difficulty': difficulty.toString(),
+        'thumbnailUrl': thumbnailUrl,
+        'estimatedHours': estimatedHours,
+        'lessonCount': lessonCount,
+        'quizCount': quizCount,
+        'projectCount': projectCount,
+        'prerequisites': prerequisites,
+        'learningOutcomes': learningOutcomes,
+        'tags': tags,
+        'isFeatured': isFeatured,
+        'isNew': isNew,
+        'rating': rating,
+        'enrollmentCount': enrollmentCount,
+        'createdAt': createdAt.toIso8601String(),
+        'updatedAt': updatedAt.toIso8601String(),
+      };
 
   factory Course.fromJson(Map<String, dynamic> json) => Course(
-    id: json['id'],
-    title: json['title'],
-    shortDescription: json['shortDescription'],
-    longDescription: json['longDescription'],
-    category: LearningCategory.values.firstWhere(
-      (e) => e.toString() == 'LearningCategory.${json['category']}',
-      orElse: () => LearningCategory.webDevelopment,
-    ),
-    difficulty: DifficultyLevel.values.firstWhere(
-      (e) => e.toString() == 'DifficultyLevel.${json['difficulty']}',
-      orElse: () => DifficultyLevel.beginner,
-    ),
-    thumbnailUrl: json['thumbnailUrl'],
-    estimatedHours: json['estimatedHours'],
-    lessonCount: json['lessonCount'],
-    quizCount: json['quizCount'],
-    projectCount: json['projectCount'],
-    prerequisites: List<String>.from(json['prerequisites'] ?? []),
-    learningOutcomes: List<String>.from(json['learningOutcomes'] ?? []),
-    tags: List<String>.from(json['tags'] ?? []),
-    isFeatured: json['isFeatured'] ?? false,
-    isNew: json['isNew'] ?? false,
-    rating: json['rating']?.toDouble() ?? 0.0,
-    enrollmentCount: json['enrollmentCount'] ?? 0,
-    createdAt: DateTime.parse(json['createdAt']),
-    updatedAt: DateTime.parse(json['updatedAt']),
-  );
+        id: json['id'],
+        title: json['title'],
+        shortDescription: json['shortDescription'],
+        longDescription: json['longDescription'],
+        category: LearningCategory.values.firstWhere(
+          (e) => e.toString() == 'LearningCategory.${json['category']}',
+          orElse: () => LearningCategory.webDevelopment,
+        ),
+        difficulty: DifficultyLevel.values.firstWhere(
+          (e) => e.toString() == 'DifficultyLevel.${json['difficulty']}',
+          orElse: () => DifficultyLevel.beginner,
+        ),
+        thumbnailUrl: json['thumbnailUrl'],
+        estimatedHours: json['estimatedHours'],
+        lessonCount: json['lessonCount'],
+        quizCount: json['quizCount'],
+        projectCount: json['projectCount'],
+        prerequisites: List<String>.from(json['prerequisites'] ?? []),
+        learningOutcomes:
+            List<String>.from(json['learningOutcomes'] ?? []),
+        tags: List<String>.from(json['tags'] ?? []),
+        isFeatured: json['isFeatured'] ?? false,
+        isNew: json['isNew'] ?? false,
+        rating: json['rating']?.toDouble() ?? 0.0,
+        enrollmentCount: json['enrollmentCount'] ?? 0,
+        createdAt: DateTime.parse(json['createdAt']),
+        updatedAt: DateTime.parse(json['updatedAt']),
+      );
 
   Course copyWith({
     String? id,
@@ -180,36 +181,33 @@ class Module {
   double get progress => totalItems > 0 ? completedItems / totalItems : 0.0;
 
   Map<String, dynamic> toJson() => {
-    'id': id,
-    'courseId': courseId,
-    'title': title,
-    'description': description,
-    'order': order,
-    'lessons': lessons.map((l) => l.toJson()).toList(),
-    'quizzes': quizzes.map((q) => q.toJson()).toList(),
-    'projects': projects.map((p) => p.toJson()).toList(),
-    'isLocked': isLocked,
-    'isCompleted': isCompleted,
-  };
+        'id': id,
+        'courseId': courseId,
+        'title': title,
+        'description': description,
+        'order': order,
+        'lessons': lessons.map((l) => l.toJson()).toList(),
+        'quizzes': quizzes.map((q) => q.toJson()).toList(),
+        'projects': projects.map((p) => p.toJson()).toList(),
+        'isLocked': isLocked,
+        'isCompleted': isCompleted,
+      };
 
   factory Module.fromJson(Map<String, dynamic> json) => Module(
-    id: json['id'],
-    courseId: json['courseId'],
-    title: json['title'],
-    description: json['description'],
-    order: json['order'],
-    lessons: List<Lesson>.from(
-      json['lessons']?.map((l) => Lesson.fromJson(l)) ?? [],
-    ),
-    quizzes: List<Quiz>.from(
-      json['quizzes']?.map((q) => Quiz.fromJson(q)) ?? [],
-    ),
-    projects: List<Project>.from(
-      json['projects']?.map((p) => Project.fromJson(p)) ?? [],
-    ),
-    isLocked: json['isLocked'] ?? false,
-    isCompleted: json['isCompleted'] ?? false,
-  );
+        id: json['id'],
+        courseId: json['courseId'],
+        title: json['title'],
+        description: json['description'],
+        order: json['order'],
+        lessons: List<Lesson>.from(
+            json['lessons']?.map((l) => Lesson.fromJson(l)) ?? []),
+        quizzes: List<Quiz>.from(
+            json['quizzes']?.map((q) => Quiz.fromJson(q)) ?? []),
+        projects: List<Project>.from(
+            json['projects']?.map((p) => Project.fromJson(p)) ?? []),
+        isLocked: json['isLocked'] ?? false,
+        isCompleted: json['isCompleted'] ?? false,
+      );
 }
 
 class Lesson {
@@ -244,38 +242,38 @@ class Lesson {
   });
 
   Map<String, dynamic> toJson() => {
-    'id': id,
-    'moduleId': moduleId,
-    'title': title,
-    'content': content,
-    'videoUrl': videoUrl,
-    'codeSnippets': codeSnippets,
-    'keyTakeaways': keyTakeaways,
-    'estimatedMinutes': estimatedMinutes,
-    'order': order,
-    'isLocked': isLocked,
-    'isCompleted': isCompleted,
-    'isBookmarked': isBookmarked,
-    'completedAt': completedAt?.toIso8601String(),
-  };
+        'id': id,
+        'moduleId': moduleId,
+        'title': title,
+        'content': content,
+        'videoUrl': videoUrl,
+        'codeSnippets': codeSnippets,
+        'keyTakeaways': keyTakeaways,
+        'estimatedMinutes': estimatedMinutes,
+        'order': order,
+        'isLocked': isLocked,
+        'isCompleted': isCompleted,
+        'isBookmarked': isBookmarked,
+        'completedAt': completedAt?.toIso8601String(),
+      };
 
   factory Lesson.fromJson(Map<String, dynamic> json) => Lesson(
-    id: json['id'],
-    moduleId: json['moduleId'],
-    title: json['title'],
-    content: json['content'],
-    videoUrl: json['videoUrl'],
-    codeSnippets: List<String>.from(json['codeSnippets'] ?? []),
-    keyTakeaways: List<String>.from(json['keyTakeaways'] ?? []),
-    estimatedMinutes: json['estimatedMinutes'],
-    order: json['order'],
-    isLocked: json['isLocked'] ?? false,
-    isCompleted: json['isCompleted'] ?? false,
-    isBookmarked: json['isBookmarked'] ?? false,
-    completedAt: json['completedAt'] != null
-        ? DateTime.parse(json['completedAt'])
-        : null,
-  );
+        id: json['id'],
+        moduleId: json['moduleId'],
+        title: json['title'],
+        content: json['content'],
+        videoUrl: json['videoUrl'],
+        codeSnippets: List<String>.from(json['codeSnippets'] ?? []),
+        keyTakeaways: List<String>.from(json['keyTakeaways'] ?? []),
+        estimatedMinutes: json['estimatedMinutes'],
+        order: json['order'],
+        isLocked: json['isLocked'] ?? false,
+        isCompleted: json['isCompleted'] ?? false,
+        isBookmarked: json['isBookmarked'] ?? false,
+        completedAt: json['completedAt'] != null
+            ? DateTime.parse(json['completedAt'])
+            : null,
+      );
 
   Lesson copyWith({
     String? id,
@@ -344,40 +342,39 @@ class Quiz {
   int get totalQuestions => questions.length;
 
   Map<String, dynamic> toJson() => {
-    'id': id,
-    'moduleId': moduleId,
-    'title': title,
-    'description': description,
-    'questions': questions.map((q) => q.toJson()).toList(),
-    'timeLimitMinutes': timeLimitMinutes,
-    'passingScore': passingScore,
-    'order': order,
-    'isLocked': isLocked,
-    'isCompleted': isCompleted,
-    'bestScore': bestScore,
-    'attempts': attempts,
-    'completedAt': completedAt?.toIso8601String(),
-  };
+        'id': id,
+        'moduleId': moduleId,
+        'title': title,
+        'description': description,
+        'questions': questions.map((q) => q.toJson()).toList(),
+        'timeLimitMinutes': timeLimitMinutes,
+        'passingScore': passingScore,
+        'order': order,
+        'isLocked': isLocked,
+        'isCompleted': isCompleted,
+        'bestScore': bestScore,
+        'attempts': attempts,
+        'completedAt': completedAt?.toIso8601String(),
+      };
 
   factory Quiz.fromJson(Map<String, dynamic> json) => Quiz(
-    id: json['id'],
-    moduleId: json['moduleId'],
-    title: json['title'],
-    description: json['description'],
-    questions: List<QuizQuestion>.from(
-      json['questions']?.map((q) => QuizQuestion.fromJson(q)) ?? [],
-    ),
-    timeLimitMinutes: json['timeLimitMinutes'],
-    passingScore: json['passingScore'],
-    order: json['order'],
-    isLocked: json['isLocked'] ?? false,
-    isCompleted: json['isCompleted'] ?? false,
-    bestScore: json['bestScore'] ?? 0,
-    attempts: json['attempts'] ?? 0,
-    completedAt: json['completedAt'] != null
-        ? DateTime.parse(json['completedAt'])
-        : null,
-  );
+        id: json['id'],
+        moduleId: json['moduleId'],
+        title: json['title'],
+        description: json['description'],
+        questions: List<QuizQuestion>.from(
+            json['questions']?.map((q) => QuizQuestion.fromJson(q)) ?? []),
+        timeLimitMinutes: json['timeLimitMinutes'],
+        passingScore: json['passingScore'],
+        order: json['order'],
+        isLocked: json['isLocked'] ?? false,
+        isCompleted: json['isCompleted'] ?? false,
+        bestScore: json['bestScore'] ?? 0,
+        attempts: json['attempts'] ?? 0,
+        completedAt: json['completedAt'] != null
+            ? DateTime.parse(json['completedAt'])
+            : null,
+      );
 }
 
 class QuizQuestion {
@@ -402,29 +399,29 @@ class QuizQuestion {
   });
 
   Map<String, dynamic> toJson() => {
-    'id': id,
-    'question': question,
-    'type': type.toString(),
-    'options': options,
-    'correctAnswerIndex': correctAnswerIndex,
-    'explanation': explanation,
-    'codeSnippet': codeSnippet,
-    'points': points,
-  };
+        'id': id,
+        'question': question,
+        'type': type.toString(),
+        'options': options,
+        'correctAnswerIndex': correctAnswerIndex,
+        'explanation': explanation,
+        'codeSnippet': codeSnippet,
+        'points': points,
+      };
 
   factory QuizQuestion.fromJson(Map<String, dynamic> json) => QuizQuestion(
-    id: json['id'],
-    question: json['question'],
-    type: QuestionType.values.firstWhere(
-      (e) => e.toString() == 'QuestionType.${json['type']}',
-      orElse: () => QuestionType.singleChoice,
-    ),
-    options: List<String>.from(json['options'] ?? []),
-    correctAnswerIndex: json['correctAnswerIndex'],
-    explanation: json['explanation'],
-    codeSnippet: json['codeSnippet'],
-    points: json['points'] ?? 10,
-  );
+        id: json['id'],
+        question: json['question'],
+        type: QuestionType.values.firstWhere(
+          (e) => e.toString() == 'QuestionType.${json['type']}',
+          orElse: () => QuestionType.singleChoice,
+        ),
+        options: List<String>.from(json['options'] ?? []),
+        correctAnswerIndex: json['correctAnswerIndex'],
+        explanation: json['explanation'],
+        codeSnippet: json['codeSnippet'],
+        points: json['points'] ?? 10,
+      );
 }
 
 enum QuestionType {
@@ -472,38 +469,38 @@ class Project {
   });
 
   Map<String, dynamic> toJson() => {
-    'id': id,
-    'moduleId': moduleId,
-    'title': title,
-    'description': description,
-    'requirements': requirements,
-    'starterFiles': starterFiles,
-    'solutionUrl': solutionUrl,
-    'estimatedHours': estimatedHours,
-    'order': order,
-    'isLocked': isLocked,
-    'isCompleted': isCompleted,
-    'isSubmitted': isSubmitted,
-    'submissionUrl': submissionUrl,
-    'completedAt': completedAt?.toIso8601String(),
-  };
+        'id': id,
+        'moduleId': moduleId,
+        'title': title,
+        'description': description,
+        'requirements': requirements,
+        'starterFiles': starterFiles,
+        'solutionUrl': solutionUrl,
+        'estimatedHours': estimatedHours,
+        'order': order,
+        'isLocked': isLocked,
+        'isCompleted': isCompleted,
+        'isSubmitted': isSubmitted,
+        'submissionUrl': submissionUrl,
+        'completedAt': completedAt?.toIso8601String(),
+      };
 
   factory Project.fromJson(Map<String, dynamic> json) => Project(
-    id: json['id'],
-    moduleId: json['moduleId'],
-    title: json['title'],
-    description: json['description'],
-    requirements: List<String>.from(json['requirements'] ?? []),
-    starterFiles: List<String>.from(json['starterFiles'] ?? []),
-    solutionUrl: json['solutionUrl'],
-    estimatedHours: json['estimatedHours'],
-    order: json['order'],
-    isLocked: json['isLocked'] ?? false,
-    isCompleted: json['isCompleted'] ?? false,
-    isSubmitted: json['isSubmitted'] ?? false,
-    submissionUrl: json['submissionUrl'],
-    completedAt: json['completedAt'] != null
-        ? DateTime.parse(json['completedAt'])
-        : null,
-  );
+        id: json['id'],
+        moduleId: json['moduleId'],
+        title: json['title'],
+        description: json['description'],
+        requirements: List<String>.from(json['requirements'] ?? []),
+        starterFiles: List<String>.from(json['starterFiles'] ?? []),
+        solutionUrl: json['solutionUrl'],
+        estimatedHours: json['estimatedHours'],
+        order: json['order'],
+        isLocked: json['isLocked'] ?? false,
+        isCompleted: json['isCompleted'] ?? false,
+        isSubmitted: json['isSubmitted'] ?? false,
+        submissionUrl: json['submissionUrl'],
+        completedAt: json['completedAt'] != null
+            ? DateTime.parse(json['completedAt'])
+            : null,
+      );
 }

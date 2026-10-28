@@ -277,29 +277,10 @@ class _ReplyBottomSheetState extends State<_ReplyBottomSheet> {
     super.dispose();
   }
 
-  void _startReply(String? parentReplyId, String? authorName, int depth) {
-    // Enforce max depth of 2 (0 = top-level, 1 = nested, 2 = max)
-    // If replying to a depth-1 reply, we allow it but attach to the depth-1 parent
-    // If replying to depth >= 1, we find the depth-1 ancestor
-    if (depth >= 1) {
-      // Find the depth-1 ancestor
-      PostReply? currentReply = _findReplyById(_replies, parentReplyId ?? '');
-      if (currentReply != null && currentReply.parentReplyId != null) {
-        // This is a depth-2 reply, use its parent (depth-1) as the parent
-        _replyingToId = currentReply.parentReplyId!;
-      } else {
-        // This is a depth-1 reply, use it as parent
-        _replyingToId = parentReplyId ?? '';
-      }
-    } else {
-      // Top-level reply
-      _replyingToId = parentReplyId ?? '';
-    }
-
-    // Find the author name for the reply we're actually replying to
-    PostReply? targetReply = _findReplyById(_replies, _replyingToId!);
+  void _startReply(String? parentReplyId, String? authorName) {
     setState(() {
-      _replyingToName = targetReply?.authorName ?? authorName;
+      _replyingToId = parentReplyId;
+      _replyingToName = authorName;
     });
     _controller.clear();
   }
@@ -316,62 +297,26 @@ class _ReplyBottomSheetState extends State<_ReplyBottomSheet> {
     final content = _controller.text.trim();
     if (content.isEmpty) return;
 
-    // Optimistic update: add reply immediately
-    final tempReply = PostReply(
-      id: 'temp_${DateTime.now().millisecondsSinceEpoch}',
-      postId: widget.post.id,
-      authorId: 'current_user',
-      authorName: 'You',
-      content: content,
-      parentReplyId: _replyingToId,
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-      replies: const [],
-    );
+    if (_replyingToId != null) {
+      await widget.onReplyToReply(_replyingToId!, content);
+    } else {
+      await widget.onReply(content);
+    }
 
-    // Optimistically add to UI
-    // ignore: unnecessary_braces_in_if
+    _controller.clear();
     setState(() {
-      if (_replyingToId != null) {
-        // Add as nested reply
-        _addNestedReply(_replies, _replyingToId!, tempReply);
-      } else {
-        _replies = [tempReply, ..._replies];
-      }
       _replyingToId = null;
       _replyingToName = null;
-      _controller.clear();
-      // ignore: unnecessary_braces_in_if
     });
 
-    // ignore: unnecessary_braces_in_if
-    try {
-      if (_replyingToId != null) {
-        await widget.onReplyToReply(_replyingToId!, content);
-      } else {
-        await widget.onReply(content);
-      }
-
-      // Refresh from server to get real IDs
-      if (!mounted) return;
-      final provider = context.read<AppProvider>();
-      final updatedReplies = await provider.getReplies(widget.post.id);
-      if (mounted) {
-        setState(() {
-          _replies = updatedReplies;
-        });
-      }
-      // ignore: unnecessary_braces_in_if
-    } catch (e) {
-      // On error, remove optimistic reply and show error
-      if (mounted) {
-        setState(() {
-          _replies = widget.replies; // Revert to original
-        });
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to post reply: $e')));
-      }
+    // Refresh replies
+    if (!mounted) return;
+    final provider = context.read<AppProvider>();
+    final updatedReplies = await provider.getReplies(widget.post.id);
+    if (mounted) {
+      setState(() {
+        _replies = updatedReplies;
+      });
     }
   }
 
@@ -562,11 +507,8 @@ class _ReplyBottomSheetState extends State<_ReplyBottomSheet> {
                         _buildVoteButton(reply),
                         const SizedBox(width: 8),
                         TextButton(
-                          onPressed: () => _startReply(
-                            reply.id,
-                            reply.authorName,
-                            depth + 1,
-                          ),
+                          onPressed: () =>
+                              _startReply(reply.id, reply.authorName),
                           style: TextButton.styleFrom(
                             padding: EdgeInsets.zero,
                             minimumSize: Size.zero,
@@ -753,10 +695,8 @@ class _ReplyBottomSheetState extends State<_ReplyBottomSheet> {
                         horizontal: 16,
                         vertical: 12,
                       ),
-                      counterText: '${_controller.text.length}/2000',
                     ),
                     style: Theme.of(context).textTheme.bodyMedium,
-                    maxLength: 2000,
                     maxLines: null,
                     textCapitalization: TextCapitalization.sentences,
                   ),
@@ -780,29 +720,6 @@ class _ReplyBottomSheetState extends State<_ReplyBottomSheet> {
         ),
       ),
     );
-  }
-
-  PostReply? _findReplyById(List<PostReply> replies, String id) {
-    for (final reply in replies) {
-      if (reply.id == id) return reply;
-      final found = _findReplyById(reply.replies, id);
-      if (found != null) return found;
-    }
-    return null;
-  }
-
-  void _addNestedReply(
-    List<PostReply> replies,
-    String parentId,
-    PostReply newReply,
-  ) {
-    for (final reply in replies) {
-      if (reply.id == parentId) {
-        reply.replies = [newReply, ...reply.replies];
-        return;
-      }
-      _addNestedReply(reply.replies, parentId, newReply);
-    }
   }
 }
 

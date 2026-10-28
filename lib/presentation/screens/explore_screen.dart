@@ -8,7 +8,6 @@ import 'package:brainbox/presentation/widgets/filter_chips.dart';
 import 'package:brainbox/data/models/course_models.dart';
 import 'package:brainbox/data/models/learning_models.dart';
 import 'package:brainbox/core/constants/app_colors.dart';
-import 'package:brainbox/presentation/widgets/async_state_view.dart';
 
 class ExploreScreen extends StatefulWidget {
   const ExploreScreen({super.key});
@@ -44,69 +43,53 @@ class _ExploreScreenState extends State<ExploreScreen> {
   Widget build(BuildContext context) {
     return Consumer<AppProvider>(
       builder: (context, provider, _) {
-        return AsyncStateView<List<Course>>(
-          futureBuilder: () async => provider.courses,
-          onSuccess: (context, courses) {
-            final filteredCourses = _filterCourses(courses);
-            return _buildExploreContent(context, provider, filteredCourses);
-          },
-          onError: (context, error, retry) =>
-              _buildErrorState(context, error, retry),
-          loadingBuilder: (context) => const _LoadingSkeleton(),
+        if (provider.isLoading) {
+          return const _LoadingSkeleton();
+        }
+
+        final filteredCourses = _filterCourses(provider.courses);
+
+        return CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildHeader(context),
+                    const SizedBox(height: 24),
+                    _buildSearchBar(context),
+                    const SizedBox(height: 16),
+                    _buildDifficultyFilter(context),
+                    const SizedBox(height: 16),
+                    _buildCategoryFilter(context),
+                    const SizedBox(height: 20),
+                    _buildResultsCount(context, filteredCourses.length),
+                    const SizedBox(height: 16),
+                  ],
+                ),
+              ),
+            ),
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
+              sliver: SliverList.separated(
+                itemCount: filteredCourses.isEmpty ? 1 : filteredCourses.length,
+                separatorBuilder: (_, _) => const SizedBox(height: 12),
+                itemBuilder: (context, index) {
+                  if (filteredCourses.isEmpty) {
+                    return _buildEmptyState();
+                  }
+                  return CourseCard(
+                    course: filteredCourses[index],
+                    onTap: () => context.push('/course/${filteredCourses[index].id}'),
+                  ).animate().fadeIn(delay: (100 + index * 50).ms).slideY(begin: 0.2, end: 0);
+                },
+              ),
+            ),
+          ],
         );
       },
-    );
-  }
-
-  Widget _buildExploreContent(
-    BuildContext context,
-    AppProvider provider,
-    List<Course> filteredCourses,
-  ) {
-    return CustomScrollView(
-      slivers: [
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildHeader(context),
-                const SizedBox(height: 24),
-                _buildSearchBar(context),
-                const SizedBox(height: 16),
-                _buildDifficultyFilter(context),
-                const SizedBox(height: 16),
-                _buildCategoryFilter(context),
-                const SizedBox(height: 20),
-                _buildResultsCount(context, filteredCourses.length),
-                const SizedBox(height: 16),
-              ],
-            ),
-          ),
-        ),
-        SliverPadding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
-          sliver: filteredCourses.isEmpty
-              ? SliverToBoxAdapter(
-                  child: _buildEmptyState(context, filteredCourses.isEmpty),
-                )
-              : SliverList.separated(
-                  itemCount: filteredCourses.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: 12),
-                  itemBuilder: (context, index) =>
-                      CourseCard(
-                            course: filteredCourses[index],
-                            onTap: () => context.go(
-                              '/course/${filteredCourses[index].id}',
-                            ),
-                          )
-                          .animate()
-                          .fadeIn(delay: (100 + index * 50).ms)
-                          .slideY(begin: 0.2, end: 0),
-                ),
-        ),
-      ],
     );
   }
 
@@ -125,9 +108,9 @@ class _ExploreScreenState extends State<ExploreScreen> {
         const SizedBox(height: 8),
         Text(
           'Explore 50+ courses across 8 categories',
-          style: Theme.of(
-            context,
-          ).textTheme.bodyLarge?.copyWith(color: AppColors.textSecondary),
+          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+            color: AppColors.textSecondary,
+          ),
         ),
       ],
     ).animate().fadeIn().slideY(begin: 0.2, end: 0);
@@ -178,38 +161,30 @@ class _ExploreScreenState extends State<ExploreScreen> {
   Widget _buildResultsCount(BuildContext context, int count) {
     return Text(
       '$count learning path${count == 1 ? '' : 's'} found',
-      style: Theme.of(
-        context,
-      ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+        fontWeight: FontWeight.w700,
+      ),
     ).animate().fadeIn(delay: 500.ms);
   }
 
   List<Course> _filterCourses(List<Course> courses) {
     return courses.where((course) {
-      final matchesSearch =
-          _searchQuery.isEmpty ||
+      final matchesSearch = _searchQuery.isEmpty ||
           course.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          course.shortDescription.toLowerCase().contains(
-            _searchQuery.toLowerCase(),
-          ) ||
-          course.tags.any(
-            (tag) => tag.toLowerCase().contains(_searchQuery.toLowerCase()),
-          );
+          course.shortDescription.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+          course.tags.any((tag) => tag.toLowerCase().contains(_searchQuery.toLowerCase()));
 
-      final matchesCategory =
-          _selectedCategory == 'All' ||
+      final matchesCategory = _selectedCategory == 'All' ||
           course.category.title == _selectedCategory;
 
-      final matchesDifficulty =
-          _selectedDifficulty == null ||
+      final matchesDifficulty = _selectedDifficulty == null ||
           course.difficulty == _selectedDifficulty;
 
       return matchesSearch && matchesCategory && matchesDifficulty;
     }).toList();
   }
 
-  Widget _buildEmptyState(BuildContext context, bool isEmpty) {
-    if (!isEmpty) return const SizedBox.shrink();
+  Widget _buildEmptyState() {
     return Container(
       padding: const EdgeInsets.all(48),
       decoration: BoxDecoration(
@@ -219,87 +194,27 @@ class _ExploreScreenState extends State<ExploreScreen> {
       ),
       child: Column(
         children: [
-          Icon(Icons.search_off_rounded, size: 64, color: AppColors.textMuted),
+          Icon(
+            Icons.search_off_rounded,
+            size: 64,
+            color: AppColors.textMuted,
+          ),
           const SizedBox(height: 16),
           Text(
             'No courses match your filters',
-            style: Theme.of(
-              context,
-            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
             'Try adjusting your search or filters',
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: AppColors.textSecondary,
+            ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 16),
-          FilledButton.icon(
-            onPressed: () {
-              setState(() {
-                _searchQuery = '';
-                _selectedCategory = 'All';
-                _selectedDifficulty = null;
-                _searchController.clear();
-              });
-            },
-            icon: const Icon(Icons.filter_alt_off_rounded),
-            label: const Text('Clear all filters'),
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.accentPrimary,
-            ),
-          ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildErrorState(
-    BuildContext context,
-    String error,
-    VoidCallback? retry,
-  ) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(48),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.cloud_off_rounded,
-              size: 64,
-              color: AppColors.accentError,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Unable to load courses',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              error,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            FilledButton.icon(
-              onPressed: retry,
-              icon: const Icon(Icons.refresh_rounded),
-              label: const Text('Retry'),
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColors.accentPrimary,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -338,8 +253,7 @@ class _LoadingSkeleton extends StatelessWidget {
           sliver: SliverList.separated(
             itemCount: 5,
             separatorBuilder: (_, _) => const SizedBox(height: 12),
-            itemBuilder: (_, _) =>
-                _skeletonBox(width: double.infinity, height: 140),
+            itemBuilder: (_, _) => _skeletonBox(width: double.infinity, height: 140),
           ),
         ),
       ],

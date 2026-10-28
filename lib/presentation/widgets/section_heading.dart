@@ -19,9 +19,9 @@ class SectionHeading extends StatelessWidget {
       Expanded(
         child: Text(
           title,
-          style: Theme.of(
-            context,
-          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
           overflow: TextOverflow.ellipsis,
         ),
       ),

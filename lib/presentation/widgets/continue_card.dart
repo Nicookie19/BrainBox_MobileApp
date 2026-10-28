@@ -5,10 +5,22 @@ import 'package:brainbox/data/models/learning_models.dart';
 import 'package:brainbox/core/constants/app_colors.dart';
 
 class ContinueCard extends StatelessWidget {
-  const ContinueCard({required this.course, required this.onTap, super.key});
+  const ContinueCard({
+    required this.course,
+    required this.onTap,
+    this.progress = 0.0,
+    this.subtitle = '',
+    super.key,
+  });
 
   final Course? course;
   final VoidCallback onTap;
+
+  /// Fraction (0..1) of the course completed.
+  final double progress;
+
+  /// Line shown under the title, e.g. the next lesson.
+  final String subtitle;
 
   @override
   Widget build(BuildContext context) {
@@ -17,8 +29,6 @@ class ContinueCard extends StatelessWidget {
     }
 
     final c = course!;
-    // Calculate progress from storage or default
-    final progress = 0.42; // This would come from actual progress tracking
 
     return Material(
       color: Colors.transparent,
@@ -28,9 +38,18 @@ class ContinueCard extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: AppColors.bgCard,
+            gradient: LinearGradient(
+              colors: [
+                AppColors.bgCard,
+                AppColors.accentPrimarySoft.withValues(alpha: 0.82),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: AppColors.borderDefault),
+            border: Border.all(
+              color: AppColors.accentPrimary.withValues(alpha: 0.38),
+            ),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.2),
@@ -64,17 +83,24 @@ class ContinueCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Lesson 7 · CSS Flexbox',
+                          subtitle,
                           style: Theme.of(context).textTheme.bodyMedium
                               ?.copyWith(color: AppColors.textSecondary),
                         ),
                       ],
                     ),
                   ),
-                  Icon(
-                    Icons.arrow_forward_rounded,
-                    color: AppColors.textMuted,
-                    size: 24,
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.accentPrimary,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.arrow_forward_rounded,
+                      color: Colors.white,
+                      size: 18,
+                    ),
                   ),
                 ],
               ),
@@ -87,8 +113,8 @@ class ContinueCard extends StatelessWidget {
                       child: LinearProgressIndicator(
                         value: progress,
                         minHeight: 8,
-                        backgroundColor: AppColors.bgTertiary,
-                        color: AppColors.accentPrimary,
+                        backgroundColor: Colors.white.withValues(alpha: 0.1),
+                        color: AppColors.accentSecondary,
                       ),
                     ),
                   ),
@@ -112,7 +138,7 @@ class ContinueCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    '+25 XP on completion',
+                    '+25 XP per lesson',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: AppColors.textSecondary,
                       fontWeight: FontWeight.w500,
@@ -143,9 +169,16 @@ class ContinueCard extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: AppColors.bgCard,
+            gradient: LinearGradient(
+              colors: [
+                AppColors.accentPrimarySoft.withValues(alpha: 0.92),
+                AppColors.accentSecondarySoft.withValues(alpha: 0.75),
+              ],
+            ),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: AppColors.borderDefault),
+            border: Border.all(
+              color: AppColors.accentPrimary.withValues(alpha: 0.42),
+            ),
           ),
           child: Row(
             children: [

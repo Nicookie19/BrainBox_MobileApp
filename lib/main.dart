@@ -10,6 +10,7 @@ import 'presentation/providers/app_provider.dart';
 import 'presentation/screens/bookmarks_screen.dart';
 import 'presentation/screens/community_screen.dart';
 import 'presentation/screens/course_detail_screen.dart';
+import 'presentation/screens/downloads_screen.dart';
 import 'presentation/screens/daily_challenge_screen.dart';
 import 'presentation/screens/explore_screen.dart';
 import 'presentation/screens/home_screen.dart';
@@ -59,7 +60,7 @@ class _MobileAppFrame extends StatelessWidget {
         color: AppColors.bgPrimary,
         child: Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 390, maxHeight: 844),
+            constraints: const BoxConstraints(maxWidth: 430, maxHeight: 900),
             child: DecoratedBox(
               decoration: BoxDecoration(
                 color: AppColors.bgPrimary,
@@ -110,5 +111,6 @@ final _router = GoRouter(
     ),
     GoRoute(path: '/settings', builder: (_, _) => const SettingsScreen()),
     GoRoute(path: '/bookmarks', builder: (_, _) => const BookmarksScreen()),
+    GoRoute(path: '/downloads', builder: (_, _) => const DownloadsScreen()),
   ],
 );

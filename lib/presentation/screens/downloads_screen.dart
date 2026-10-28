@@ -1,283 +1,190 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
-import 'package:brainbox/presentation/providers/app_provider.dart';
-import 'package:brainbox/data/repositories/content_loader.dart';
-import 'package:brainbox/data/models/content_models.dart';
-import 'package:brainbox/presentation/widgets/shared_widgets.dart';
 import 'package:brainbox/core/constants/app_colors.dart';
+import 'package:brainbox/data/services/storage_service.dart';
 
-class DownloadsScreen extends StatelessWidget {
+/// Lists lessons the learner saved for offline access and lets them remove
+/// or reopen them.
+class DownloadsScreen extends StatefulWidget {
   const DownloadsScreen({super.key});
+
+  @override
+  State<DownloadsScreen> createState() => _DownloadsScreenState();
+}
+
+class _DownloadsScreenState extends State<DownloadsScreen> {
+  List<Map<String, dynamic>> _items = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  void _load() {
+    final raw = StorageService.getDownloadedContent();
+    final items = <Map<String, dynamic>>[];
+    for (final entry in raw.entries) {
+      final value = entry.value;
+      if (value is Map) {
+        items.add({'key': entry.key, ...Map<String, dynamic>.from(value)});
+      }
+    }
+    items.sort(
+      (a, b) => ((b['downloadedAt'] as String?) ?? '').compareTo(
+        (a['downloadedAt'] as String?) ?? '',
+      ),
+    );
+    _items = items;
+  }
+
+  Future<void> _remove(String key) async {
+    await StorageService.removeDownload(key);
+    if (!mounted) return;
+    setState(_load);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Removed from downloads.')),
+    );
+  }
+
+  Future<void> _removeAll() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Remove all downloads?'),
+        content: const Text('Your lesson progress is not affected.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Remove all'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    await StorageService.clearDownloads();
+    if (!mounted) return;
+    setState(_load);
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.bgPrimary,
       appBar: AppBar(
         title: const Text('Downloads'),
         backgroundColor: AppColors.bgPrimary,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
+        actions: [
+          if (_items.isNotEmpty)
+            TextButton(onPressed: _removeAll, child: const Text('Remove all')),
+        ],
       ),
-      backgroundColor: AppColors.bgPrimary,
-      body: Consumer<AppProvider>(
-        builder: (context, provider, _) {
-          if (provider.isLoading || provider.profile == null) {
-            return const AppLoadingSkeleton();
-          }
+      body: _items.isEmpty ? _buildEmptyState(context) : _buildList(context),
+    );
+  }
 
-          final downloads = _getDownloadedContent(provider);
-
-          if (downloads.isEmpty) {
-            return AppEmptyState(
-              message: 'No downloaded content',
-              actionLabel: 'Explore Lessons',
-              onAction: () => context.go('/learn'),
-              icon: Icons.download_outlined,
-            );
-          }
-
-          return ListView.builder(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
-            itemCount: downloads.length,
-            itemBuilder: (context, index) {
-              final download = downloads[index];
-              return _DownloadCard(
-                    download: download,
-                    onTap: () => context.go(
-                      '/lesson/${download.courseId}?lesson=${download.lessonId}',
-                    ),
-                    onRemove: () => _showRemoveDialog(context, download),
-                  )
-                  .animate()
-                  .fadeIn(delay: (100 + index * 50).ms)
-                  .slideY(begin: 0.2, end: 0);
-            },
-          );
-        },
+  Widget _buildEmptyState(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.download_outlined, size: 64, color: AppColors.textMuted),
+            const SizedBox(height: 16),
+            Text(
+              'No downloads yet',
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Tap the download button inside a lesson to keep it here.',
+              textAlign: TextAlign.center,
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
+            ),
+          ],
+        ),
       ),
     );
   }
-}
 
-List<DownloadInfo> _getDownloadedContent(AppProvider provider) {
-  final downloads = provider.profile?.downloadedLessonIds ?? [];
-  final List<DownloadInfo> result = [];
+  Widget _buildList(BuildContext context) {
+    return ListView.separated(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+      itemCount: _items.length,
+      separatorBuilder: (_, _) => const SizedBox(height: 12),
+      itemBuilder: (context, index) {
+        final item = _items[index];
+        final key = item['key'] as String;
+        final title = (item['title'] as String?) ?? 'Lesson';
+        final courseTitle = (item['courseTitle'] as String?) ?? '';
+        final courseId = item['courseId'] as String?;
+        final lessonId = item['lessonId'] as String?;
 
-  for (final downloadId in downloads) {
-    final parts = downloadId.split(':');
-    if (parts.length != 2) continue;
-
-    final courseId = parts[0];
-    final lessonId = parts[1];
-
-    final lesson = _findLesson(courseId, lessonId);
-    if (lesson != null) {
-      result.add(
-        DownloadInfo(
-          courseId: courseId,
-          lessonId: lessonId,
-          lessonTitle: lesson.title,
-          courseTitle: _getCourseTitle(courseId),
-          downloadedAt: DateTime.now(), // In real app, this would be stored
-          sizeBytes: lesson.estimatedMinutes * 50 * 1024, // Rough estimate
-        ),
-      );
-    }
-  }
-
-  return result;
-}
-
-LessonContent? _findLesson(String courseId, String lessonId) {
-  final course = ContentLoader.getCourse(courseId);
-  if (course == null) return null;
-
-  for (final module in course.modules) {
-    for (final lesson in module.lessons) {
-      if (lesson.id == lessonId) {
-        return lesson;
-      }
-    }
-  }
-  return null;
-}
-
-String _getCourseTitle(String courseId) {
-  final course = ContentLoader.getCourse(courseId);
-  return course?.title ?? courseId;
-}
-
-Future<void> _showRemoveDialog(
-  BuildContext context,
-  DownloadInfo download,
-) async {
-  final confirmed = await showDialog<bool>(
-    context: context,
-    builder: (context) => AlertDialog(
-      backgroundColor: AppColors.bgCard,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      title: const Text('Remove Download?'),
-      content: Text('Remove "${download.lessonTitle}" from downloads?'),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context, false),
-          child: const Text('Cancel'),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.pop(context, true),
-          style: FilledButton.styleFrom(backgroundColor: AppColors.accentError),
-          child: const Text('Remove'),
-        ),
-      ],
-    ),
-  );
-
-  if (confirmed == true && context.mounted) {
-    await context.read<AppProvider>().removeDownload(
-      '${download.courseId}:${download.lessonId}',
-    );
-    if (!context.mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Download removed')));
-  }
-}
-
-class DownloadInfo {
-  final String courseId;
-  final String lessonId;
-  final String lessonTitle;
-  final String courseTitle;
-  final DateTime downloadedAt;
-  final int sizeBytes;
-
-  DownloadInfo({
-    required this.courseId,
-    required this.lessonId,
-    required this.lessonTitle,
-    required this.courseTitle,
-    required this.downloadedAt,
-    required this.sizeBytes,
-  });
-
-  String get formattedSize {
-    if (sizeBytes < 1024) return '$sizeBytes B';
-    if (sizeBytes < 1024 * 1024) {
-      return '${(sizeBytes / 1024).toStringAsFixed(1)} KB';
-    }
-    return '${(sizeBytes / (1024 * 1024)).toStringAsFixed(1)} MB';
-  }
-}
-
-class _DownloadCard extends StatelessWidget {
-  final DownloadInfo download;
-  final VoidCallback onTap;
-  final VoidCallback onRemove;
-
-  const _DownloadCard({
-    required this.download,
-    required this.onTap,
-    required this.onRemove,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      color: AppColors.bgCard,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppColors.accentSecondarySoft,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.download_done_rounded,
-                  color: AppColors.accentSecondary,
-                  size: 24,
-                ),
+        return Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(16),
+            onTap: courseId == null || lessonId == null
+                ? null
+                : () => context.push('/lesson/$courseId?lesson=$lessonId'),
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppColors.bgCard,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppColors.borderDefault),
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      download.lessonTitle,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      download.courseTitle,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.download_done_rounded,
+                    color: AppColors.accentPrimary,
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(
-                          Icons.file_download_rounded,
-                          size: 12,
-                          color: AppColors.textMuted,
-                        ),
-                        const SizedBox(width: 4),
                         Text(
-                          download.formattedSize,
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(color: AppColors.textMuted),
+                          title,
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.w600),
                         ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              PopupMenuButton<String>(
-                onSelected: (value) {
-                  if (value == 'remove') onRemove();
-                },
-                itemBuilder: (context) => [
-                  const PopupMenuItem(
-                    value: 'remove',
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.delete_outline_rounded,
-                          color: AppColors.accentError,
-                          size: 20,
-                        ),
-                        SizedBox(width: 8),
-                        Text('Remove download'),
+                        if (courseTitle.isNotEmpty)
+                          Text(
+                            courseTitle,
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(color: AppColors.textSecondary),
+                          ),
                       ],
                     ),
                   ),
+                  IconButton(
+                    tooltip: 'Remove',
+                    onPressed: () => _remove(key),
+                    icon: Icon(
+                      Icons.delete_outline_rounded,
+                      color: AppColors.textMuted,
+                    ),
+                  ),
                 ],
-                icon: const Icon(
-                  Icons.more_vert_rounded,
-                  color: AppColors.textMuted,
-                ),
               ),
-            ],
-          ),
-        ),
-      ),
+            ),
+          ).animate().fadeIn(delay: (100 + index * 50).ms).slideY(begin: 0.2, end: 0),
+        );
+      },
     );
   }
 }

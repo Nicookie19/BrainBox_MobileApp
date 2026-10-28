@@ -68,7 +68,16 @@ class _AppShellState extends State<AppShell> with TickerProviderStateMixin {
     final selectedIndex = _routes.indexWhere((route) => currentPath == route);
     return Consumer<AppProvider>(
       builder: (context, provider, _) => Scaffold(
-        body: widget.child,
+        body: Column(
+          children: [
+            const SizedBox(
+              height: 4,
+              width: double.infinity,
+              child: ColoredBox(color: AppColors.accentSecondary),
+            ),
+            Expanded(child: widget.child),
+          ],
+        ),
         bottomNavigationBar: Container(
           decoration: BoxDecoration(
             color: AppColors.bgCard,
@@ -90,12 +99,12 @@ class _AppShellState extends State<AppShell> with TickerProviderStateMixin {
                         _navController.forward(from: 0);
                         context.go(_routes[index]);
                       },
-                      height: 78,
+                      height: 72,
                       backgroundColor: Colors.transparent,
                       surfaceTintColor: Colors.transparent,
-                      indicatorColor: Colors.transparent,
+                      indicatorColor: AppColors.accentPrimarySoft,
                       labelBehavior:
-                          NavigationDestinationLabelBehavior.alwaysShow,
+                          NavigationDestinationLabelBehavior.onlyShowSelected,
                       animationDuration: const Duration(milliseconds: 300),
                       destinations: _destinations,
                     )

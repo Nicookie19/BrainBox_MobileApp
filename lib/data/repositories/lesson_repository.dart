@@ -8,7 +8,14 @@ class LessonRepository {
     'python-essentials': 'assets/lessons/python-essentials.json',
     'data-structures': 'assets/lessons/data-structures.json',
     'sql-basics': 'assets/lessons/sql-basics.json',
+    'flutter-from-zero': 'assets/lessons/flutter-from-zero.json',
+    'machine-learning-basics': 'assets/lessons/machine-learning-basics.json',
+    'networking-fundamentals': 'assets/lessons/networking-fundamentals.json',
   };
+
+  /// Whether lesson content ships for this course.
+  static bool hasLessons(String courseId) =>
+      _lessonAssets.containsKey(courseId);
 
   static Future<LessonModuleData?> getCourseLessons(String courseId) async {
     final assetPath = _lessonAssets[courseId];

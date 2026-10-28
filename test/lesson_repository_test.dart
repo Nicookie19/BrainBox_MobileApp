@@ -1,6 +1,6 @@
 import 'package:brainbox/data/repositories/lesson_progress_repository.dart';
-import 'package:brainbox/data/repositories/content_loader.dart';
-import 'package:brainbox/data/models/content_models.dart';
+import 'package:brainbox/data/repositories/lesson_repository.dart';
+import 'package:brainbox/data/services/storage_backend.dart';
 import 'package:brainbox/data/services/storage_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -9,34 +9,77 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   test('all multiple-choice lessons expose valid answer choices', () async {
-    await ContentLoader.initialize();
     for (final courseId in const [
-      'frontend_foundations',
-      'python_essentials',
-      'data_structures',
-      'sql_basics',
+      'frontend-foundations',
+      'python-essentials',
+      'data-structures',
+      'sql-basics',
+      'flutter-from-zero',
+      'machine-learning-basics',
+      'networking-fundamentals',
     ]) {
-      final course = ContentLoader.getCourse(courseId);
+      final course = await LessonRepository.getCourseLessons(courseId);
       expect(
         course,
         isNotNull,
         reason: '$courseId should load its lesson asset',
       );
 
-      if (course != null) {
-        for (final module in course.modules) {
-          for (final lesson in module.lessons) {
-            for (final step in lesson.steps) {
-              if (step.type == StepType.multipleChoice) {
-                expect(step.options, isNotNull);
-                expect(step.options!.length, greaterThanOrEqualTo(2));
-                expect(
-                  step.correctAnswer,
-                  inInclusiveRange(0, step.options!.length - 1),
-                );
-              }
-            }
+      for (final lesson in course!.modules.expand((module) => module.lessons)) {
+        for (final step in lesson.steps) {
+          if (step.type == LessonStepType.multipleChoice) {
+            expect(step.options, isNotNull);
+            expect(step.options!.length, greaterThanOrEqualTo(2));
+            expect(
+              step.correctAnswer,
+              inInclusiveRange(0, step.options!.length - 1),
+            );
           }
+        }
+      }
+    }
+  });
+
+  test('every sample course ships lessons', () {
+    for (final courseId in const [
+      'frontend-foundations',
+      'python-essentials',
+      'data-structures',
+      'sql-basics',
+      'flutter-from-zero',
+      'machine-learning-basics',
+      'networking-fundamentals',
+    ]) {
+      expect(LessonRepository.hasLessons(courseId), isTrue, reason: courseId);
+    }
+  });
+
+  test('code-ordering steps are valid and not already solved', () async {
+    for (final courseId in const [
+      'frontend-foundations',
+      'python-essentials',
+      'data-structures',
+      'sql-basics',
+      'flutter-from-zero',
+      'machine-learning-basics',
+      'networking-fundamentals',
+    ]) {
+      final course = await LessonRepository.getCourseLessons(courseId);
+      for (final lesson in course!.modules.expand((m) => m.lessons)) {
+        for (final step in lesson.steps) {
+          if (step.type != LessonStepType.codeOrdering) continue;
+          final order = step.correctOrder!;
+          final sorted = [...order]..sort();
+          expect(
+            sorted,
+            List<int>.generate(step.snippets!.length, (i) => i),
+            reason: '$courseId ${lesson.id}: correctOrder must be a permutation',
+          );
+          expect(
+            order,
+            isNot(List<int>.generate(order.length, (i) => i)),
+            reason: '$courseId ${lesson.id}: ordering is solved before the user starts',
+          );
         }
       }
     }
@@ -45,44 +88,21 @@ void main() {
   test('lesson progress saves and restores answer state', () async {
     SharedPreferences.setMockInitialValues({});
     StorageService.resetForTesting();
-    await StorageService.init();
-    ContentLoader.resetForTesting();
-    await ContentLoader.initialize();
-
-    await LessonProgressRepository.saveProgressImmediate(
-      courseId: 'python_essentials',
+    await StorageService.init(backend: MemoryStorageBackend());
+    await LessonProgressRepository.saveProgress(
+      courseId: 'python-essentials',
       lessonId: 'lesson_1',
       currentStepIndex: 3,
-      answeredSteps: {2: 1, 3: 'test'},
-      hintsUsed: {2: 1},
+      answeredSteps: {2: 1, 3: 0},
       isFinished: false,
-      contentVersion: 1,
     );
 
     final restored = await LessonProgressRepository.loadProgress(
-      'python_essentials',
+      'python-essentials',
       'lesson_1',
     );
     expect(restored?.currentStepIndex, 3);
-    expect(restored?.answeredSteps, {2: 1, 3: 'test'});
-    expect(restored?.hintsUsed, {2: 1});
+    expect(restored?.answeredSteps, {2: 1, 3: 0});
     expect(restored?.isFinished, isFalse);
-    expect(restored?.contentVersion, 1);
-  });
-
-  test('downloads persist and can be removed', () async {
-    SharedPreferences.setMockInitialValues({});
-    StorageService.resetForTesting();
-    await StorageService.init();
-
-    const lessonId = 'python_essentials:lesson_1';
-    await StorageService.saveDownloadedContent(lessonId, {
-      'courseId': 'python_essentials',
-      'lessonId': 'lesson_1',
-    });
-    expect(StorageService.getDownloadedContent(), contains(lessonId));
-
-    await StorageService.removeDownload(lessonId);
-    expect(StorageService.getDownloadedContent(), isNot(contains(lessonId)));
   });
 }
