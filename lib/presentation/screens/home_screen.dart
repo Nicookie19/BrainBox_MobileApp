@@ -74,7 +74,7 @@ class HomeScreen extends StatelessWidget {
                       onPressed: () => context.go('/explore'),
                     ),
                     const SizedBox(height: 16),
-                    _buildRecommendations(context),
+                    _buildRecommendations(context, provider),
                     const SizedBox(height: 32),
                   ],
                 ),
@@ -134,6 +134,7 @@ class HomeScreen extends StatelessWidget {
     final initials =
         provider.profile?.displayName
             .split(' ')
+            .where((e) => e.isNotEmpty)
             .map((e) => e[0])
             .take(2)
             .join()
@@ -243,33 +244,37 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildRecommendations(BuildContext context) {
+  Widget _buildRecommendations(BuildContext context, AppProvider provider) {
+    final courses = provider.courses
+        .where(
+          (course) => !provider.profile!.completedCourseIds.contains(course.id),
+        )
+        .take(3)
+        .toList();
     return Column(
-      children: [
-        RecommendationTile(
-          icon: Icons.psychology_rounded,
-          title: 'Neural Networks',
-          subtitle: '8 min · Intermediate',
-          color: AppColors.accentPrimary,
-          onTap: () => context.go('/explore'),
-        ).animate().fadeIn(delay: 800.ms).slideY(begin: 0.2, end: 0),
-        const SizedBox(height: 12),
-        RecommendationTile(
-          icon: Icons.code_rounded,
-          title: 'Algorithms & Data Structures',
-          subtitle: '12 min · Beginner',
-          color: AppColors.accentSecondary,
-          onTap: () => context.go('/course/data-structures'),
-        ).animate().fadeIn(delay: 900.ms).slideY(begin: 0.2, end: 0),
-        const SizedBox(height: 12),
-        RecommendationTile(
-          icon: Icons.cloud_rounded,
-          title: 'Cloud Fundamentals',
-          subtitle: '15 min · Beginner',
-          color: AppColors.accentSuccess,
-          onTap: () => context.go('/explore'),
-        ).animate().fadeIn(delay: 1000.ms).slideY(begin: 0.2, end: 0),
-      ],
+      children: courses
+          .asMap()
+          .entries
+          .map(
+            (entry) => Padding(
+              padding: EdgeInsets.only(
+                bottom: entry.key == courses.length - 1 ? 0 : 12,
+              ),
+              child:
+                  RecommendationTile(
+                        icon: Icons.school_rounded,
+                        title: entry.value.title,
+                        subtitle:
+                            '${entry.value.estimatedHours}h · ${entry.value.difficulty.label}',
+                        color: AppColors.accentPrimary,
+                        onTap: () => context.go('/course/${entry.value.id}'),
+                      )
+                      .animate()
+                      .fadeIn(delay: (800 + entry.key * 100).ms)
+                      .slideY(begin: 0.2, end: 0),
+            ),
+          )
+          .toList(),
     );
   }
 }

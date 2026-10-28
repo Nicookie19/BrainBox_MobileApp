@@ -560,7 +560,12 @@ class SettingsScreen extends StatelessWidget {
             icon: Icons.info_outline_rounded,
             title: 'App Version',
             subtitle: 'BrainBox v1.0.0',
-            onTap: () {},
+            onTap: () => showAboutDialog(
+              context: context,
+              applicationName: 'BrainBox',
+              applicationVersion: '1.0.0',
+              applicationLegalese: 'Learn by doing.',
+            ),
           ),
           const Divider(
             height: 1,
@@ -572,7 +577,11 @@ class SettingsScreen extends StatelessWidget {
             icon: Icons.article_outlined,
             title: 'Terms of Service',
             subtitle: 'Read our terms and conditions',
-            onTap: () {},
+            onTap: () => _showInfoDialog(
+              context,
+              'Terms of Service',
+              'Placeholder terms. Replace this text with the full terms before release.',
+            ),
           ),
           const Divider(
             height: 1,
@@ -584,7 +593,11 @@ class SettingsScreen extends StatelessWidget {
             icon: Icons.privacy_tip_outlined,
             title: 'Privacy Policy',
             subtitle: 'Learn how we handle your data',
-            onTap: () {},
+            onTap: () => _showInfoDialog(
+              context,
+              'Privacy Policy',
+              'Placeholder privacy policy. Replace this text with the full policy before release.',
+            ),
           ),
           const Divider(
             height: 1,
@@ -596,11 +609,31 @@ class SettingsScreen extends StatelessWidget {
             icon: Icons.star_outline_rounded,
             title: 'Rate the App',
             subtitle: 'Share your feedback on the store',
-            onTap: () {},
+            onTap: () => _showInfoDialog(
+              context,
+              'Rate the App',
+              'Placeholder rating flow. Add the store rating link before release.',
+            ),
           ),
         ],
       ),
     ).animate().fadeIn(delay: 600.ms).slideY(begin: 0.1, end: 0);
+  }
+
+  void _showInfoDialog(BuildContext context, String title, String body) {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(title),
+        content: Text(body),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
   }
 }
 

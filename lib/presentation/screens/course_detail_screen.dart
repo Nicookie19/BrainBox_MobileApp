@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:brainbox/data/repositories/course_repository.dart';
@@ -170,21 +171,17 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: IconButton(
-                  onPressed: () {},
-                  icon: const Icon(
-                    Icons.bookmark_outline_rounded,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-              ),
-              Container(
-                margin: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: AppColors.bgCard.withValues(alpha: 0.9),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: IconButton(
-                  onPressed: () {},
+                  onPressed: () async {
+                    await Clipboard.setData(
+                      ClipboardData(
+                        text: 'Check out "${_course!.title}" on BrainBox!',
+                      ),
+                    );
+                    if (!context.mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Copied to clipboard')),
+                    );
+                  },
                   icon: const Icon(
                     Icons.share_outlined,
                     color: AppColors.textPrimary,
@@ -372,15 +369,18 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
   }
 
   Widget _buildEnrollButton() {
+    final hasLessons = CourseRepository.hasLessons(widget.courseId);
     return SizedBox(
       width: double.infinity,
       child: FilledButton.icon(
-        onPressed: _toggleEnrollment,
+        onPressed: hasLessons ? _toggleEnrollment : null,
         icon: Icon(
           _enrolled ? Icons.check_circle_rounded : Icons.play_circle_rounded,
         ),
         label: Text(
-          _enrolled ? 'Continue Learning' : 'Start Learning',
+          hasLessons
+              ? (_enrolled ? 'Continue Learning' : 'Start Learning')
+              : 'Lessons coming soon',
           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         ),
         style: FilledButton.styleFrom(

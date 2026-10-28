@@ -76,8 +76,9 @@ class ContentLoader {
   }
 
   static Future<CourseContent?> _loadCourse(String courseId) async {
-    if (_courseContents!.containsKey(courseId))
+    if (_courseContents!.containsKey(courseId)) {
       return _courseContents![courseId];
+    }
 
     final assetPath = '$_contentBasePath$courseId.json';
     try {

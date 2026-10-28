@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:go_router/go_router.dart';
 import 'package:brainbox/data/models/user_models.dart';
 import 'package:brainbox/core/constants/app_colors.dart';
 
@@ -11,6 +12,7 @@ class ProfileHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final initials = profile.displayName
         .split(' ')
+        .where((e) => e.isNotEmpty)
         .map((e) => e[0])
         .take(2)
         .join()
@@ -54,7 +56,7 @@ class ProfileHeader extends StatelessWidget {
           ),
         ),
         IconButton(
-          onPressed: () {},
+          onPressed: () => context.push('/settings'),
           icon: Icon(Icons.settings_outlined, color: AppColors.textMuted),
           style: IconButton.styleFrom(backgroundColor: AppColors.bgTertiary),
         ).animate().fadeIn(delay: 400.ms),
@@ -109,7 +111,7 @@ class ProfileHeader extends StatelessWidget {
               ],
             ),
             Text(
-              '$profile.xp / $xpForNextLevel XP',
+              '${profile.xp} / $xpForNextLevel XP',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: AppColors.textMuted,
                 fontWeight: FontWeight.w500,

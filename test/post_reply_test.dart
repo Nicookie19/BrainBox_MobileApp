@@ -4,22 +4,8 @@ import 'package:brainbox/data/models/community_models.dart';
 void main() {
   group('PostReply copyWith', () {
     late PostReply originalReply;
-    late List<PostReply> nestedReplies;
 
     setUp(() {
-      nestedReplies = [
-        PostReply(
-          id: 'nested_1',
-          postId: 'post_1',
-          authorId: 'user_2',
-          authorName: 'Nested Author',
-          content: 'Nested reply content',
-          parentReplyId: 'reply_1',
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        ),
-      ];
-
       originalReply = PostReply(
         id: 'reply_1',
         postId: 'post_1',
@@ -64,7 +50,6 @@ void main() {
     });
 
     test('copyWith updates content field', () {
-      const newContent = 'Updated reply content';
       final copied = originalReply.copyWith(content: 'Updated reply content');
 
       expect(copied.content, 'Updated reply content');
@@ -75,19 +60,6 @@ void main() {
     });
 
     test('copyWith updates replies list', () {
-      final newReplies = [
-        PostReply(
-          id: 'new_nested',
-          postId: 'post_1',
-          authorId: 'user_3',
-          authorName: 'New Nested Author',
-          content: 'New nested reply',
-          parentReplyId: 'reply_1',
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        ),
-      ];
-
       final copied = originalReply.copyWith(
         replies: [
           PostReply(

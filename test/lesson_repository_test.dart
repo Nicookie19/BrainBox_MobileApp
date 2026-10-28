@@ -69,4 +69,20 @@ void main() {
     expect(restored?.isFinished, isFalse);
     expect(restored?.contentVersion, 1);
   });
+
+  test('downloads persist and can be removed', () async {
+    SharedPreferences.setMockInitialValues({});
+    StorageService.resetForTesting();
+    await StorageService.init();
+
+    const lessonId = 'python_essentials:lesson_1';
+    await StorageService.saveDownloadedContent(lessonId, {
+      'courseId': 'python_essentials',
+      'lessonId': 'lesson_1',
+    });
+    expect(StorageService.getDownloadedContent(), contains(lessonId));
+
+    await StorageService.removeDownload(lessonId);
+    expect(StorageService.getDownloadedContent(), isNot(contains(lessonId)));
+  });
 }

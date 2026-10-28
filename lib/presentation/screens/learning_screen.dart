@@ -8,8 +8,7 @@ import 'package:brainbox/presentation/widgets/section_heading.dart';
 import 'package:brainbox/presentation/widgets/week_activity.dart';
 import 'package:brainbox/presentation/widgets/achievement_card.dart';
 import 'package:brainbox/presentation/widgets/stat_summary.dart';
-import 'package:brainbox/data/models/course_models.dart';
-import 'package:brainbox/data/models/learning_models.dart';
+import 'package:brainbox/data/models/user_models.dart';
 import 'package:brainbox/core/constants/app_colors.dart';
 
 class LearningScreen extends StatelessWidget {
@@ -63,19 +62,12 @@ class LearningScreen extends StatelessWidget {
                           ),
                     ),
                     const SizedBox(height: 16),
-                    _buildCompletedCourses(context),
+                    _buildCompletedCourses(context, provider),
                     const SizedBox(height: 28),
                     SectionHeading(
                       title: 'Weekly Activity',
                       action: 'Details',
-                      onPressed: () =>
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                'Weekly activity details are coming soon.',
-                              ),
-                            ),
-                          ),
+                      onPressed: () => context.go('/profile'),
                     ),
                     const SizedBox(height: 16),
                     const WeekActivity(),
@@ -86,7 +78,7 @@ class LearningScreen extends StatelessWidget {
                       onPressed: () => context.go('/profile'),
                     ),
                     const SizedBox(height: 16),
-                    _buildAchievements(context),
+                    _buildAchievements(context, provider),
                     const SizedBox(height: 32),
                   ],
                 ),
@@ -133,7 +125,8 @@ class LearningScreen extends StatelessWidget {
         children: [
           Expanded(
             child: StatSummary(
-              value: '2.5h',
+              value:
+                  '${(provider.profile?.stats.totalStudyMinutes ?? 0) ~/ 60}h',
               label: 'This Week',
               icon: Icons.schedule_rounded,
               color: AppColors.accentSecondary,
@@ -142,7 +135,7 @@ class LearningScreen extends StatelessWidget {
           Container(width: 1, height: 50, color: AppColors.borderDefault),
           Expanded(
             child: StatSummary(
-              value: '5',
+              value: '${provider.profile?.stats.totalLessonsCompleted ?? 0}',
               label: 'Lessons Done',
               icon: Icons.menu_book_rounded,
               color: AppColors.accentPrimary,
@@ -179,7 +172,7 @@ class LearningScreen extends StatelessWidget {
         final course = entry.value;
         return LearningCourseTile(
               course: course,
-              progress: _getCourseProgress(course.id),
+              progress: _getCourseProgress(provider, course.id),
               onTap: () => context.go('/lesson/${course.id}'),
             )
             .animate()
@@ -220,88 +213,55 @@ class LearningScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildCompletedCourses(BuildContext context) {
-    return LearningCourseTile(
-      course: Course(
-        id: 'digital-productivity',
-        title: 'Digital Productivity',
-        shortDescription: 'Master productivity tools',
-        longDescription: '',
-        category: LearningCategory.projectManagement,
-        difficulty: DifficultyLevel.beginner,
-        thumbnailUrl: '',
-        estimatedHours: 3,
-        lessonCount: 8,
-        quizCount: 2,
-        projectCount: 1,
-        prerequisites: [],
-        learningOutcomes: [],
-        tags: [],
-        isFeatured: false,
-        isNew: false,
-        rating: 4.5,
-        enrollmentCount: 1200,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ),
-      progress: 1.0,
-      onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Course details are being prepared.')),
-      ),
-      isCompleted: true,
-    ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.2, end: 0);
+  Widget _buildCompletedCourses(BuildContext context, AppProvider provider) {
+    final completed = provider.courses
+        .where(
+          (course) =>
+              provider.profile?.completedCourseIds.contains(course.id) ?? false,
+        )
+        .toList();
+    if (completed.isEmpty) return _buildEmptyInProgress(context);
+    return Column(
+      children: completed
+          .map(
+            (course) => LearningCourseTile(
+              course: course,
+              progress: 1,
+              isCompleted: true,
+              onTap: () => context.go('/lesson/${course.id}'),
+            ),
+          )
+          .toList(),
+    );
   }
 
-  Widget _buildAchievements(BuildContext context) {
+  Widget _buildAchievements(BuildContext context, AppProvider provider) {
+    final achievements = provider.profile?.achievements ?? const [];
+    final shown = achievements.take(3).toList();
     return Row(
-      children: [
-        Expanded(
-          child: AchievementCard(
-            icon: Icons.local_fire_department_rounded,
-            title: 'On Fire',
-            subtitle: '7 day streak',
-            color: AppColors.accentWarning,
-            isUnlocked: true,
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: AchievementCard(
-            icon: Icons.rocket_launch_rounded,
-            title: 'Starter',
-            subtitle: 'First course',
-            color: AppColors.accentPrimary,
-            isUnlocked: false,
-            progress: 0,
-            target: 1,
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: AchievementCard(
-            icon: Icons.menu_book_rounded,
-            title: 'Scholar',
-            subtitle: '10 lessons',
-            color: AppColors.accentSecondary,
-            isUnlocked: false,
-            progress: 5,
-            target: 10,
-          ),
-        ),
-      ],
+      children: shown
+          .map(
+            (achievement) => Expanded(
+              child: AchievementCard(
+                icon: achievement.type == AchievementType.streakDays
+                    ? Icons.local_fire_department_rounded
+                    : Icons.emoji_events_rounded,
+                title: achievement.title,
+                subtitle: achievement.description,
+                color: AppColors.accentPrimary,
+                isUnlocked: achievement.isUnlocked,
+                progress: achievement.progress.toDouble(),
+                target: achievement.target.toDouble(),
+              ),
+            ),
+          )
+          .toList(),
     ).animate().fadeIn(delay: 500.ms).slideY(begin: 0.2, end: 0);
   }
 
-  double _getCourseProgress(String courseId) {
-    // This would come from actual progress tracking
-    switch (courseId) {
-      case 'frontend-foundations':
-        return 0.42;
-      case 'python-essentials':
-        return 0.18;
-      default:
-        return 0.0;
-    }
+  double _getCourseProgress(AppProvider provider, String courseId) {
+    final progress = provider.courseProgress[courseId];
+    return progress?.overallProgress ?? 0;
   }
 }
 

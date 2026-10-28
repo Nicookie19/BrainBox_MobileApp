@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 import 'package:brainbox/data/repositories/community_repository.dart';
 import 'package:brainbox/data/repositories/course_repository.dart';
 import 'package:brainbox/data/services/storage_service.dart';
-import 'package:brainbox/data/services/supabase_service.dart';
 import 'package:brainbox/data/services/completion_service.dart';
 import 'package:brainbox/data/models/course_models.dart';
 import 'package:brainbox/data/models/user_models.dart';
@@ -21,13 +20,25 @@ class AppProvider extends ChangeNotifier {
   UserProfile? get profile => _profile;
   List<Course> get courses => _courses;
   List<CommunityPost> get posts => _posts;
+  Map<String, CourseProgress> get courseProgress =>
+      StorageService.getAllCourseProgress();
   bool get isLoading => _isLoading;
   CompletionResult? get lastCompletionResult => _lastCompletionResult;
 
   int get xp => _profile?.xp ?? 0;
   UserLevel get level => _profile?.level ?? UserLevel.allLevels[0];
   double get levelProgress => _profile?.levelProgress ?? 0;
-  int get currentStreak => StorageService.getComputedCurrentStreak();
+  int get currentStreak {
+    final profile = _profile;
+    final lastActiveAt = profile?.lastLessonCompletedAt;
+    if (profile == null || lastActiveAt == null) return 0;
+    final today = Clock.real.now().startOfLocalDay;
+    final lastActiveDay = lastActiveAt.startOfLocalDay;
+    return lastActiveDay == today ||
+            lastActiveDay == today.subtract(const Duration(days: 1))
+        ? profile.stats.currentStreakDays
+        : 0;
+  }
 
   Future<void> initialize() async {
     _isLoading = true;
@@ -49,28 +60,14 @@ class AppProvider extends ChangeNotifier {
   Future<UserProfile> _loadOrCreateProfile() async {
     final existingResult = StorageService.getUserProfile();
     final existing = existingResult.isSuccess ? existingResult.value : null;
-    final cloudUser = SupabaseService.isEnabled
-        ? SupabaseService.client.auth.currentUser
-        : null;
     if (existing != null) {
-      if (cloudUser == null || existing.id == cloudUser.id) return existing;
-      final migrated = existing.copyWith(
-        id: cloudUser.id,
-        email: cloudUser.email ?? existing.email,
-        displayName:
-            (cloudUser.userMetadata?['display_name'] as String?) ??
-            existing.displayName,
-      );
-      await StorageService.saveUserProfile(migrated);
-      return migrated;
+      return existing;
     }
 
     final newProfile = UserProfile(
-      id: cloudUser?.id ?? 'current_user',
-      email: cloudUser?.email ?? 'user@brainbox.app',
-      displayName:
-          (cloudUser?.userMetadata?['display_name'] as String?) ??
-          'Alex Rivera',
+      id: 'local_user',
+      email: 'local@brainbox.app',
+      displayName: 'Alex Rivera',
       bio: 'Aspiring Frontend Developer',
       level: UserLevel.getLevelForXp(0),
       xp: 0,
@@ -315,4 +312,40 @@ class AppProvider extends ChangeNotifier {
   }
 
   List<String> get bookmarkedLessonIds => _profile?.bookmarkedLessonIds ?? [];
+
+  Future<void> saveDownload(
+    String lessonId,
+    Map<String, dynamic> content,
+  ) async {
+    if (_profile == null) return;
+
+    final result = await StorageService.saveDownloadedContent(
+      lessonId,
+      content,
+    );
+    if (!result.isSuccess) return;
+
+    final downloadedLessonIds = List<String>.from(
+      _profile!.downloadedLessonIds,
+    );
+    if (!downloadedLessonIds.contains(lessonId)) {
+      downloadedLessonIds.add(lessonId);
+    }
+    _profile = _profile!.copyWith(downloadedLessonIds: downloadedLessonIds);
+    await StorageService.saveUserProfile(_profile!);
+    notifyListeners();
+  }
+
+  Future<void> removeDownload(String lessonId) async {
+    if (_profile == null) return;
+
+    final result = await StorageService.removeDownload(lessonId);
+    if (!result.isSuccess) return;
+
+    final downloadedLessonIds = List<String>.from(_profile!.downloadedLessonIds)
+      ..remove(lessonId);
+    _profile = _profile!.copyWith(downloadedLessonIds: downloadedLessonIds);
+    await StorageService.saveUserProfile(_profile!);
+    notifyListeners();
+  }
 }

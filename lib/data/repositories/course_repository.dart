@@ -6,6 +6,16 @@ import 'package:brainbox/data/models/learning_models.dart';
 
 class CourseRepository {
   static const String _coursesKey = 'available_courses';
+  static const Set<String> _coursesWithLessons = {
+    'frontend-foundations',
+    'python-essentials',
+    'data-structures',
+    'sql-basics',
+    'machine-learning-basics',
+  };
+
+  static bool hasLessons(String courseId) =>
+      _coursesWithLessons.contains(courseId);
 
   // Initialize with sample data if no courses exist
   static Future<void> initializeSampleCourses() async {

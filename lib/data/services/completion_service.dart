@@ -1,5 +1,6 @@
 import 'package:brainbox/data/models/user_models.dart';
 import 'package:brainbox/data/services/storage_service.dart';
+import 'package:brainbox/data/repositories/content_loader.dart';
 import 'package:brainbox/core/utils/clock.dart';
 
 /// Result of a completion operation
@@ -71,15 +72,24 @@ class CompletionService {
           ? courseProgressResult.value
           : null;
 
-      // Load lesson to get XP reward
-      final lesson = _getLessonForCourse(courseId, lessonId);
-      final lessonXp = (lesson?.xpReward as int?) ?? _lessonXp;
+      final contentCourse = ContentLoader.getCourse(
+        courseId.replaceAll('-', '_'),
+      );
+      final lesson = contentCourse?.modules
+          .expand((module) => module.lessons)
+          .where((item) => item.id == lessonId)
+          .firstOrNull;
+      final lessonXp = lesson?.xpReward ?? _lessonXp;
+      final totalLessons =
+          contentCourse?.modules.fold<int>(
+            0,
+            (total, module) => total + module.lessons.length,
+          ) ??
+          1;
 
       // Calculate new XP and level
       final newTotalXp = profile.totalXp + lessonXp;
       final oldLevel = profile.level;
-      final newLevel = UserLevel.getLevelForXp(newTotalXp);
-      final leveledUp = newLevel != oldLevel;
 
       // Calculate streak
       final (newStreak, newLongestStreak) = _calculateStreak(
@@ -94,9 +104,9 @@ class CompletionService {
                     courseId: courseId,
                     userId: profile.id,
                     completedModules: 0,
-                    totalModules: 1,
+                    totalModules: 0,
                     completedLessons: 0,
-                    totalLessons: 10,
+                    totalLessons: totalLessons,
                     completedQuizzes: 0,
                     totalQuizzes: 0,
                     completedProjects: 0,
@@ -108,10 +118,22 @@ class CompletionService {
                   ))
               .copyWith(
                 completedLessons: (courseProgress?.completedLessons ?? 0) + 1,
+                totalLessons: totalLessons,
                 totalStudyMinutes:
                     (courseProgress?.totalStudyMinutes ?? 0) + 10,
                 lastAccessedAt: clock.now(),
               );
+      final courseCompleted =
+          updatedCourseProgress.completedLessons >=
+          updatedCourseProgress.totalLessons;
+      final completedCourseIds = List<String>.from(profile.completedCourseIds);
+      if (courseCompleted && !completedCourseIds.contains(courseId)) {
+        completedCourseIds.add(courseId);
+      }
+      final finalizedCourseProgress = updatedCourseProgress.copyWith(
+        isCompleted: courseCompleted,
+        completedAt: courseCompleted ? clock.now() : null,
+      );
 
       // Update completed lesson IDs
       final completedLessonIds = List<String>.from(profile.completedLessonIds);
@@ -136,7 +158,7 @@ class CompletionService {
       final newAchievements = _evaluateAchievements(
         profile.achievements,
         newStats: newStats,
-        completedCourseIds: profile.completedCourseIds,
+        completedCourseIds: completedCourseIds,
       );
 
       // Find newly unlocked achievements
@@ -148,12 +170,19 @@ class CompletionService {
         }
       }
 
+      final achievementXp = newlyUnlocked.fold<int>(
+        0,
+        (total, achievement) => total + achievement.xpReward,
+      );
+      final finalTotalXp = newTotalXp + achievementXp;
+
       // Prepare updated profile
       final updatedProfile = profile.copyWith(
-        xp: profile.xp + lessonXp,
-        totalXp: newTotalXp,
-        level: newLevel,
+        xp: profile.xp + lessonXp + achievementXp,
+        totalXp: finalTotalXp,
+        level: UserLevel.getLevelForXp(finalTotalXp),
         enrolledCourseIds: enrolledIds,
+        completedCourseIds: completedCourseIds,
         completedLessonIds: completedLessonIds,
         lastActiveAt: clock.now(),
         lastLessonCompletedAt: clock.now(),
@@ -163,14 +192,17 @@ class CompletionService {
 
       // Atomic write: save all data
       await Future.wait([
-        StorageService.saveCourseProgress(updatedCourseProgress),
+        StorageService.saveCourseProgress(finalizedCourseProgress),
         StorageService.saveUserProfile(updatedProfile),
+        StorageService.markActivity(todayLocal),
       ]);
 
       return CompletionResult.success(
-        xpAwarded: lessonXp,
-        leveledUp: leveledUp,
-        newLevel: leveledUp ? newLevel : null,
+        xpAwarded: lessonXp + achievementXp,
+        leveledUp: UserLevel.getLevelForXp(finalTotalXp) != oldLevel,
+        newLevel: UserLevel.getLevelForXp(finalTotalXp) != oldLevel
+            ? UserLevel.getLevelForXp(finalTotalXp)
+            : null,
         newlyUnlockedAchievements: newlyUnlocked,
       );
     } catch (e) {
@@ -202,8 +234,6 @@ class CompletionService {
       // Calculate new XP and level
       final newTotalXp = profile.totalXp + _challengeXp;
       final oldLevel = profile.level;
-      final newLevel = UserLevel.getLevelForXp(newTotalXp);
-      final leveledUp = newLevel != oldLevel;
 
       // Calculate streak (challenge completion counts for streak)
       final (newStreak, newLongestStreak) = _calculateStreak(
@@ -236,11 +266,17 @@ class CompletionService {
         }
       }
 
+      final achievementXp = newlyUnlocked.fold<int>(
+        0,
+        (total, achievement) => total + achievement.xpReward,
+      );
+      final finalTotalXp = newTotalXp + achievementXp;
+
       // Prepare updated profile
       final updatedProfile = profile.copyWith(
-        xp: profile.xp + _challengeXp,
-        totalXp: newTotalXp,
-        level: newLevel,
+        xp: profile.xp + _challengeXp + achievementXp,
+        totalXp: finalTotalXp,
+        level: UserLevel.getLevelForXp(finalTotalXp),
         lastActiveAt: clock.now(),
         stats: newStats,
         achievements: newAchievements,
@@ -250,12 +286,15 @@ class CompletionService {
       await Future.wait([
         StorageService.markDailyChallengeCompleted(date, score),
         StorageService.saveUserProfile(updatedProfile),
+        StorageService.markActivity(todayLocal),
       ]);
 
       return CompletionResult.success(
-        xpAwarded: _challengeXp,
-        leveledUp: leveledUp,
-        newLevel: leveledUp ? newLevel : null,
+        xpAwarded: _challengeXp + achievementXp,
+        leveledUp: UserLevel.getLevelForXp(finalTotalXp) != oldLevel,
+        newLevel: UserLevel.getLevelForXp(finalTotalXp) != oldLevel
+            ? UserLevel.getLevelForXp(finalTotalXp)
+            : null,
         newlyUnlockedAchievements: newlyUnlocked,
       );
     } catch (e) {
@@ -338,12 +377,5 @@ class CompletionService {
         unlockedAt: isUnlocked ? DateTime.now() : null,
       );
     }).toList();
-  }
-
-  /// Gets lesson info for XP reward (would ideally come from content loader)
-  static dynamic _getLessonForCourse(String courseId, String lessonId) {
-    // This would ideally use ContentLoader, but we keep it simple here
-    // The lesson XP is passed from the caller in practice
-    return null;
   }
 }

@@ -89,7 +89,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
           padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
           sliver: filteredCourses.isEmpty
               ? SliverToBoxAdapter(
-                  child: _buildEmptyState(context, filteredCourses.length == 0),
+                  child: _buildEmptyState(context, filteredCourses.isEmpty),
                 )
               : SliverList.separated(
                   itemCount: filteredCourses.length,

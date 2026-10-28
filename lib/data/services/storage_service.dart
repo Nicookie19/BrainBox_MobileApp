@@ -1,9 +1,7 @@
 import 'dart:convert';
 
-import 'package:shared_preferences/shared_preferences.dart';
-
 import '../models/user_models.dart';
-import 'profile_sync_service.dart';
+import 'local_database_service.dart';
 import '../../core/utils/clock.dart';
 
 class StorageResult<T> {
@@ -58,20 +56,20 @@ class StorageService {
   static const String _userProfileKey = 'user_profile';
   static const String _courseProgressKey = 'course_progress_';
   static const String _preferencesKey = 'user_preferences';
-  static const String _bookmarksKey = 'bookmarks';
   static const String _downloadsKey = 'downloads';
-  static const String _streakKey = 'streak_data';
   static const String _lastSyncKey = 'last_sync';
   static const String _dailyChallengeCompletionKey =
       'daily_challenge_completed_';
   static const String _dailyChallengeScoreKey = 'daily_challenge_score_';
   static const String _lessonProgressPrefix = 'lesson_progress_';
+  static const String _activityPrefix = 'activity_';
 
-  static SharedPreferences? _prefs;
+  static LocalPreferences? _prefs;
   static Clock _clock = Clock.real;
 
   static Future<void> init({Clock? clock}) async {
-    _prefs = await SharedPreferences.getInstance();
+    await LocalDatabaseService.initialize();
+    _prefs = LocalPreferences();
     if (clock != null) _clock = clock;
     await _runMigrations();
   }
@@ -85,7 +83,7 @@ class StorageService {
     _clock = Clock.real;
   }
 
-  static SharedPreferences get prefs {
+  static LocalPreferences get prefs {
     if (_prefs == null) {
       throw StateError('StorageService not initialized. Call init() first.');
     }
@@ -190,9 +188,7 @@ class StorageService {
       profile,
       (p) => p.toJson(),
     );
-    if (result.isSuccess) {
-      await ProfileSyncService.sync(profile);
-    }
+    if (result.isSuccess) {}
     return result;
   }
 
@@ -285,43 +281,6 @@ class StorageService {
     );
   }
 
-  // Bookmarks
-  static Future<StorageResult<void>> saveBookmarks(
-    List<String> lessonIds,
-  ) async {
-    try {
-      await prefs.setStringList(_bookmarksKey, lessonIds);
-      return StorageResult.success(null);
-    } catch (e) {
-      return StorageResult.failure(
-        StorageError(
-          'Failed to save bookmarks',
-          key: _bookmarksKey,
-          originalError: e,
-        ),
-      );
-    }
-  }
-
-  static List<String> getBookmarks() {
-    return prefs.getStringList(_bookmarksKey) ?? [];
-  }
-
-  static Future<StorageResult<void>> addBookmark(String lessonId) async {
-    final bookmarks = getBookmarks();
-    if (!bookmarks.contains(lessonId)) {
-      bookmarks.add(lessonId);
-      return saveBookmarks(bookmarks);
-    }
-    return StorageResult.success(null);
-  }
-
-  static Future<StorageResult<void>> removeBookmark(String lessonId) async {
-    final bookmarks = getBookmarks();
-    bookmarks.remove(lessonId);
-    return saveBookmarks(bookmarks);
-  }
-
   // Downloads (for offline access)
   static Future<StorageResult<void>> saveDownloadedContent(
     String contentId,
@@ -385,69 +344,6 @@ class StorageService {
     }
   }
 
-  // Streak Data
-  static Future<StorageResult<void>> saveStreakData({
-    required int currentStreak,
-    required int longestStreak,
-    required DateTime lastStudyDate,
-  }) async {
-    try {
-      await prefs.setInt('${_streakKey}_current', currentStreak);
-      await prefs.setInt('${_streakKey}_longest', longestStreak);
-      await prefs.setString(
-        '${_streakKey}_last_date',
-        lastStudyDate.toIso8601String(),
-      );
-      return StorageResult.success(null);
-    } catch (e) {
-      return StorageResult.failure(
-        StorageError(
-          'Failed to save streak data',
-          key: _streakKey,
-          originalError: e,
-        ),
-      );
-    }
-  }
-
-  static ({int currentStreak, int longestStreak, DateTime? lastStudyDate})
-  getStreakData() {
-    final current = prefs.getInt('${_streakKey}_current') ?? 0;
-    final longest = prefs.getInt('${_streakKey}_longest') ?? 0;
-    final lastDateStr = prefs.getString('${_streakKey}_last_date');
-    DateTime? lastDate;
-    if (lastDateStr != null) {
-      try {
-        lastDate = DateTime.parse(lastDateStr);
-      } catch (_) {
-        lastDate = null;
-      }
-    }
-    return (
-      currentStreak: current,
-      longestStreak: longest,
-      lastStudyDate: lastDate,
-    );
-  }
-
-  // Computed streak (derived at read time, doesn't mutate storage)
-  static int getComputedCurrentStreak() {
-    final data = getStreakData();
-    if (data.lastStudyDate == null) return 0;
-
-    final now = _clock.now();
-    final today = now.startOfLocalDay;
-    final lastActiveDay = data.lastStudyDate!.startOfLocalDay;
-
-    if (lastActiveDay == today) {
-      return data.currentStreak;
-    } else if (lastActiveDay == today.subtract(const Duration(days: 1))) {
-      return data.currentStreak;
-    } else {
-      return 0;
-    }
-  }
-
   // Daily Challenge
   static String _dateToString(DateTime date) {
     return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
@@ -482,6 +378,23 @@ class StorageService {
   static int getDailyChallengeScore(DateTime date) {
     final dateKey = _dateToString(date);
     return prefs.getInt('$_dailyChallengeScoreKey$dateKey') ?? 0;
+  }
+
+  static String _activityKey(DateTime date) =>
+      '$_activityPrefix${date.year}-${date.month}-${date.day}';
+
+  static Future<void> markActivity(DateTime date) async {
+    await prefs.setBool(_activityKey(date), true);
+  }
+
+  static List<bool> getActivityForWeek(DateTime date) {
+    final monday = date.subtract(Duration(days: date.weekday - 1));
+    return List<bool>.generate(
+      7,
+      (index) =>
+          prefs.getBool(_activityKey(monday.add(Duration(days: index)))) ??
+          false,
+    );
   }
 
   // Lesson Progress
@@ -674,6 +587,48 @@ class StorageService {
         StorageError('Failed to clear all', originalError: e),
       );
     }
+  }
+}
+
+class LocalPreferences {
+  String? getString(String key) => LocalDatabaseService.read(key) as String?;
+  int? getInt(String key) => LocalDatabaseService.read(key) as int?;
+  bool? getBool(String key) => LocalDatabaseService.read(key) as bool?;
+  List<String>? getStringList(String key) {
+    final value = LocalDatabaseService.read(key);
+    return value is List ? value.cast<String>() : null;
+  }
+
+  dynamic get(String key) => LocalDatabaseService.read(key);
+  Set<String> getKeys() => LocalDatabaseService.keys;
+  Future<bool> setString(String key, String value) async {
+    await LocalDatabaseService.write(key, value);
+    return true;
+  }
+
+  Future<bool> setInt(String key, int value) async {
+    await LocalDatabaseService.write(key, value);
+    return true;
+  }
+
+  Future<bool> setBool(String key, bool value) async {
+    await LocalDatabaseService.write(key, value);
+    return true;
+  }
+
+  Future<bool> setStringList(String key, List<String> value) async {
+    await LocalDatabaseService.write(key, value);
+    return true;
+  }
+
+  Future<bool> remove(String key) async {
+    await LocalDatabaseService.remove(key);
+    return true;
+  }
+
+  Future<bool> clear() async {
+    await LocalDatabaseService.clear();
+    return true;
   }
 }
 

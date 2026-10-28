@@ -498,7 +498,8 @@ class _ReplyBottomSheetState extends State<_ReplyBottomSheet> {
                 radius: 16,
                 backgroundColor: AppColors.accentPrimarySoft,
                 child: Text(
-                  reply.authorName[0].toUpperCase(),
+                  (reply.authorName.isEmpty ? '?' : reply.authorName[0])
+                      .toUpperCase(),
                   style: TextStyle(
                     color: AppColors.accentPrimary,
                     fontWeight: FontWeight.w700,
@@ -802,30 +803,6 @@ class _ReplyBottomSheetState extends State<_ReplyBottomSheet> {
       }
       _addNestedReply(reply.replies, parentId, newReply);
     }
-  }
-
-  int _getReplyDepth(
-    List<PostReply> replies,
-    String id, {
-    int currentDepth = 0,
-  }) {
-    for (final reply in replies) {
-      if (reply.id == id) return currentDepth;
-      final found = _getReplyDepth(
-        reply.replies,
-        id,
-        currentDepth: currentDepth + 1,
-      );
-      if (found != -1) return found;
-    }
-    return -1;
-  }
-
-  bool _canReplyTo(PostReply reply) {
-    // Check if replying to this reply would exceed max depth of 2
-    // We need to find the depth of this reply in the tree
-    final depth = _getReplyDepth(_replies, reply.id);
-    return depth < 2; // Max depth is 2 (0 = top-level, 1 = nested)
   }
 }
 

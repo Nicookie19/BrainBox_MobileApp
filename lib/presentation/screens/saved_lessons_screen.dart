@@ -45,7 +45,10 @@ class SavedLessonsScreen extends StatelessWidget {
               final lesson = _findLesson(lessonId);
 
               if (lesson == null) {
-                return _buildUnknownLessonCard(lessonId);
+                return _buildUnknownLessonCard(
+                  lessonId,
+                  () => _showRemoveDialog(context, lessonId),
+                );
               }
 
               return _SavedLessonCard(
@@ -91,7 +94,10 @@ class SavedLessonsScreen extends StatelessWidget {
     return lessonIdKey.split(':').first;
   }
 
-  static Widget _buildUnknownLessonCard(String lessonIdKey) {
+  static Widget _buildUnknownLessonCard(
+    String lessonIdKey,
+    VoidCallback onRemove,
+  ) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       color: AppColors.bgCard,
@@ -113,7 +119,7 @@ class SavedLessonsScreen extends StatelessWidget {
             Icons.delete_outline_rounded,
             color: AppColors.accentError,
           ),
-          onPressed: () {}, // Will be handled by parent
+          onPressed: onRemove,
         ),
       ),
     );

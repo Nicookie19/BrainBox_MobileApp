@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:brainbox/core/constants/app_colors.dart';
+import 'package:brainbox/data/services/storage_service.dart';
 
 class WeekActivity extends StatelessWidget {
   const WeekActivity({super.key});
@@ -8,8 +9,7 @@ class WeekActivity extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const days = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-    // This would come from actual data
-    const activity = [true, true, true, true, true, false, false];
+    final activity = StorageService.getActivityForWeek(DateTime.now());
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -31,7 +31,7 @@ class WeekActivity extends StatelessWidget {
               ),
               const Spacer(),
               Text(
-                '5/7 days',
+                '${activity.where((active) => active).length}/7 days',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: AppColors.accentPrimary,
                   fontWeight: FontWeight.w600,

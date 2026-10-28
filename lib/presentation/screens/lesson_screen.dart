@@ -1138,15 +1138,14 @@ class _LessonScreenState extends State<LessonScreen>
   Future<void> _downloadCurrentLesson() async {
     final lesson = _getCurrentLesson();
     if (lesson == null) return;
-    await StorageService.saveDownloadedContent(
-      '${widget.courseId}:${lesson.id}',
-      {
-        'courseId': widget.courseId,
-        'lessonId': lesson.id,
-        'title': lesson.title,
-        'downloadedAt': DateTime.now().toIso8601String(),
-      },
-    );
+    await context
+        .read<AppProvider>()
+        .saveDownload('${widget.courseId}:${lesson.id}', {
+          'courseId': widget.courseId,
+          'lessonId': lesson.id,
+          'title': lesson.title,
+          'downloadedAt': DateTime.now().toIso8601String(),
+        });
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Lesson saved for offline access.')),

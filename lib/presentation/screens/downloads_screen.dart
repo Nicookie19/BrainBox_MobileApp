@@ -134,9 +134,14 @@ Future<void> _showRemoveDialog(
     ),
   );
 
-  if (confirmed == true) {
-    // In a real app, this would remove from storage
-    // For now, just show a snackbar
+  if (confirmed == true && context.mounted) {
+    await context.read<AppProvider>().removeDownload(
+      '${download.courseId}:${download.lessonId}',
+    );
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Download removed')));
   }
 }
 
@@ -158,9 +163,10 @@ class DownloadInfo {
   });
 
   String get formattedSize {
-    if (sizeBytes < 1024) return '${sizeBytes} B';
-    if (sizeBytes < 1024 * 1024)
+    if (sizeBytes < 1024) return '$sizeBytes B';
+    if (sizeBytes < 1024 * 1024) {
       return '${(sizeBytes / 1024).toStringAsFixed(1)} KB';
+    }
     return '${(sizeBytes / (1024 * 1024)).toStringAsFixed(1)} MB';
   }
 }
