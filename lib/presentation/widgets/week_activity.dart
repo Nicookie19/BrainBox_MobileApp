@@ -27,9 +27,9 @@ class WeekActivity extends StatelessWidget {
             children: [
               Text(
                 'This Week',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
               ),
               const Spacer(),
               Text(
@@ -47,47 +47,56 @@ class WeekActivity extends StatelessWidget {
             children: List.generate(days.length, (index) {
               final isActive = index < activity.length && activity[index];
               return Column(
-                children: [
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 300),
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: isActive
-                          ? AppColors.accentPrimary
-                          : AppColors.bgTertiary,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: isActive
-                            ? Colors.transparent
-                            : AppColors.borderDefault,
-                      ),
-                    ),
-                    child: isActive
-                        ? const Icon(
-                            Icons.check_rounded,
-                            color: Colors.white,
-                            size: 20,
-                          )
-                        : Text(
-                            days[index],
-                            style: TextStyle(
-                              color: AppColors.textMuted,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 12,
-                            ),
+                    children: [
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 300),
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: isActive
+                              ? AppColors.accentPrimary
+                              : AppColors.bgTertiary,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: isActive
+                                ? Colors.transparent
+                                : AppColors.borderDefault,
                           ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    days[index],
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: isActive ? AppColors.accentPrimary : AppColors.textMuted,
-                      fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ).animate().fadeIn(delay: (index * 50).ms).scale(delay: (index * 50).ms);
+                        ),
+                        child: isActive
+                            ? Padding(
+                                padding: const EdgeInsets.all(9),
+                                child: Image.asset(
+                                  'assets/ui/fire.png',
+                                  fit: BoxFit.contain,
+                                ),
+                              )
+                            : Text(
+                                days[index],
+                                style: TextStyle(
+                                  color: AppColors.textMuted,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 12,
+                                ),
+                              ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        days[index],
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: isActive
+                              ? AppColors.accentPrimary
+                              : AppColors.textMuted,
+                          fontWeight: isActive
+                              ? FontWeight.w600
+                              : FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  )
+                  .animate()
+                  .fadeIn(delay: (index * 50).ms)
+                  .scale(delay: (index * 50).ms);
             }),
           ),
         ],

@@ -39,16 +39,18 @@ class CommunityPostWidget extends StatelessWidget {
   Widget _buildHeader(BuildContext context) {
     return Row(
       children: [
-        CircleAvatar(
-          radius: 18,
-          backgroundColor: post.type.color.withValues(alpha: 0.2),
-          child: Text(
-            (post.authorName.isEmpty ? '?' : post.authorName[0]).toUpperCase(),
-            style: TextStyle(
-              color: post.type.color,
-              fontWeight: FontWeight.w700,
-              fontSize: 14,
-            ),
+        Container(
+          width: 36,
+          height: 36,
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            color: post.type.color.withValues(alpha: 0.2),
+            shape: BoxShape.circle,
+          ),
+          child: Image.asset(
+            'assets/ui/brand_brain.png',
+            fit: BoxFit.contain,
+            filterQuality: FilterQuality.high,
           ),
         ),
         const SizedBox(width: 10),

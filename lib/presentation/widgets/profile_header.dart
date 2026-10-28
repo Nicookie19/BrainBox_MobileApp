@@ -10,14 +10,6 @@ class ProfileHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final initials = profile.displayName
-        .split(' ')
-        .where((e) => e.isNotEmpty)
-        .map((e) => e[0])
-        .take(2)
-        .join()
-        .toUpperCase();
-
     return Stack(
       children: [
         Column(
@@ -34,14 +26,12 @@ class ProfileHeader extends StatelessWidget {
                     shape: BoxShape.circle,
                     boxShadow: AppShadows.glow(AppColors.accentPrimary),
                   ),
-                  child: Center(
-                    child: Text(
-                      initials.isEmpty ? 'B' : initials,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w800,
-                        fontSize: 30,
-                      ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(13),
+                    child: Image.asset(
+                      'assets/ui/avatar.png',
+                      fit: BoxFit.contain,
+                      filterQuality: FilterQuality.high,
                     ),
                   ),
                 ).animate().scale(delay: 100.ms),
@@ -57,12 +47,11 @@ class ProfileHeader extends StatelessWidget {
                       border: Border.all(color: AppColors.bgPrimary, width: 3),
                     ),
                     alignment: Alignment.center,
-                    child: Text(
-                      '${profile.level.number}',
-                      style: const TextStyle(
-                        color: AppColors.bgPrimary,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w800,
+                    child: Padding(
+                      padding: const EdgeInsets.all(5),
+                      child: Image.asset(
+                        'assets/ui/crown.png',
+                        fit: BoxFit.contain,
                       ),
                     ),
                   ),
