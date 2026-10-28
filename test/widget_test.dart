@@ -114,7 +114,7 @@ void main() {
 
     expect(tester.takeException(), isNull);
 
-    await tester.tap(find.byIcon(Icons.explore_outlined));
+    await tester.tap(find.text('Learn'));
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
   });

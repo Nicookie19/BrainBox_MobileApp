@@ -9,6 +9,7 @@ import 'package:brainbox/data/repositories/course_repository.dart';
 import 'package:brainbox/data/services/storage_service.dart';
 import 'package:brainbox/data/models/course_models.dart';
 import 'package:brainbox/core/constants/app_colors.dart';
+import 'package:brainbox/presentation/widgets/brand_mark.dart';
 
 class LessonScreen extends StatefulWidget {
   final String courseId;
@@ -295,48 +296,66 @@ class _LessonScreenState extends State<LessonScreen>
           '${widget.courseId}:${lesson.id}',
         );
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-      child: Row(
-        children: [
-          backButton,
-          const SizedBox(width: 12),
-          Expanded(child: titleColumn),
-          IconButton(
-            onPressed: lesson != null
-                ? () => context.read<AppProvider>().toggleBookmark(
-                    '${widget.courseId}:${lesson.id}',
-                  )
-                : null,
-            icon: Icon(
-              isBookmarked
-                  ? Icons.bookmark_rounded
-                  : Icons.bookmark_outline_rounded,
-            ),
-            style: IconButton.styleFrom(
-              backgroundColor: AppColors.bgCard,
-              foregroundColor: isBookmarked
-                  ? AppColors.accentPrimary
-                  : AppColors.textSecondary,
+    return Column(
+      children: [
+        Container(
+          height: 34,
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          alignment: Alignment.centerLeft,
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [AppColors.accentPrimary, AppColors.bgSecondary],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
             ),
           ),
-          const SizedBox(width: 8),
-          IconButton(
-            onPressed: lesson == null ? null : _downloadCurrentLesson,
-            icon: Icon(
-              isDownloaded
-                  ? Icons.download_done_rounded
-                  : Icons.download_outlined,
-            ),
-            style: IconButton.styleFrom(
-              backgroundColor: AppColors.bgCard,
-              foregroundColor: isDownloaded
-                  ? AppColors.accentPrimary
-                  : AppColors.textSecondary,
-            ),
+          child: const BrandMark(size: 23),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+          child: Row(
+            children: [
+              backButton,
+              const SizedBox(width: 12),
+              Expanded(child: titleColumn),
+              IconButton(
+                onPressed: lesson != null
+                    ? () => context.read<AppProvider>().toggleBookmark(
+                        '${widget.courseId}:${lesson.id}',
+                      )
+                    : null,
+                icon: Icon(
+                  isBookmarked
+                      ? Icons.bookmark_rounded
+                      : Icons.bookmark_outline_rounded,
+                ),
+                style: IconButton.styleFrom(
+                  backgroundColor: AppColors.bgCard,
+                  foregroundColor: isBookmarked
+                      ? AppColors.accentPrimary
+                      : AppColors.textSecondary,
+                ),
+              ),
+              const SizedBox(width: 8),
+              IconButton(
+                onPressed: lesson == null ? null : _downloadCurrentLesson,
+                icon: Icon(
+                  isDownloaded
+                      ? Icons.download_done_rounded
+                      : Icons.download_outlined,
+                ),
+                style: IconButton.styleFrom(
+                  backgroundColor: AppColors.bgCard,
+                  foregroundColor: isDownloaded
+                      ? AppColors.accentPrimary
+                      : AppColors.textSecondary,
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -350,15 +369,15 @@ class _LessonScreenState extends State<LessonScreen>
             LinearProgressIndicator(
               value: _courseProgress * _progressController.value,
               minHeight: 4,
-              backgroundColor: AppColors.bgTertiary,
-              color: AppColors.accentSecondary,
+              backgroundColor: Colors.white.withValues(alpha: 0.18),
+              color: AppColors.accentPrimary,
             ),
             const SizedBox(height: 8),
             // Lesson progress
             LinearProgressIndicator(
               value: _lessonProgress * _progressController.value,
               minHeight: 3,
-              backgroundColor: AppColors.bgTertiary,
+              backgroundColor: Colors.white.withValues(alpha: 0.18),
               color: AppColors.accentPrimary,
             ),
           ],

@@ -1,128 +1,119 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
-import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
-import 'package:brainbox/presentation/providers/app_provider.dart';
 import 'package:brainbox/core/constants/app_colors.dart';
 import 'package:brainbox/presentation/widgets/brand_mark.dart';
 
-class AppShell extends StatefulWidget {
+class AppShell extends StatelessWidget {
+  const AppShell({required this.child, super.key});
+
   final Widget child;
-
-  const AppShell({super.key, required this.child});
-
-  @override
-  State<AppShell> createState() => _AppShellState();
-}
-
-class _AppShellState extends State<AppShell> with TickerProviderStateMixin {
-  late AnimationController _navController;
 
   static const _routes = ['/', '/explore', '/learn', '/community', '/profile'];
 
-  static const List<NavigationDestination> _destinations = [
-    NavigationDestination(
-      icon: Icon(Icons.home_outlined),
-      selectedIcon: Icon(Icons.home_rounded),
-      label: 'Today',
+  static const _items = [
+    _NavItem('Home', 'assets/ui/nav_home.png', 'assets/ui/nav_home_active.png'),
+    _NavItem(
+      'Learn',
+      'assets/ui/nav_learn.png',
+      'assets/ui/nav_learn_active.png',
     ),
-    NavigationDestination(
-      icon: Icon(Icons.explore_outlined),
-      selectedIcon: Icon(Icons.explore_rounded),
-      label: 'Explore',
+    _NavItem('Code', 'assets/ui/nav_code.png', 'assets/ui/nav_code.png'),
+    _NavItem(
+      'Community',
+      'assets/ui/nav_community.png',
+      'assets/ui/nav_community.png',
     ),
-    NavigationDestination(
-      icon: Icon(Icons.school_outlined),
-      selectedIcon: Icon(Icons.school_rounded),
-      label: 'Learn',
-    ),
-    NavigationDestination(
-      icon: Icon(Icons.forum_outlined),
-      selectedIcon: Icon(Icons.forum_rounded),
-      label: 'Community',
-    ),
-    NavigationDestination(
-      icon: Icon(Icons.person_outline),
-      selectedIcon: Icon(Icons.person_rounded),
-      label: 'Profile',
+    _NavItem(
+      'Profile',
+      'assets/ui/nav_profile.png',
+      'assets/ui/nav_profile.png',
     ),
   ];
-
-  @override
-  void initState() {
-    super.initState();
-    _navController = AnimationController(
-      duration: const Duration(milliseconds: 300),
-      vsync: this,
-    );
-  }
-
-  @override
-  void dispose() {
-    _navController.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
     final currentPath = GoRouterState.of(context).uri.path;
     final selectedIndex = _routes.indexWhere((route) => currentPath == route);
-    return Consumer<AppProvider>(
-      builder: (context, provider, _) => Scaffold(
-        body: Column(
-          children: [
-            Container(
-              height: 76,
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 18),
-              alignment: Alignment.centerLeft,
-              decoration: const BoxDecoration(
-                color: AppColors.bgSecondary,
-                border: Border(
-                  bottom: BorderSide(color: AppColors.borderDefault),
-                ),
+    final activeIndex = selectedIndex == -1 ? 0 : selectedIndex;
+    return Scaffold(
+      body: Column(
+        children: [
+          Container(
+            height: 64,
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            alignment: Alignment.centerLeft,
+            decoration: const BoxDecoration(
+              color: AppColors.bgSecondary,
+              border: Border(
+                bottom: BorderSide(color: AppColors.borderDefault),
               ),
-              child: const BrandMark(size: 38),
             ),
-            Expanded(child: widget.child),
-          ],
-        ),
-        bottomNavigationBar: Container(
-          decoration: BoxDecoration(
-            color: AppColors.bgCard,
-            border: Border(top: BorderSide(color: AppColors.borderDefault)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.3),
-                blurRadius: 20,
-                offset: const Offset(0, -4),
-              ),
-            ],
+            child: const BrandMark(size: 31),
           ),
-          child: SafeArea(
-            top: false,
-            child:
-                NavigationBar(
-                      selectedIndex: selectedIndex == -1 ? 0 : selectedIndex,
-                      onDestinationSelected: (index) {
-                        _navController.forward(from: 0);
-                        context.go(_routes[index]);
-                      },
-                      height: 72,
-                      backgroundColor: Colors.transparent,
-                      surfaceTintColor: Colors.transparent,
-                      indicatorColor: AppColors.accentPrimarySoft,
-                      labelBehavior:
-                          NavigationDestinationLabelBehavior.onlyShowSelected,
-                      animationDuration: const Duration(milliseconds: 300),
-                      destinations: _destinations,
-                    )
-                    .animate(controller: _navController)
-                    .fadeIn(duration: 300.ms)
-                    .slideY(begin: 1, end: 0),
+          Expanded(child: child),
+        ],
+      ),
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Container(
+          height: 58,
+          decoration: const BoxDecoration(
+            color: AppColors.bgSecondary,
+            border: Border(top: BorderSide(color: AppColors.borderDefault)),
+          ),
+          child: Row(
+            children: List.generate(_items.length, (index) {
+              final item = _items[index];
+              final selected = index == activeIndex;
+              return Expanded(
+                child: Semantics(
+                  button: true,
+                  selected: selected,
+                  label: item.label,
+                  child: InkWell(
+                    onTap: () => context.go(_routes[index]),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SizedBox.square(
+                          dimension: 20,
+                          child: Image.asset(
+                            selected ? item.activeAsset : item.asset,
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          item.label,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: selected
+                                ? AppColors.textPrimary
+                                : AppColors.textMuted,
+                            fontSize: 9,
+                            fontWeight: selected
+                                ? FontWeight.w700
+                                : FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }),
           ),
         ),
       ),
     );
   }
+}
+
+class _NavItem {
+  const _NavItem(this.label, this.asset, this.activeAsset);
+
+  final String label;
+  final String asset;
+  final String activeAsset;
 }
