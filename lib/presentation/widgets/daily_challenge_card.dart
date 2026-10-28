@@ -57,11 +57,19 @@ class DailyChallengeCard extends StatelessWidget {
                       : AppColors.accentWarning,
                   borderRadius: BorderRadius.circular(16),
                 ),
-                child: Icon(
-                  isCompleted ? Icons.check_rounded : Icons.bolt_rounded,
-                  color: Colors.white,
-                  size: 28,
-                ),
+                child: isCompleted
+                    ? const Icon(
+                        Icons.check_rounded,
+                        color: Colors.white,
+                        size: 28,
+                      )
+                    : SizedBox.square(
+                        dimension: 28,
+                        child: Image.asset(
+                          'assets/ui/bolt.png',
+                          fit: BoxFit.contain,
+                        ),
+                      ),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -88,7 +96,10 @@ class DailyChallengeCard extends StatelessWidget {
               ),
               if (!isCompleted)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.accentWarning,
                     borderRadius: BorderRadius.circular(20),
@@ -103,10 +114,7 @@ class DailyChallengeCard extends StatelessWidget {
                   ),
                 )
               else
-                Icon(
-                  Icons.chevron_right_rounded,
-                  color: AppColors.textMuted,
-                ),
+                Icon(Icons.chevron_right_rounded, color: AppColors.textMuted),
             ],
           ),
         ),

@@ -138,10 +138,12 @@ class _CommunityScreenState extends State<CommunityScreen> {
               color: AppColors.accentPrimary,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(
-              Icons.groups_rounded,
-              color: Colors.white,
-              size: 22,
+            child: SizedBox.square(
+              dimension: 22,
+              child: Image.asset(
+                'assets/ui/nav_community.png',
+                fit: BoxFit.contain,
+              ),
             ),
           ),
           const SizedBox(width: 12),
@@ -180,7 +182,15 @@ class _CommunityScreenState extends State<CommunityScreen> {
       ),
       child: Column(
         children: [
-          Icon(Icons.forum_outlined, size: 64, color: AppColors.textMuted),
+          SizedBox.square(
+            dimension: 64,
+            child: Image.asset(
+              'assets/ui/character.png',
+              fit: BoxFit.contain,
+              color: AppColors.textMuted,
+              colorBlendMode: BlendMode.srcIn,
+            ),
+          ),
           const SizedBox(height: 16),
           Text(
             'No posts yet',

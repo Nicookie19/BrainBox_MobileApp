@@ -390,14 +390,34 @@ class _LessonScreenState extends State<LessonScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'STEP ${_currentStepIndex + 1} OF ${lesson.steps.length}',
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w700,
-            color: AppColors.accentPrimary,
-            letterSpacing: 1.2,
-          ),
+        Row(
+          children: [
+            Container(
+              width: 34,
+              height: 34,
+              padding: const EdgeInsets.all(7),
+              decoration: BoxDecoration(
+                color: AppColors.accentSecondary.withValues(alpha: 0.35),
+                borderRadius: BorderRadius.circular(9),
+              ),
+              child: Image.asset(
+                'assets/ui/code_brackets.png',
+                fit: BoxFit.contain,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'STEP ${_currentStepIndex + 1} OF ${lesson.steps.length}',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.accentPrimary,
+                  letterSpacing: 1.2,
+                ),
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 12),
         Text(
