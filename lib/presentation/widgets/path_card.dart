@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:brainbox/data/models/course_models.dart';
 import 'package:brainbox/data/models/learning_models.dart';
+import 'package:brainbox/presentation/widgets/course_artwork.dart';
 
 class PathCard extends StatelessWidget {
   const PathCard({required this.course, super.key});
@@ -39,12 +40,14 @@ class PathCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-              padding: const EdgeInsets.all(10),
+              width: 48,
+              height: 48,
+              padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: Colors.white.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(course.category.icon, color: Colors.white, size: 24),
+              child: CourseArtwork(category: course.category, size: 32),
             ),
             const Spacer(),
             Text(

@@ -8,6 +8,7 @@ import 'package:brainbox/data/repositories/course_repository.dart';
 import 'package:brainbox/data/models/course_models.dart';
 import 'package:brainbox/data/models/learning_models.dart';
 import 'package:brainbox/core/constants/app_colors.dart';
+import 'package:brainbox/presentation/widgets/course_artwork.dart';
 
 class CourseDetailScreen extends StatefulWidget {
   final String courseId;
@@ -235,10 +236,18 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(
-                            _course!.category.icon,
-                            color: Colors.white,
-                            size: 36,
+                          Container(
+                            width: 52,
+                            height: 52,
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.16),
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            child: CourseArtwork(
+                              category: _course!.category,
+                              size: 36,
+                            ),
                           ),
                           const SizedBox(height: 12),
                           Text(

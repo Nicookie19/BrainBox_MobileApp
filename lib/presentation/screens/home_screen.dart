@@ -8,8 +8,6 @@ import 'package:brainbox/presentation/widgets/daily_challenge_card.dart';
 import 'package:brainbox/presentation/widgets/path_card.dart';
 import 'package:brainbox/presentation/widgets/recommendation_tile.dart';
 import 'package:brainbox/presentation/widgets/section_heading.dart';
-import 'package:brainbox/presentation/widgets/stat_pill.dart';
-import 'package:brainbox/presentation/widgets/brand_mark.dart';
 import 'package:brainbox/core/constants/app_colors.dart';
 import 'package:brainbox/data/models/course_models.dart';
 import 'package:brainbox/data/repositories/daily_challenge_repository.dart';
@@ -33,15 +31,7 @@ class HomeScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildHeader(context, provider),
-                    const SizedBox(height: 24),
-                    _buildGreeting(context, provider),
-                    const SizedBox(height: 8),
-                    _buildSubtitle(context),
-                    const SizedBox(height: 20),
-                    _buildLevelCard(context, provider),
-                    const SizedBox(height: 16),
-                    _buildStats(context, provider),
+                    _buildWelcomePanel(context, provider),
                     const SizedBox(height: 28),
                     SectionHeading(
                       title: 'Continue Learning',
@@ -110,70 +100,73 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader(BuildContext context, AppProvider provider) {
-    return Row(
-      children: [
-        const BrandMark(size: 40),
-        const SizedBox(width: 10),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'BrainBox',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.w700,
-                letterSpacing: -0.5,
-              ),
-            ),
-            Text(
-              'Daily Practice',
-              style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                color: AppColors.textMuted,
-                letterSpacing: 0.5,
-              ),
-            ),
+  Widget _buildWelcomePanel(BuildContext context, AppProvider provider) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(17, 13, 17, 15),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppColors.bgCard,
+            AppColors.bgCard,
+            AppColors.accentPrimary.withValues(alpha: 0.78),
           ],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
         ),
-        const Spacer(),
-        IconButton(
-          onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('You\'re all caught up.')),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _welcomePill('DAILY PRACTICE'),
+              _welcomePill(
+                '${provider.currentStreak} day${provider.currentStreak == 1 ? '' : 's'}',
+                icon: 'assets/ui/fire.png',
+                accent: AppColors.accentWarningLight,
+              ),
+            ],
           ),
-          icon: const Icon(Icons.notifications_none_rounded),
-          style: IconButton.styleFrom(
-            backgroundColor: AppColors.bgTertiary,
-            foregroundColor: AppColors.textSecondary,
-          ),
-        ).animate().scale(delay: 200.ms),
-        const SizedBox(width: 8),
-        _buildAvatar(provider),
-      ],
-    ).animate().fadeIn(delay: 100.ms).slideX(begin: -0.2, end: 0);
+          const SizedBox(height: 10),
+          _buildGreeting(context, provider),
+          const SizedBox(height: 2),
+          _buildSubtitle(context),
+          const SizedBox(height: 15),
+          _buildLevelCard(context, provider),
+        ],
+      ),
+    ).animate().fadeIn(delay: 100.ms).slideY(begin: 0.08, end: 0);
   }
 
-  Widget _buildAvatar(AppProvider provider) {
-    final initials =
-        provider.profile?.displayName
-            .split(' ')
-            .where((e) => e.isNotEmpty)
-            .map((e) => e[0])
-            .take(2)
-            .join()
-            .toUpperCase() ??
-        'AR';
-
-    return CircleAvatar(
-      radius: 18,
-      backgroundColor: AppColors.accentPrimarySoft,
-      child: Text(
-        initials,
-        style: TextStyle(
-          color: AppColors.accentPrimary,
-          fontWeight: FontWeight.w700,
-          fontSize: 14,
-        ),
+  Widget _welcomePill(String text, {String? icon, Color? accent}) {
+    final color = accent ?? AppColors.accentPrimary;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(6),
       ),
-    ).animate().scale(delay: 300.ms);
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (icon != null) ...[
+            Image.asset(icon, width: 13, height: 13),
+            const SizedBox(width: 3),
+          ],
+          Text(
+            text.toUpperCase(),
+            style: TextStyle(
+              color: color,
+              fontSize: 9,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.3,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildGreeting(BuildContext context, AppProvider provider) {
@@ -358,57 +351,6 @@ class HomeScreen extends StatelessWidget {
         ),
       ],
     );
-  }
-
-  Widget _buildStats(BuildContext context, AppProvider provider) {
-    return Row(
-      children: [
-        Flexible(
-          child: StatPill(
-            icon: Icons.local_fire_department_rounded,
-            value: '${provider.currentStreak} day streak',
-            color: AppColors.accentWarning,
-            background: AppColors.accentWarningSoft,
-          ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.2, end: 0),
-        ),
-        const SizedBox(width: 8),
-        Flexible(
-          child: StatPill(
-            icon: Icons.bolt_rounded,
-            value: '${provider.xp} XP',
-            color: AppColors.accentPrimary,
-            background: AppColors.accentPrimarySoft,
-          ).animate().fadeIn(delay: 500.ms).slideY(begin: 0.2, end: 0),
-        ),
-        const SizedBox(width: 8),
-        _buildLevelBadge(context, provider),
-      ],
-    );
-  }
-
-  Widget _buildLevelBadge(BuildContext context, AppProvider provider) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        gradient: AppColors.primaryGradient,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.star_rounded, size: 16, color: AppColors.textOnAccent),
-          const SizedBox(width: 4),
-          Text(
-            'Level ${provider.level.number}',
-            style: TextStyle(
-              color: AppColors.textOnAccent,
-              fontWeight: FontWeight.w700,
-              fontSize: 12,
-            ),
-          ),
-        ],
-      ),
-    ).animate().fadeIn(delay: 600.ms).slideY(begin: 0.2, end: 0);
   }
 
   Widget _buildPathCards(AppProvider provider) {

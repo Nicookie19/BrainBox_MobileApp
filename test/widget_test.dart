@@ -98,4 +98,24 @@ void main() {
     // Just verify the app renders something
     expect(find.byType(Scaffold), findsWidgets);
   });
+
+  testWidgets('compact phone layouts do not overflow', (
+    WidgetTester tester,
+  ) async {
+    tester.view.physicalSize = const Size(320, 720);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    SharedPreferences.setMockInitialValues({});
+    await StorageService.init(backend: MemoryStorageBackend());
+    await tester.pumpWidget(const BrainBoxApp());
+    await tester.pumpAndSettle(const Duration(seconds: 5));
+
+    expect(tester.takeException(), isNull);
+
+    await tester.tap(find.byIcon(Icons.explore_outlined));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+  });
 }

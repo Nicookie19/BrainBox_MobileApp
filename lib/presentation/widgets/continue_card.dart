@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:brainbox/data/models/course_models.dart';
 import 'package:brainbox/data/models/learning_models.dart';
 import 'package:brainbox/core/constants/app_colors.dart';
+import 'package:brainbox/presentation/widgets/course_artwork.dart';
 
 class ContinueCard extends StatelessWidget {
   const ContinueCard({
@@ -64,12 +65,14 @@ class ContinueCard extends StatelessWidget {
               Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(12),
+                    width: 54,
+                    height: 54,
+                    padding: const EdgeInsets.all(9),
                     decoration: BoxDecoration(
                       gradient: _getCategoryGradient(c.category),
                       borderRadius: BorderRadius.circular(14),
                     ),
-                    child: Icon(c.category.icon, color: Colors.white, size: 26),
+                    child: CourseArtwork(category: c.category, size: 34),
                   ),
                   const SizedBox(width: 14),
                   Expanded(

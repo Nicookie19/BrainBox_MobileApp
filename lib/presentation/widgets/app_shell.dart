@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:brainbox/presentation/providers/app_provider.dart';
 import 'package:brainbox/core/constants/app_colors.dart';
+import 'package:brainbox/presentation/widgets/brand_mark.dart';
 
 class AppShell extends StatefulWidget {
   final Widget child;
@@ -70,10 +71,18 @@ class _AppShellState extends State<AppShell> with TickerProviderStateMixin {
       builder: (context, provider, _) => Scaffold(
         body: Column(
           children: [
-            const SizedBox(
-              height: 4,
+            Container(
+              height: 76,
               width: double.infinity,
-              child: ColoredBox(color: AppColors.accentSecondary),
+              padding: const EdgeInsets.symmetric(horizontal: 18),
+              alignment: Alignment.centerLeft,
+              decoration: const BoxDecoration(
+                color: AppColors.bgSecondary,
+                border: Border(
+                  bottom: BorderSide(color: AppColors.borderDefault),
+                ),
+              ),
+              child: const BrandMark(size: 38),
             ),
             Expanded(child: widget.child),
           ],

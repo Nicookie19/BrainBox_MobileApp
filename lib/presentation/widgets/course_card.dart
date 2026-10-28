@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:brainbox/data/models/course_models.dart';
 import 'package:brainbox/data/models/learning_models.dart';
 import 'package:brainbox/core/constants/app_colors.dart';
+import 'package:brainbox/presentation/widgets/course_artwork.dart';
 
 class CourseCard extends StatelessWidget {
   const CourseCard({required this.course, required this.onTap, super.key});
@@ -43,11 +44,7 @@ class CourseCard extends StatelessWidget {
                     ).colors.first.withValues(alpha: 0.32),
                   ),
                 ),
-                child: Icon(
-                  course.category.icon,
-                  color: _getCategoryGradient(course.category).colors.first,
-                  size: 28,
-                ),
+                child: CourseArtwork(category: course.category, size: 38),
               ),
               const SizedBox(width: 16),
               Expanded(
