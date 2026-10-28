@@ -43,7 +43,7 @@ class CommunityPostWidget extends StatelessWidget {
           radius: 18,
           backgroundColor: post.type.color.withValues(alpha: 0.2),
           child: Text(
-            post.authorName[0].toUpperCase(),
+            (post.authorName.isEmpty ? '?' : post.authorName[0]).toUpperCase(),
             style: TextStyle(
               color: post.type.color,
               fontWeight: FontWeight.w700,

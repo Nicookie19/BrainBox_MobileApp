@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:brainbox/data/models/user_models.dart';
 import 'package:brainbox/core/constants/app_colors.dart';
@@ -11,55 +12,98 @@ class ProfileHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final initials = profile.displayName
         .split(' ')
+        .where((e) => e.isNotEmpty)
         .map((e) => e[0])
         .take(2)
         .join()
         .toUpperCase();
 
-    return Row(
+    return Stack(
       children: [
-        CircleAvatar(
-          radius: 36,
-          backgroundColor: AppColors.accentPrimarySoft,
-          child: Text(
-            initials,
-            style: TextStyle(
-              color: AppColors.accentPrimary,
-              fontWeight: FontWeight.w700,
-              fontSize: 28,
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Container(
+                  width: 82,
+                  height: 82,
+                  decoration: BoxDecoration(
+                    gradient: AppColors.primaryGradient,
+                    shape: BoxShape.circle,
+                    boxShadow: AppShadows.glow(AppColors.accentPrimary),
+                  ),
+                  child: Center(
+                    child: Text(
+                      initials.isEmpty ? 'B' : initials,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 30,
+                      ),
+                    ),
+                  ),
+                ).animate().scale(delay: 100.ms),
+                Positioned(
+                  bottom: -2,
+                  right: -2,
+                  child: Container(
+                    width: 28,
+                    height: 28,
+                    decoration: BoxDecoration(
+                      color: AppColors.accentWarning,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppColors.bgPrimary, width: 3),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      '${profile.level.number}',
+                      style: const TextStyle(
+                        color: AppColors.bgPrimary,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ),
-        ).animate().scale(delay: 100.ms),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                profile.displayName,
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
-              ).animate().fadeIn(delay: 200.ms).slideX(begin: 0.2, end: 0),
-              const SizedBox(height: 4),
-              Text(
-                profile.bio.isNotEmpty ? profile.bio : 'Aspiring Developer',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppColors.textSecondary,
-                ),
-              ).animate().fadeIn(delay: 300.ms).slideX(begin: 0.2, end: 0),
-              const SizedBox(height: 12),
-              _buildLevelProgress(context, profile),
-            ],
-          ),
+            const SizedBox(height: 12),
+            Text(
+              profile.displayName.isEmpty
+                  ? 'BrainBox Learner'
+                  : profile.displayName,
+              style: Theme.of(
+                context,
+              ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
+            ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.1, end: 0),
+            const SizedBox(height: 4),
+            Text(
+              profile.bio.isNotEmpty
+                  ? profile.bio
+                  : 'Building skills one lesson at a time',
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
+              textAlign: TextAlign.center,
+            ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.1, end: 0),
+            const SizedBox(height: 14),
+            _buildLevelProgress(context, profile),
+          ],
         ),
-        IconButton(
-          onPressed: () {},
-          icon: Icon(Icons.settings_outlined, color: AppColors.textMuted),
-          style: IconButton.styleFrom(
-            backgroundColor: AppColors.bgTertiary,
-          ),
-        ).animate().fadeIn(delay: 400.ms),
+        Positioned(
+          top: 0,
+          right: 0,
+          child: IconButton(
+            onPressed: () => context.push('/settings'),
+            icon: Icon(Icons.settings_outlined, color: AppColors.textMuted),
+            style: IconButton.styleFrom(
+              backgroundColor: AppColors.bgTertiary,
+              side: const BorderSide(color: AppColors.borderDefault),
+            ),
+          ).animate().fadeIn(delay: 400.ms),
+        ),
       ],
     );
   }
@@ -71,10 +115,11 @@ class ProfileHeader extends StatelessWidget {
     final xpForNextLevel = nextLevel?.xpRequired ?? profile.level.xpRequired;
     final progress = nextLevel == null
         ? 1.0
-        : (currentXp - xpForCurrentLevel) / (xpForNextLevel - xpForCurrentLevel);
+        : (currentXp - xpForCurrentLevel) /
+              (xpForNextLevel - xpForCurrentLevel);
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -82,15 +127,21 @@ class ProfileHeader extends StatelessWidget {
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
-                    gradient: AppColors.primaryGradient,
-                    borderRadius: BorderRadius.circular(6),
+                    color: AppColors.accentPrimarySoft,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: AppColors.accentPrimary.withValues(alpha: 0.4),
+                    ),
                   ),
                   child: Text(
                     'Level ${profile.level.number}',
                     style: TextStyle(
-                      color: AppColors.textOnAccent,
+                      color: AppColors.accentPrimaryLight,
                       fontWeight: FontWeight.w700,
                       fontSize: 11,
                     ),
@@ -107,7 +158,7 @@ class ProfileHeader extends StatelessWidget {
               ],
             ),
             Text(
-              '$profile.xp / $xpForNextLevel XP',
+              '${profile.xp} / $xpForNextLevel XP',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: AppColors.textMuted,
                 fontWeight: FontWeight.w500,
@@ -122,7 +173,7 @@ class ProfileHeader extends StatelessWidget {
             value: progress.clamp(0.0, 1.0),
             minHeight: 6,
             backgroundColor: AppColors.bgTertiary,
-            color: AppColors.accentPrimary,
+            color: AppColors.accentSecondary,
           ),
         ),
       ],

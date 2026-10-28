@@ -1,0 +1,285 @@
+{
+  "courseId": "machine_learning_basics",
+  "learningPathId": "backend_cloud",
+  "version": 1,
+  "modules": [
+    {
+      "id": "module_1",
+      "title": "Introduction to Machine Learning",
+      "description": "Core concepts and workflow",
+      "order": 1,
+      "lessons": [
+        {
+          "id": "lesson_1",
+          "title": "What is Machine Learning?",
+          "description": "Understanding ML vs traditional programming",
+          "order": 1,
+          "estimatedMinutes": 10,
+          "xpReward": 25,
+          "steps": [
+            {
+              "type": "explanation",
+              "content": "Traditional programming: rules + data = answers. Machine Learning: data + answers = rules. ML algorithms learn patterns from data to make predictions on new data. Instead of writing explicit if/else rules, you show examples and the model learns the mapping."
+            },
+            {
+              "type": "explanation",
+              "content": "Key terms: Features (input variables), Labels/Targets (output to predict), Training data (examples with labels), Test data (unseen data for evaluation), Model (learned function), Inference (making predictions). ML is a subset of AI focused on learning from data."
+            },
+            {
+              "type": "multiple_choice",
+              "question": "In ML, what do we call the input variables?",
+              "options": ["Labels", "Features", "Targets", "Weights"],
+              "correctAnswer": 1,
+              "explanation": "Features are the input variables (columns) used to make predictions. Labels/targets are the outputs we want to predict.",
+              "hints": ["Inputs = features", "Outputs = labels/targets"]
+            },
+            {
+              "type": "fill_in_blank",
+              "question": "The data used to train a model is called ______ data.",
+              "acceptedAnswers": ["training"],
+              "explanation": "Training data contains examples with known labels. The model learns from this. Test/validation data is held out for evaluation.",
+              "hints": ["Used for learning", "Has known answers"]
+            },
+            {
+              "type": "code_ordering",
+              "question": "Order the typical ML workflow steps",
+              "snippets": [
+                "Collect and prepare data",
+                "Split into train/test sets",
+                "Choose a model",
+                "Train on training data",
+                "Evaluate on test data",
+                "Deploy and monitor"
+              ],
+              "correctOrder": [0, 1, 2, 3, 4, 5],
+              "explanation": "Data first, then split, model selection, training, evaluation, deployment.",
+              "hints": ["Data before model", "Train before evaluate"]
+            },
+            {
+              "type": "true_false",
+              "question": "Machine Learning requires explicit programming of rules for each decision.",
+              "correctAnswerBool": false,
+              "explanation": "ML learns patterns from data automatically. You provide examples (data + answers), the algorithm discovers the rules.",
+              "hints": ["Rules are learned", "Not programmed"]
+            },
+            {
+              "type": "multiple_choice",
+              "question": "What is the purpose of test data?",
+              "options": [
+                "To train the model",
+                "To evaluate model performance on unseen data",
+                "To provide more training examples",
+                "To validate data quality"
+              ],
+              "correctAnswer": 1,
+              "explanation": "Test data is NEVER used during training. It simulates real-world unseen data to estimate how the model will perform in production.",
+              "hints": ["Unseen data", "Evaluation only"]
+            }
+          ]
+        },
+        {
+          "id": "lesson_2",
+          "title": "Supervised vs Unsupervised Learning",
+          "description": "Two main categories of ML",
+          "order": 2,
+          "estimatedMinutes": 12,
+          "xpReward": 25,
+          "steps": [
+            {
+              "type": "explanation",
+              "content": "Supervised learning: training data has labels (answers). Algorithm learns mapping from features to labels. Tasks: classification (discrete labels: spam/not spam) and regression (continuous: house price). Examples: linear regression, decision trees, neural networks."
+            },
+            {
+              "type": "explanation",
+              "content": "Unsupervised learning: training data has NO labels. Algorithm finds structure/patterns on its own. Tasks: clustering (group similar: customer segments), dimensionality reduction (compress features), anomaly detection. Examples: K-means, PCA."
+            },
+            {
+              "type": "multiple_choice",
+              "question": "Which is a supervised learning task?",
+              "options": ["Customer segmentation", "Predicting house prices", "Finding anomalies", "Compressing images"],
+              "correctAnswer": 1,
+              "explanation": "Predicting house prices is regression (continuous target) - supervised. Segmentation, anomalies, compression are unsupervised.",
+              "hints": ["Has a target value", "Price is a label"]
+            },
+            {
+              "type": "fill_in_blank",
+              "question": "Grouping similar data points without labels is called ______.",
+              "acceptedAnswers": ["clustering"],
+              "explanation": "Clustering finds natural groups in unlabeled data. K-means is a popular algorithm.",
+              "hints": ["Like clustering stars", "No labels needed"]
+            },
+            {
+              "type": "code_ordering",
+              "question": "Order to classify emails as spam/not spam",
+              "snippets": [
+                "Collect labeled emails (spam/ham)",
+                "Extract features (words, sender, etc.)",
+                "Train classifier on labeled data",
+                "Predict on new emails"
+              ],
+              "correctOrder": [0, 1, 2, 3],
+              "explanation": "Supervised classification: labeled data -> features -> train -> predict.",
+              "hints": ["Labels first", "Features from raw data"]
+            },
+            {
+              "type": "true_false",
+              "question": "In unsupervised learning, you evaluate using accuracy against true labels.",
+              "correctAnswerBool": false,
+              "explanation": "Unsupervised learning has NO true labels. Evaluation uses internal metrics (silhouette score, inertia) or downstream task performance.",
+              "hints": ["No labels exist", "Different evaluation"]
+            },
+            {
+              "type": "multiple_choice",
+              "question": "Which algorithm is commonly used for clustering?",
+              "options": ["Linear Regression", "K-Means", "Logistic Regression", "Decision Tree"],
+              "correctAnswer": 1,
+              "explanation": "K-Means partitions data into K clusters by minimizing within-cluster variance. It's the classic unsupervised clustering algorithm.",
+              "hints": ["K = number of clusters", "Means = centroids"]
+            }
+          ]
+        },
+        {
+          "id": "lesson_3",
+          "title": "Model Evaluation",
+          "description": "Measure how well your model works",
+          "order": 3,
+          "estimatedMinutes": 15,
+          "xpReward": 30,
+          "steps": [
+            {
+              "type": "explanation",
+              "content": "Classification metrics: Accuracy (correct/total), Precision (TP/(TP+FP)), Recall (TP/(TP+FN)), F1-score (harmonic mean). Confusion matrix shows TP/FP/TN/FN. ROC-AUC measures ranking ability. Regression metrics: MAE, MSE, RMSE, R²."
+            },
+            {
+              "type": "explanation",
+              "content": "Train/test split: typically 80/20 or 70/30. Cross-validation: k-fold splits data k times, trains k models, averages scores. Overfitting: model memorizes training data, fails on test (high train accuracy, low test). Underfitting: too simple, fails on both. Regularization prevents overfitting."
+            },
+            {
+              "type": "multiple_choice",
+              "question": "What does precision measure?",
+              "options": [
+                "Of all positive predictions, how many are correct",
+                "Of all actual positives, how many were found",
+                "Overall correctness",
+                "Balance of precision and recall"
+              ],
+              "correctAnswer": 0,
+              "explanation": "Precision = TP / (TP + FP). Of the items we predicted as positive, how many actually are? High precision = few false alarms.",
+              "hints": ["Positive Predictive Value", "FP in denominator"]
+            },
+            {
+              "type": "fill_in_blank",
+              "question": "The harmonic mean of precision and recall is the ______ score.",
+              "acceptedAnswers": ["F1"],
+              "explanation": "F1 = 2 * (precision * recall) / (precision + recall). Balances precision and recall when you need a single number.",
+              "hints": ["Balances both", "Harmonic mean"]
+            },
+            {
+              "type": "code_ordering",
+              "question": "Order to calculate accuracy from confusion matrix values",
+              "snippets": [
+                "TP = 90; TN = 80; FP = 10; FN = 20",
+                "accuracy = (TP + TN) / (TP + TN + FP + FN)",
+                "print(accuracy)  # 0.85"
+              ],
+              "correctOrder": [0, 1, 2],
+              "explanation": "Accuracy = (true positives + true negatives) / total predictions.",
+              "hints": ["Correct predictions / total", "TP + TN on top"]
+            },
+            {
+              "type": "true_false",
+              "question": "High accuracy always means a good model.",
+              "correctAnswerBool": false,
+              "explanation": "Accuracy can be misleading with imbalanced data. 99% negative class: predicting all negative gives 99% accuracy but 0% recall for positive class.",
+              "hints": ["Imbalanced data problem", "Check precision/recall too"]
+            },
+            {
+              "type": "multiple_choice",
+              "question": "What indicates overfitting?",
+              "options": [
+                "Low training accuracy, high test accuracy",
+                "High training accuracy, low test accuracy",
+                "Both accuracies low",
+                "Both accuracies high and equal"
+              ],
+              "correctAnswer": 1,
+              "explanation": "Overfitting = model memorizes training data (high train acc) but doesn't generalize (low test acc). Gap between train and test performance.",
+              "hints": ["Memorizes training", "Fails on new data"]
+            }
+          ]
+        },
+        {
+          "id": "lesson_4",
+          "title": "Linear Regression",
+          "description": "Predict continuous values with a line",
+          "order": 4,
+          "estimatedMinutes": 15,
+          "xpReward": 30,
+          "steps": [
+            {
+              "type": "explanation",
+              "content": "Linear regression models relationship between features and continuous target as a straight line (or hyperplane). Equation: y = wx + b (simple) or y = w₁x₁ + w₂x₂ + ... + b (multiple). Goal: find weights (w) and bias (b) that minimize prediction error."
+            },
+            {
+              "type": "explanation",
+              "content": "Loss function: Mean Squared Error (MSE) = average of (prediction - actual)². Optimization: Gradient Descent iteratively adjusts weights to minimize loss. Learning rate controls step size. Assumptions: linear relationship, independent errors, homoscedasticity, normal residuals."
+            },
+            {
+              "type": "multiple_choice",
+              "question": "What does the 'linear' in linear regression refer to?",
+              "options": [
+                "Linear relationship between features and target",
+                "Linear algorithm speed",
+                "Linear data storage",
+                "Linear code structure"
+              ],
+              "correctAnswer": 0,
+              "explanation": "Linear regression assumes the target is a linear combination of features: y = w·x + b. The model is linear in parameters.",
+              "hints": ["Linear in parameters", "Straight line/hyperplane"]
+            },
+            {
+              "type": "fill_in_blank",
+              "question": "The loss function commonly used in linear regression is ______.",
+              "acceptedAnswers": ["Mean Squared Error", "MSE"],
+              "explanation": "MSE = mean((y_pred - y_true)²). Squared errors penalize large mistakes more. Differentiable for gradient descent.",
+              "hints": ["Squared errors", "Differentiable"]
+            },
+            {
+              "type": "code_ordering",
+              "question": "Order to implement gradient descent step for linear regression",
+              "snippets": [
+                "predictions = X @ weights + bias",
+                "errors = predictions - y",
+                "grad_w = (X.T @ errors) / n",
+                "weights -= learning_rate * grad_w"
+              ],
+              "correctOrder": [0, 1, 2, 3],
+              "explanation": "Predict -> compute errors -> compute gradient -> update weights. X.T @ errors gives gradient for weights.",
+              "hints": ["Forward pass", "Update"]
+            },
+            {
+              "type": "true_false",
+              "question": "Linear regression can only model straight lines.",
+              "correctAnswerBool": false,
+              "explanation": "With feature engineering (polynomial features: x, x², x³), linear regression can model curves. It's linear in PARAMETERS, not necessarily in raw features.",
+              "hints": ["Linear in parameters", "Polynomial features work"]
+            },
+            {
+              "type": "multiple_choice",
+              "question": "What does the learning rate control in gradient descent?",
+              "options": [
+                "Number of iterations",
+                "Step size of weight updates",
+                "Which features to use",
+                "Loss function type"
+              ],
+              "correctAnswer": 1,
+              "explanation": "Learning rate (alpha) scales the gradient step: new_weight = weight - learning_rate * gradient. Too large = overshoot, too small = slow convergence.",
+              "hints": ["Step size", "Alpha parameter"]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

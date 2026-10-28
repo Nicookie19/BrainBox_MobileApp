@@ -6,12 +6,11 @@ import 'core/constants/app_colors.dart';
 import 'core/theme/app_theme.dart';
 import 'data/repositories/course_repository.dart';
 import 'data/services/storage_service.dart';
-import 'data/services/supabase_service.dart';
 import 'presentation/providers/app_provider.dart';
-import 'presentation/screens/auth_screen.dart';
 import 'presentation/screens/bookmarks_screen.dart';
 import 'presentation/screens/community_screen.dart';
 import 'presentation/screens/course_detail_screen.dart';
+import 'presentation/screens/downloads_screen.dart';
 import 'presentation/screens/daily_challenge_screen.dart';
 import 'presentation/screens/explore_screen.dart';
 import 'presentation/screens/home_screen.dart';
@@ -24,7 +23,6 @@ import 'presentation/widgets/app_shell.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await StorageService.init();
-  await SupabaseService.initialize();
   await CourseRepository.initializeSampleCourses();
   runApp(const BrainBoxApp());
 }
@@ -83,13 +81,8 @@ class _MobileAppFrame extends StatelessWidget {
 }
 
 final _router = GoRouter(
-  initialLocation:
-      SupabaseService.isEnabled &&
-          SupabaseService.client.auth.currentSession == null
-      ? '/auth'
-      : '/',
+  initialLocation: '/',
   routes: [
-    GoRoute(path: '/auth', builder: (_, _) => const AuthScreen()),
     ShellRoute(
       builder: (context, state, child) => AppShell(child: child),
       routes: [
@@ -118,5 +111,6 @@ final _router = GoRouter(
     ),
     GoRoute(path: '/settings', builder: (_, _) => const SettingsScreen()),
     GoRoute(path: '/bookmarks', builder: (_, _) => const BookmarksScreen()),
+    GoRoute(path: '/downloads', builder: (_, _) => const DownloadsScreen()),
   ],
 );

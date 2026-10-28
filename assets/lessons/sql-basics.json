@@ -22,7 +22,12 @@
             {
               "type": "multiple_choice",
               "question": "What does SELECT * FROM users; return?",
-              "options": ["All columns from users table", "Only the first column", "Only the last row", "Error"],
+              "options": [
+                "All columns from users table",
+                "Only the first column",
+                "Only the last row",
+                "Error"
+              ],
               "correctAnswer": 0,
               "explanation": "* is a wildcard meaning 'all columns'. This returns every column for every row in the users table."
             },
@@ -36,10 +41,13 @@
               "type": "code_ordering",
               "question": "Order to select name and email from users table",
               "snippets": [
-                "SELECT name, email",
-                "FROM users;"
+                "FROM users;",
+                "SELECT name, email"
               ],
-              "correctOrder": [0, 1],
+              "correctOrder": [
+                1,
+                0
+              ],
               "explanation": "List columns after SELECT, then specify table after FROM."
             },
             {
@@ -92,11 +100,15 @@
               "type": "code_ordering",
               "question": "Order to find active users from USA",
               "snippets": [
-                "SELECT * FROM users",
+                "AND country = 'USA';",
                 "WHERE is_active = true",
-                "AND country = 'USA';"
+                "SELECT * FROM users"
               ],
-              "correctOrder": [0, 1, 2],
+              "correctOrder": [
+                2,
+                1,
+                0
+              ],
               "explanation": "SELECT → FROM → WHERE with AND for multiple conditions."
             },
             {
@@ -130,7 +142,12 @@
             {
               "type": "multiple_choice",
               "question": "Which JOIN returns all rows from the left table and matching rows from the right?",
-              "options": ["INNER JOIN", "LEFT JOIN", "RIGHT JOIN", "CROSS JOIN"],
+              "options": [
+                "INNER JOIN",
+                "LEFT JOIN",
+                "RIGHT JOIN",
+                "CROSS JOIN"
+              ],
               "correctAnswer": 1,
               "explanation": "LEFT JOIN keeps all left table rows, filling right side with NULL where no match exists."
             },
@@ -144,18 +161,28 @@
               "type": "code_ordering",
               "question": "Order to join users with their orders",
               "snippets": [
-                "SELECT u.name, o.total",
                 "FROM users u",
+                "SELECT u.name, o.total",
                 "INNER JOIN orders o",
                 "ON u.id = o.user_id;"
               ],
-              "correctOrder": [0, 1, 2, 3],
+              "correctOrder": [
+                1,
+                0,
+                2,
+                3
+              ],
               "explanation": "Select columns → from first table → join second table → on matching keys."
             },
             {
               "type": "multiple_choice",
               "question": "What does INNER JOIN return when there's no match?",
-              "options": ["All rows from both tables", "Only matching rows", "Left table rows with NULLs", "Right table rows with NULLs"],
+              "options": [
+                "All rows from both tables",
+                "Only matching rows",
+                "Left table rows with NULLs",
+                "Right table rows with NULLs"
+              ],
               "correctAnswer": 1,
               "explanation": "INNER JOIN only returns rows where the join condition matches in BOTH tables."
             }
@@ -178,7 +205,12 @@
             {
               "type": "multiple_choice",
               "question": "Which clause filters groups after aggregation?",
-              "options": ["WHERE", "HAVING", "FILTER", "GROUP BY"],
+              "options": [
+                "WHERE",
+                "HAVING",
+                "FILTER",
+                "GROUP BY"
+              ],
               "correctAnswer": 1,
               "explanation": "HAVING filters aggregated results. WHERE filters rows before grouping."
             },
@@ -192,11 +224,15 @@
               "type": "code_ordering",
               "question": "Order to find average salary by department",
               "snippets": [
-                "SELECT department, AVG(salary)",
                 "FROM employees",
-                "GROUP BY department;"
+                "GROUP BY department;",
+                "SELECT department, AVG(salary)"
               ],
-              "correctOrder": [0, 1, 2],
+              "correctOrder": [
+                2,
+                0,
+                1
+              ],
               "explanation": "Select aggregate → from table → group by the non-aggregated column."
             },
             {

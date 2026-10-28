@@ -82,7 +82,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                   }
                   return CourseCard(
                     course: filteredCourses[index],
-                    onTap: () => context.go('/course/${filteredCourses[index].id}'),
+                    onTap: () => context.push('/course/${filteredCourses[index].id}'),
                   ).animate().fadeIn(delay: (100 + index * 50).ms).slideY(begin: 0.2, end: 0);
                 },
               ),

@@ -7,9 +7,9 @@ import 'package:brainbox/presentation/widgets/profile_header.dart';
 import 'package:brainbox/presentation/widgets/profile_stats.dart';
 import 'package:brainbox/presentation/widgets/week_activity.dart';
 import 'package:brainbox/presentation/widgets/achievement_card.dart';
+import 'package:brainbox/presentation/widgets/achievement_style.dart';
 import 'package:brainbox/presentation/widgets/menu_row.dart';
 import 'package:brainbox/data/models/user_models.dart';
-import 'package:brainbox/data/services/storage_service.dart';
 import 'package:brainbox/core/constants/app_colors.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -39,7 +39,7 @@ class ProfileScreen extends StatelessWidget {
                     const SizedBox(height: 28),
                     _buildSectionTitle(context, 'Your Progress'),
                     const SizedBox(height: 16),
-                    const WeekActivity(),
+                    WeekActivity(activity: provider.weekActivity),
                     const SizedBox(height: 28),
                     _buildSectionTitle(context, 'Achievements'),
                     const SizedBox(height: 16),
@@ -81,10 +81,10 @@ class ProfileScreen extends StatelessWidget {
               right: index == achievements.length - 1 ? 0 : 12,
             ),
             child: AchievementCard(
-              icon: _getAchievementIcon(achievement.iconAsset),
+              icon: achievementIcon(achievement.iconAsset),
               title: achievement.title,
               subtitle: achievement.description,
-              color: _getAchievementColor(achievement.type),
+              color: achievementColor(achievement.type),
               isUnlocked: achievement.isUnlocked,
               progress: achievement.progress.toDouble(),
               target: achievement.target.toDouble(),
@@ -108,9 +108,7 @@ class ProfileScreen extends StatelessWidget {
           icon: Icons.download_outlined,
           title: 'Downloads',
           subtitle: 'Manage offline content',
-          onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('No lessons are downloaded yet.')),
-          ),
+          onTap: () => context.push('/downloads'),
         ),
         MenuRow(
           icon: Icons.dark_mode_outlined,
@@ -134,79 +132,8 @@ class ProfileScreen extends StatelessWidget {
             ),
           ),
         ),
-        MenuRow(
-          icon: Icons.logout_rounded,
-          title: 'Sign Out',
-          subtitle: 'Log out of your account',
-          onTap: () => _showSignOutDialog(context, provider),
-          isDestructive: true,
-        ),
       ],
     ).animate().fadeIn(delay: 500.ms).slideY(begin: 0.1, end: 0);
-  }
-
-  IconData _getAchievementIcon(String asset) {
-    switch (asset) {
-      case 'local_fire_department':
-        return Icons.local_fire_department_rounded;
-      case 'rocket_launch':
-        return Icons.rocket_launch_rounded;
-      case 'menu_book':
-        return Icons.menu_book_rounded;
-      default:
-        return Icons.emoji_events_rounded;
-    }
-  }
-
-  Color _getAchievementColor(AchievementType type) {
-    switch (type) {
-      case AchievementType.streakDays:
-        return AppColors.accentWarning;
-      case AchievementType.coursesCompleted:
-        return AppColors.accentPrimary;
-      case AchievementType.lessonsCompleted:
-        return AppColors.accentSecondary;
-      default:
-        return AppColors.accentPrimary;
-    }
-  }
-
-  Future<void> _showSignOutDialog(
-    BuildContext context,
-    AppProvider provider,
-  ) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.bgCard,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Sign Out?'),
-        content: const Text(
-          'Are you sure you want to sign out? Your progress will be saved locally.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.accentError,
-            ),
-            child: const Text('Sign Out'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true && context.mounted) {
-      await StorageService.clearAll();
-      provider.initialize();
-      if (context.mounted) {
-        context.go('/');
-      }
-    }
   }
 }
 

@@ -1,16 +1,24 @@
 import 'package:flutter/foundation.dart';
 import 'package:brainbox/data/repositories/community_repository.dart';
 import 'package:brainbox/data/repositories/course_repository.dart';
+import 'package:brainbox/data/repositories/lesson_repository.dart' as lr;
 import 'package:brainbox/data/services/storage_service.dart';
-import 'package:brainbox/data/services/supabase_service.dart';
 import 'package:brainbox/data/models/course_models.dart';
 import 'package:brainbox/data/models/user_models.dart';
 import 'package:brainbox/data/models/community_models.dart';
 
 class AppProvider extends ChangeNotifier {
+  static const String _activityKey = 'activity_days';
+  static const String _minutesKeyPrefix = 'study_minutes_';
+  static const int _challengeXp = 50;
+  static const int _challengeMinutes = 5;
+  static const int _defaultLessonXp = 25;
+  static const int _defaultLessonMinutes = 10;
+
   UserProfile? _profile;
   List<Course> _courses = [];
   List<CommunityPost> _posts = [];
+  Map<String, List<lr.Lesson>> _lessonsByCourse = {};
   bool _isLoading = true;
 
   UserProfile? get profile => _profile;
@@ -21,7 +29,11 @@ class AppProvider extends ChangeNotifier {
   int get xp => _profile?.xp ?? 0;
   UserLevel get level => _profile?.level ?? UserLevel.allLevels[0];
   double get levelProgress => _profile?.levelProgress ?? 0;
-  int get currentStreak => _profile?.stats.currentStreakDays ?? 0;
+
+  /// Streak as it stands today: a streak whose last activity is older than
+  /// yesterday (UTC) has lapsed, even though nothing has rewritten the stored
+  /// value yet.
+  int get currentStreak => effectiveStreak(_profile);
 
   Future<void> initialize() async {
     _isLoading = true;
@@ -29,36 +41,33 @@ class AppProvider extends ChangeNotifier {
 
     _profile = await _loadOrCreateProfile();
     _courses = await CourseRepository.getAllCourses();
+    _lessonsByCourse = await _loadLessons(_courses);
     _posts = await CommunityRepository.getPosts();
 
     _isLoading = false;
     notifyListeners();
   }
 
+  Future<Map<String, List<lr.Lesson>>> _loadLessons(
+    List<Course> courses,
+  ) async {
+    final result = <String, List<lr.Lesson>>{};
+    for (final course in courses) {
+      final data = await lr.LessonRepository.getCourseLessons(course.id);
+      if (data == null) continue;
+      result[course.id] = data.modules.expand((m) => m.lessons).toList();
+    }
+    return result;
+  }
+
   Future<UserProfile> _loadOrCreateProfile() async {
     final existing = StorageService.getUserProfile();
-    final cloudUser = SupabaseService.isEnabled
-        ? SupabaseService.client.auth.currentUser
-        : null;
-    if (existing != null) {
-      if (cloudUser == null || existing.id == cloudUser.id) return existing;
-      final migrated = existing.copyWith(
-        id: cloudUser.id,
-        email: cloudUser.email ?? existing.email,
-        displayName:
-            (cloudUser.userMetadata?['display_name'] as String?) ??
-            existing.displayName,
-      );
-      await StorageService.saveUserProfile(migrated);
-      return migrated;
-    }
+    if (existing != null) return existing;
 
     final newProfile = UserProfile(
-      id: cloudUser?.id ?? 'current_user',
-      email: cloudUser?.email ?? 'user@brainbox.app',
-      displayName:
-          (cloudUser?.userMetadata?['display_name'] as String?) ??
-          'Alex Rivera',
+      id: 'current_user',
+      email: 'user@brainbox.app',
+      displayName: 'Alex Rivera',
       bio: 'Aspiring Frontend Developer',
       level: UserLevel.getLevelForXp(0),
       xp: 0,
@@ -134,159 +143,396 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  // ---------------------------------------------------------------------------
+  // Course and lesson progress
+  // ---------------------------------------------------------------------------
+
+  /// Whether lesson content is available for [courseId].
+  bool hasLessons(String courseId) =>
+      (_lessonsByCourse[courseId] ?? const <lr.Lesson>[]).isNotEmpty;
+
+  List<lr.Lesson> lessonsFor(String courseId) =>
+      _lessonsByCourse[courseId] ?? const <lr.Lesson>[];
+
+  int totalLessonsFor(String courseId) {
+    final lessons = _lessonsByCourse[courseId];
+    if (lessons != null) return lessons.length;
+    for (final course in _courses) {
+      if (course.id == courseId) return course.lessonCount;
+    }
+    return 0;
+  }
+
+  int completedLessonsFor(String courseId) {
+    final ids = _profile?.completedLessonIds ?? const <String>[];
+    return ids.where((id) => id.startsWith('$courseId:')).length;
+  }
+
+  bool isLessonCompleted(String courseId, String lessonId) =>
+      _profile?.completedLessonIds.contains('$courseId:$lessonId') ?? false;
+
+  /// Fraction (0..1) of a course's lessons that have been completed.
+  double courseProgress(String courseId) {
+    final total = totalLessonsFor(courseId);
+    if (total <= 0) return 0;
+    return (completedLessonsFor(courseId) / total).clamp(0.0, 1.0).toDouble();
+  }
+
+  bool isEnrolled(String courseId) =>
+      _profile?.enrolledCourseIds.contains(courseId) ?? false;
+
+  bool isCourseCompleted(String courseId) =>
+      _profile?.completedCourseIds.contains(courseId) ?? false;
+
+  /// The first lesson of [courseId] that has not been completed yet, or null
+  /// when every lesson is done (or the course has no lessons).
+  String? nextLessonIdFor(String courseId) {
+    for (final lesson in lessonsFor(courseId)) {
+      if (!isLessonCompleted(courseId, lesson.id)) return lesson.id;
+    }
+    return null;
+  }
+
+  /// Enrolled courses that are not finished, furthest along first.
+  List<Course> get inProgressCourses {
+    final list = _courses
+        .where((c) => isEnrolled(c.id) && !isCourseCompleted(c.id))
+        .toList();
+    list.sort(
+      (a, b) => courseProgress(b.id).compareTo(courseProgress(a.id)),
+    );
+    return list;
+  }
+
+  List<Course> get completedCourses =>
+      _courses.where((c) => isCourseCompleted(c.id)).toList();
+
+  /// The course to show on the "Continue Learning" card.
+  Course? get continueCourse {
+    final inProgress = inProgressCourses;
+    if (inProgress.isNotEmpty) return inProgress.first;
+    for (final course in _courses) {
+      if (!isCourseCompleted(course.id) && hasLessons(course.id)) {
+        return course;
+      }
+    }
+    return null;
+  }
+
+  /// Courses worth suggesting: not finished, not already started, with lessons.
+  List<Course> get recommendedCourses {
+    final fresh = _courses
+        .where(
+          (c) =>
+              !isCourseCompleted(c.id) &&
+              !isEnrolled(c.id) &&
+              hasLessons(c.id),
+        )
+        .toList();
+    final others = _courses
+        .where(
+          (c) =>
+              !isCourseCompleted(c.id) &&
+              isEnrolled(c.id) &&
+              hasLessons(c.id),
+        )
+        .toList();
+    return [...fresh, ...others].take(3).toList();
+  }
+
+  Future<void> setEnrolled(String courseId, bool enrolled) async {
+    final profile = _profile;
+    if (profile == null) return;
+    final ids = List<String>.from(profile.enrolledCourseIds);
+    if (enrolled && !ids.contains(courseId)) ids.add(courseId);
+    if (!enrolled) ids.remove(courseId);
+    _profile = profile.copyWith(enrolledCourseIds: ids);
+    await StorageService.saveUserProfile(_profile!);
+    notifyListeners();
+  }
+
+  lr.Lesson? _findLesson(String courseId, String? lessonId) {
+    if (lessonId == null) return null;
+    for (final lesson in lessonsFor(courseId)) {
+      if (lesson.id == lessonId) return lesson;
+    }
+    return null;
+  }
+
   Future<void> completeLesson(String courseId, {String? lessonId}) async {
-    if (_profile == null) return;
+    final profile = _profile;
+    if (profile == null) return;
 
-    final lessonIdKey = lessonId != null ? '$courseId:$lessonId' : null;
-
-    // Check if lesson was already completed
-    if (lessonIdKey != null &&
-        _profile!.completedLessonIds.contains(lessonIdKey)) {
+    final lessonKey = lessonId != null ? '$courseId:$lessonId' : null;
+    if (lessonKey != null && profile.completedLessonIds.contains(lessonKey)) {
       return; // Already completed, don't award XP again
     }
 
-    final courseProgress = StorageService.getCourseProgress(courseId);
     final now = DateTime.now();
-    final nowUtc = now.toUtc();
-    final todayUtc = DateTime(nowUtc.year, nowUtc.month, nowUtc.day);
+    final lessonDef = _findLesson(courseId, lessonId);
+    final xpGain = lessonDef?.xpReward ?? _defaultLessonXp;
+    final minutes = lessonDef?.estimatedMinutes ?? _defaultLessonMinutes;
 
-    final updatedProgress =
-        (courseProgress ??
+    final completedLessonIds = List<String>.from(profile.completedLessonIds);
+    if (lessonKey != null) completedLessonIds.add(lessonKey);
+
+    final enrolledIds = List<String>.from(profile.enrolledCourseIds);
+    if (!enrolledIds.contains(courseId)) enrolledIds.add(courseId);
+
+    final completedForCourse = completedLessonIds
+        .where((id) => id.startsWith('$courseId:'))
+        .length;
+    final totalLessons = totalLessonsFor(courseId);
+    final courseFinished =
+        totalLessons > 0 &&
+        completedForCourse >= totalLessons &&
+        !profile.completedCourseIds.contains(courseId);
+
+    final completedCourseIds = List<String>.from(profile.completedCourseIds);
+    if (courseFinished) completedCourseIds.add(courseId);
+
+    final existing = StorageService.getCourseProgress(courseId);
+    final progress =
+        (existing ??
                 CourseProgress(
                   courseId: courseId,
-                  userId: 'current_user',
+                  userId: profile.id,
                   completedModules: 0,
-                  totalModules: 1,
+                  totalModules: 0,
                   completedLessons: 0,
-                  totalLessons: 10,
+                  totalLessons: totalLessons,
                   completedQuizzes: 0,
-                  totalQuizzes: 3,
+                  totalQuizzes: 0,
                   completedProjects: 0,
-                  totalProjects: 2,
+                  totalProjects: 0,
                   totalStudyMinutes: 0,
                   startedAt: now,
                   lastAccessedAt: now,
                   isEnrolled: true,
                 ))
             .copyWith(
-              completedLessons: (courseProgress?.completedLessons ?? 0) + 1,
-              totalStudyMinutes: (courseProgress?.totalStudyMinutes ?? 0) + 10,
+              completedLessons: completedForCourse,
+              totalLessons: totalLessons,
+              totalStudyMinutes: (existing?.totalStudyMinutes ?? 0) + minutes,
               lastAccessedAt: now,
+              isEnrolled: true,
+              isCompleted: courseFinished || (existing?.isCompleted ?? false),
+              completedAt: courseFinished ? now : null,
             );
 
-    await StorageService.saveCourseProgress(updatedProgress);
-
-    // Update completed lesson IDs
-    final completedLessonIds = List<String>.from(_profile!.completedLessonIds);
-    if (lessonIdKey != null && !completedLessonIds.contains(lessonIdKey)) {
-      completedLessonIds.add(lessonIdKey);
-    }
-
-    // Update enrolled course IDs
-    final enrolledIds = List<String>.from(_profile!.enrolledCourseIds);
-    if (!enrolledIds.contains(courseId)) {
-      enrolledIds.add(courseId);
-    }
-
-    // Calculate streak
-    int newStreak = _profile!.stats.currentStreakDays;
-    int newLongestStreak = _profile!.stats.longestStreakDays;
-    DateTime? lastLessonDate = _profile!.lastLessonCompletedAt;
-
-    if (lastLessonDate != null) {
-      final lastLessonUtc = lastLessonDate.toUtc();
-      final lastLessonDay = DateTime(
-        lastLessonUtc.year,
-        lastLessonUtc.month,
-        lastLessonUtc.day,
-      );
-      final yesterdayUtc = todayUtc.subtract(const Duration(days: 1));
-
-      if (lastLessonDay == yesterdayUtc) {
-        // Consecutive day - increment streak
-        newStreak += 1;
-      } else if (lastLessonDay == todayUtc) {
-        // Same day - streak unchanged
-      } else {
-        // Streak broken
-        newStreak = 1;
-      }
-    } else {
-      // First lesson ever
-      newStreak = 1;
-    }
-
-    if (newStreak > newLongestStreak) {
-      newLongestStreak = newStreak;
-    }
-
-    final updatedProfile = _profile!.copyWith(
-      xp: _profile!.xp + 25,
-      totalXp: _profile!.totalXp + 25,
-      enrolledCourseIds: enrolledIds,
+    final updatedProfile = _applyActivity(
+      profile,
+      xpGain: xpGain,
+      now: now,
+      lessonsDelta: 1,
+      minutesDelta: minutes,
+      coursesDelta: courseFinished ? 1 : 0,
       completedLessonIds: completedLessonIds,
-      lastActiveAt: DateTime.now(),
-      lastLessonCompletedAt: DateTime.now(),
-      stats: _profile!.stats.copyWith(
-        totalLessonsCompleted: _profile!.stats.totalLessonsCompleted + 1,
-        currentStreakDays: newStreak,
-        longestStreakDays: newLongestStreak > _profile!.stats.longestStreakDays
-            ? newStreak
-            : _profile!.stats.longestStreakDays,
-        totalStudyMinutes: _profile!.stats.totalStudyMinutes + 10,
-      ),
-      achievements: _updateAchievementProgress(
-        _profile!.achievements,
-        lessonsCompleted: _profile!.stats.totalLessonsCompleted + 1,
-        streakDays: newStreak,
-      ),
+      completedCourseIds: completedCourseIds,
+      enrolledCourseIds: enrolledIds,
     );
 
     _profile = updatedProfile;
+    await StorageService.saveCourseProgress(progress);
+    await _recordActivity(now, minutes: minutes);
     await StorageService.saveUserProfile(updatedProfile);
     notifyListeners();
+  }
+
+  Future<void> completeChallenge() async {
+    final profile = _profile;
+    if (profile == null) return;
+
+    final now = DateTime.now();
+    final updatedProfile = _applyActivity(
+      profile,
+      xpGain: _challengeXp,
+      now: now,
+      minutesDelta: _challengeMinutes,
+    );
+
+    _profile = updatedProfile;
+    await _recordActivity(now, minutes: _challengeMinutes);
+    await StorageService.saveUserProfile(updatedProfile);
+    notifyListeners();
+  }
+
+  /// Applies the shared effects of any learning activity: XP and level,
+  /// streak, stats, achievement progress and achievement XP rewards.
+  UserProfile _applyActivity(
+    UserProfile base, {
+    required int xpGain,
+    required DateTime now,
+    int lessonsDelta = 0,
+    int minutesDelta = 0,
+    int coursesDelta = 0,
+    List<String>? completedLessonIds,
+    List<String>? completedCourseIds,
+    List<String>? enrolledCourseIds,
+  }) {
+    final streaks = _advanceStreak(base, now);
+    final stats = base.stats.copyWith(
+      totalCoursesCompleted: base.stats.totalCoursesCompleted + coursesDelta,
+      totalLessonsCompleted: base.stats.totalLessonsCompleted + lessonsDelta,
+      totalStudyMinutes: base.stats.totalStudyMinutes + minutesDelta,
+      currentStreakDays: streaks.current,
+      longestStreakDays: streaks.longest,
+    );
+
+    final achievements = _updateAchievementProgress(
+      base.achievements,
+      lessonsCompleted: stats.totalLessonsCompleted,
+      coursesCompleted: stats.totalCoursesCompleted,
+      streakDays: stats.currentStreakDays,
+    );
+
+    // Pay out the XP reward of anything that unlocked just now.
+    var bonusXp = 0;
+    for (var i = 0; i < achievements.length; i++) {
+      final wasUnlocked = i < base.achievements.length
+          ? base.achievements[i].isUnlocked
+          : false;
+      if (achievements[i].isUnlocked && !wasUnlocked) {
+        bonusXp += achievements[i].xpReward;
+      }
+    }
+
+    final totalXp = base.totalXp + xpGain + bonusXp;
+    return base.copyWith(
+      xp: base.xp + xpGain + bonusXp,
+      totalXp: totalXp,
+      level: UserLevel.getLevelForXp(totalXp),
+      completedLessonIds: completedLessonIds,
+      completedCourseIds: completedCourseIds,
+      enrolledCourseIds: enrolledCourseIds,
+      lastActiveAt: now,
+      lastLessonCompletedAt: now,
+      stats: stats,
+      achievements: achievements,
+    );
   }
 
   List<Achievement> _updateAchievementProgress(
     List<Achievement> achievements, {
     required int lessonsCompleted,
+    required int coursesCompleted,
     required int streakDays,
   }) {
     return achievements.map((achievement) {
-      int newProgress = achievement.progress;
-      bool isUnlocked = achievement.isUnlocked;
+      var newProgress = achievement.progress;
 
       switch (achievement.type) {
         case AchievementType.lessonsCompleted:
           newProgress = lessonsCompleted;
-          break;
-        case AchievementType.streakDays:
-          newProgress = streakDays;
-          break;
         case AchievementType.coursesCompleted:
-          // Would need course completion tracking
-          break;
+          newProgress = coursesCompleted;
+        case AchievementType.streakDays:
+          // Streak achievements keep their best progress; a lapsed streak
+          // must not lock an achievement again.
+          if (streakDays > newProgress) newProgress = streakDays;
         default:
           break;
       }
 
-      if (newProgress >= achievement.target && !achievement.isUnlocked) {
-        isUnlocked = true;
-        // Could trigger achievement unlock notification here
-      }
+      final unlocked =
+          achievement.isUnlocked || newProgress >= achievement.target;
 
       return achievement.copyWith(
         progress: newProgress.clamp(0, achievement.target),
-        isUnlocked: isUnlocked,
-        unlockedAt: isUnlocked && achievement.unlockedAt == null
+        isUnlocked: unlocked,
+        unlockedAt: unlocked && achievement.unlockedAt == null
             ? DateTime.now()
             : achievement.unlockedAt,
       );
     }).toList();
   }
 
-  Future<void> completeChallenge() async {
-    await addXp(50);
+  // ---------------------------------------------------------------------------
+  // Streaks and weekly activity (all day boundaries are UTC)
+  // ---------------------------------------------------------------------------
+
+  static DateTime _utcDay(DateTime d) {
+    final u = d.toUtc();
+    return DateTime.utc(u.year, u.month, u.day);
+  }
+
+  static String _dayKey(DateTime d) {
+    final u = d.toUtc();
+    final month = u.month.toString().padLeft(2, '0');
+    final day = u.day.toString().padLeft(2, '0');
+    return '${u.year.toString().padLeft(4, '0')}-$month-$day';
+  }
+
+  static DateTime _weekStart(DateTime now) {
+    final today = _utcDay(now);
+    return today.subtract(Duration(days: today.weekday - 1));
+  }
+
+  /// The streak a learner effectively has at [now]. Returns 0 once more than
+  /// one full UTC day has passed since the last activity.
+  static int effectiveStreak(UserProfile? profile, {DateTime? now}) {
+    if (profile == null) return 0;
+    final last = profile.lastLessonCompletedAt;
+    if (last == null) return 0;
+    final gap = _utcDay(now ?? DateTime.now()).difference(_utcDay(last)).inDays;
+    return gap <= 1 ? profile.stats.currentStreakDays : 0;
+  }
+
+  ({int current, int longest}) _advanceStreak(UserProfile p, DateTime now) {
+    final last = p.lastLessonCompletedAt;
+    var current = p.stats.currentStreakDays;
+    if (last == null) {
+      current = 1;
+    } else {
+      final gap = _utcDay(now).difference(_utcDay(last)).inDays;
+      if (gap <= 0) {
+        if (current < 1) current = 1; // same day: unchanged
+      } else if (gap == 1) {
+        current += 1; // consecutive day
+      } else {
+        current = 1; // streak was broken
+      }
+    }
+    final longest = current > p.stats.longestStreakDays
+        ? current
+        : p.stats.longestStreakDays;
+    return (current: current, longest: longest);
+  }
+
+  Future<void> _recordActivity(DateTime now, {int minutes = 0}) async {
+    final day = _dayKey(now);
+    final days = StorageService.getStringList(_activityKey);
+    if (!days.contains(day)) {
+      days.add(day);
+      days.sort();
+      final trimmed = days.length > 60 ? days.sublist(days.length - 60) : days;
+      await StorageService.setStringList(_activityKey, trimmed);
+    }
+    if (minutes > 0) {
+      final key = '$_minutesKeyPrefix$day';
+      await StorageService.setInt(key, StorageService.getInt(key) + minutes);
+    }
+  }
+
+  /// Monday..Sunday flags for the current (UTC) week.
+  List<bool> get weekActivity {
+    final days = StorageService.getStringList(_activityKey).toSet();
+    final monday = _weekStart(DateTime.now());
+    return List<bool>.generate(
+      7,
+      (i) => days.contains(_dayKey(monday.add(Duration(days: i)))),
+    );
+  }
+
+  /// Minutes studied so far in the current (UTC) week.
+  int get weeklyStudyMinutes {
+    final monday = _weekStart(DateTime.now());
+    var total = 0;
+    for (var i = 0; i < 7; i++) {
+      final day = _dayKey(monday.add(Duration(days: i)));
+      total += StorageService.getInt('$_minutesKeyPrefix$day');
+    }
+    return total;
   }
 
   Future<void> refreshPosts() async {

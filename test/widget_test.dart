@@ -12,6 +12,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:brainbox/main.dart';
 import 'package:brainbox/presentation/screens/daily_challenge_screen.dart';
 import 'package:brainbox/data/repositories/daily_challenge_repository.dart';
+import 'package:brainbox/data/services/storage_backend.dart';
 import 'package:brainbox/data/services/storage_service.dart';
 
 // Test wrapper for daily challenge screen with fixed date
@@ -26,9 +27,11 @@ class _DailyChallengeTestScreen extends StatelessWidget {
 }
 
 void main() {
-  testWidgets('BrainBox app launches without crashing', (WidgetTester tester) async {
+  testWidgets('BrainBox app launches without crashing', (
+    WidgetTester tester,
+  ) async {
     SharedPreferences.setMockInitialValues({});
-    await StorageService.init();
+    await StorageService.init(backend: MemoryStorageBackend());
     await tester.pumpWidget(const BrainBoxApp());
 
     // Wait for async initialization to complete
@@ -38,17 +41,19 @@ void main() {
     expect(find.byType(MaterialApp), findsOneWidget);
   });
 
-  testWidgets('Daily challenge screen works with fixed seed', (WidgetTester tester) async {
+  testWidgets('Daily challenge screen works with fixed seed', (
+    WidgetTester tester,
+  ) async {
     SharedPreferences.setMockInitialValues({});
-    await StorageService.init();
-    
+    await StorageService.init(backend: MemoryStorageBackend());
+
     // Use a fixed date for deterministic testing
     final fixedDate = DateTime(2024, 1, 15);
-    
+
     // Get the questions for this fixed date
     final questions = DailyChallengeRepository.getDailyQuestions(fixedDate);
     expect(questions.length, 5);
-    
+
     // Directly test daily challenge screen with fixed date
     await tester.pumpWidget(
       MaterialApp(home: _DailyChallengeTestScreen(fixedDate: fixedDate)),
@@ -56,18 +61,20 @@ void main() {
     await tester.pumpAndSettle();
 
     // Verify daily challenge screen loads with first question from fixed date
-    final firstQuestion = DailyChallengeRepository.getDailyQuestions(fixedDate).first.text;
+    final firstQuestion = DailyChallengeRepository.getDailyQuestions(
+      fixedDate,
+    ).first.text;
     expect(find.text(firstQuestion), findsOneWidget);
 
     // Answer all 5 questions correctly
     for (int i = 0; i < 5; i++) {
       final question = DailyChallengeRepository.getDailyQuestions(fixedDate)[i];
       final correctAnswer = question.options[question.answer];
-      
+
       await tester.tap(find.text(correctAnswer));
       await tester.pump();
       expect(find.text(question.explanation), findsOneWidget);
-      
+
       if (i < 4) {
         await tester.tap(find.text('Next Question'));
         await tester.pumpAndSettle();
@@ -84,11 +91,31 @@ void main() {
 
   testWidgets('Home screen renders without crash', (WidgetTester tester) async {
     SharedPreferences.setMockInitialValues({});
-    await StorageService.init();
+    await StorageService.init(backend: MemoryStorageBackend());
     await tester.pumpWidget(const BrainBoxApp());
     await tester.pumpAndSettle(const Duration(seconds: 5));
 
     // Just verify the app renders something
     expect(find.byType(Scaffold), findsWidgets);
+  });
+
+  testWidgets('compact phone layouts do not overflow', (
+    WidgetTester tester,
+  ) async {
+    tester.view.physicalSize = const Size(320, 720);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    SharedPreferences.setMockInitialValues({});
+    await StorageService.init(backend: MemoryStorageBackend());
+    await tester.pumpWidget(const BrainBoxApp());
+    await tester.pumpAndSettle(const Duration(seconds: 5));
+
+    expect(tester.takeException(), isNull);
+
+    await tester.tap(find.byIcon(Icons.explore_outlined));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
   });
 }

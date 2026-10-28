@@ -487,6 +487,22 @@ class SettingsScreen extends StatelessWidget {
     }
   }
 
+  void _showInfoDialog(BuildContext context, String title, String body) {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(title),
+        content: Text(body),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildAboutMenu(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
@@ -500,28 +516,45 @@ class SettingsScreen extends StatelessWidget {
             icon: Icons.info_outline_rounded,
             title: 'App Version',
             subtitle: 'BrainBox v1.0.0',
-            onTap: () {},
+            onTap: () => showAboutDialog(
+              context: context,
+              applicationName: 'BrainBox',
+              applicationVersion: '1.0.0',
+              applicationLegalese: 'Learn by doing.',
+            ),
           ),
           const Divider(height: 1, color: AppColors.borderDefault, indent: 56, endIndent: 16),
           MenuRow(
             icon: Icons.article_outlined,
             title: 'Terms of Service',
             subtitle: 'Read our terms and conditions',
-            onTap: () {},
+            onTap: () => _showInfoDialog(
+              context,
+              'Terms of Service',
+              'BrainBox is provided as-is for learning purposes. Full terms will be published before public release.',
+            ),
           ),
           const Divider(height: 1, color: AppColors.borderDefault, indent: 56, endIndent: 16),
           MenuRow(
             icon: Icons.privacy_tip_outlined,
             title: 'Privacy Policy',
             subtitle: 'Learn how we handle your data',
-            onTap: () {},
+            onTap: () => _showInfoDialog(
+              context,
+              'Privacy Policy',
+              'Your progress is stored on this device. If cloud sync is enabled, your profile and progress are stored in your own account only.',
+            ),
           ),
           const Divider(height: 1, color: AppColors.borderDefault, indent: 56, endIndent: 16),
           MenuRow(
             icon: Icons.star_outline_rounded,
             title: 'Rate the App',
             subtitle: 'Share your feedback on the store',
-            onTap: () {},
+            onTap: () => _showInfoDialog(
+              context,
+              'Rate BrainBox',
+              'Store ratings will be available once the app is published. Thanks for trying it out!',
+            ),
           ),
         ],
       ),

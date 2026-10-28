@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import 'package:brainbox/presentation/providers/app_provider.dart';
 import 'package:brainbox/data/repositories/course_repository.dart';
 import 'package:brainbox/data/models/course_models.dart';
 import 'package:brainbox/data/models/learning_models.dart';
-import 'package:brainbox/data/services/storage_service.dart';
 import 'package:brainbox/core/constants/app_colors.dart';
+import 'package:brainbox/presentation/widgets/course_artwork.dart';
 
 class CourseDetailScreen extends StatefulWidget {
   final String courseId;
@@ -16,9 +19,9 @@ class CourseDetailScreen extends StatefulWidget {
   State<CourseDetailScreen> createState() => _CourseDetailScreenState();
 }
 
-class _CourseDetailScreenState extends State<CourseDetailScreen> with TickerProviderStateMixin {
+class _CourseDetailScreenState extends State<CourseDetailScreen>
+    with TickerProviderStateMixin {
   Course? _course;
-  bool _enrolled = false;
   late AnimationController _animationController;
   List<Color> _colors = [];
   bool _courseNotFound = false;
@@ -45,7 +48,6 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> with TickerProv
       setState(() {
         _course = course;
         _courseNotFound = course == null;
-        _enrolled = StorageService.getBool('course_${widget.courseId}_enrolled', defaultValue: false);
         if (course != null) {
           _colors = _getCategoryColors(course.category);
         }
@@ -56,22 +58,45 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> with TickerProv
     }
   }
 
-  Future<void> _toggleEnrollment() async {
-    setState(() => _enrolled = !_enrolled);
-    await StorageService.setBool('course_${widget.courseId}_enrolled', _enrolled);
-    if (mounted) {
+  Future<void> _startOrContinue() async {
+    final course = _course;
+    if (course == null) return;
+    final provider = context.read<AppProvider>();
+
+    if (!provider.hasLessons(course.id)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(_enrolled ? 'Added to My Learning' : 'Removed from My Learning'),
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: _enrolled ? AppColors.accentSuccess : AppColors.accentError,
+        const SnackBar(
+          content: Text('Lessons for this course are coming soon.'),
         ),
       );
+      return;
     }
+
+    await provider.setEnrolled(course.id, true);
+    if (!mounted) return;
+    final next =
+        provider.nextLessonIdFor(course.id) ??
+        provider.lessonsFor(course.id).first.id;
+    context.push('/lesson/${course.id}?lesson=$next');
+  }
+
+  Future<void> _removeFromLearning() async {
+    final course = _course;
+    if (course == null) return;
+    await context.read<AppProvider>().setEnrolled(course.id, false);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('Removed from My Learning'),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: AppColors.accentError,
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    context.watch<AppProvider>();
     if (_courseNotFound) {
       return Scaffold(
         backgroundColor: AppColors.bgPrimary,
@@ -81,7 +106,11 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> with TickerProv
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.error_outline_rounded, size: 64, color: AppColors.accentError),
+                Icon(
+                  Icons.error_outline_rounded,
+                  size: 64,
+                  color: AppColors.accentError,
+                ),
                 const SizedBox(height: 16),
                 Text(
                   'Course Not Found',
@@ -117,7 +146,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> with TickerProv
     if (_course == null) {
       return Scaffold(
         backgroundColor: AppColors.bgPrimary,
-        body: const Center(child: CircularProgressIndicator(color: AppColors.accentPrimary)),
+        body: const Center(
+          child: CircularProgressIndicator(color: AppColors.accentPrimary),
+        ),
       );
     }
 
@@ -139,7 +170,10 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> with TickerProv
               ),
               child: IconButton(
                 onPressed: () => context.pop(),
-                icon: const Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary),
+                icon: const Icon(
+                  Icons.arrow_back_rounded,
+                  color: AppColors.textPrimary,
+                ),
               ),
             ),
             actions: [
@@ -150,24 +184,29 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> with TickerProv
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: IconButton(
-                  onPressed: () {},
-                  icon: const Icon(Icons.bookmark_outline_rounded, color: AppColors.textPrimary),
-                ),
-              ),
-              Container(
-                margin: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: AppColors.bgCard.withValues(alpha: 0.9),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: IconButton(
-                  onPressed: () {},
-                  icon: const Icon(Icons.share_outlined, color: AppColors.textPrimary),
+                  onPressed: () async {
+                    await Clipboard.setData(
+                      ClipboardData(
+                        text: 'Check out "${_course!.title}" on BrainBox!',
+                      ),
+                    );
+                    if (!context.mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Copied to clipboard')),
+                    );
+                  },
+                  icon: const Icon(
+                    Icons.share_outlined,
+                    color: AppColors.textPrimary,
+                  ),
                 ),
               ),
             ],
             flexibleSpace: FlexibleSpaceBar(
-              stretchModes: const [StretchMode.zoomBackground, StretchMode.blurBackground],
+              stretchModes: const [
+                StretchMode.zoomBackground,
+                StretchMode.blurBackground,
+              ],
               background: Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
@@ -197,7 +236,19 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> with TickerProv
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(_course!.category.icon, color: Colors.white, size: 36),
+                          Container(
+                            width: 52,
+                            height: 52,
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.16),
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            child: CourseArtwork(
+                              category: _course!.category,
+                              size: 36,
+                            ),
+                          ),
                           const SizedBox(height: 12),
                           Text(
                             _course!.category.title.toUpperCase(),
@@ -221,9 +272,15 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> with TickerProv
                           const SizedBox(height: 8),
                           Row(
                             children: [
-                              _buildMetaChip(Icons.menu_book_rounded, '${_course!.lessonCount} lessons'),
+                              _buildMetaChip(
+                                Icons.menu_book_rounded,
+                                '${_course!.lessonCount} lessons',
+                              ),
                               const SizedBox(width: 12),
-                              _buildMetaChip(Icons.schedule_rounded, '${_course!.estimatedHours}h'),
+                              _buildMetaChip(
+                                Icons.schedule_rounded,
+                                '${_course!.estimatedHours}h',
+                              ),
                               const SizedBox(width: 12),
                               _buildMetaChip(
                                 Icons.bar_chart_rounded,
@@ -248,6 +305,8 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> with TickerProv
                 children: [
                   _buildDescription(),
                   const SizedBox(height: 24),
+                  _buildCourseProgressCard(),
+                  const SizedBox(height: 20),
                   _buildEnrollButton(),
                   const SizedBox(height: 28),
                   _buildLearningOutcomes(),
@@ -294,9 +353,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> with TickerProv
       children: [
         Text(
           'About this course',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w700,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 12),
         Text(
@@ -333,23 +392,136 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> with TickerProv
   }
 
   Widget _buildEnrollButton() {
-    return SizedBox(
-      width: double.infinity,
-      child: FilledButton.icon(
-        onPressed: _toggleEnrollment,
-        icon: Icon(_enrolled ? Icons.check_circle_rounded : Icons.play_circle_rounded),
-        label: Text(
-          _enrolled ? 'Continue Learning' : 'Start Learning',
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+    final provider = context.read<AppProvider>();
+    final course = _course!;
+    final completed = provider.isCourseCompleted(course.id);
+    final started = provider.completedLessonsFor(course.id) > 0;
+    final label = completed
+        ? 'Review Course'
+        : (started || provider.isEnrolled(course.id))
+        ? 'Continue Learning'
+        : 'Start Learning';
+    final showRemove = provider.isEnrolled(course.id) && !completed;
+
+    return Column(
+      children: [
+        SizedBox(
+          width: double.infinity,
+          child: FilledButton.icon(
+            onPressed: _startOrContinue,
+            icon: Icon(
+              completed ? Icons.replay_rounded : Icons.play_circle_rounded,
+            ),
+            label: Text(
+              label,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            ),
+            style: FilledButton.styleFrom(
+              backgroundColor: completed
+                  ? AppColors.accentSuccess
+                  : AppColors.accentPrimary,
+              foregroundColor: AppColors.textOnAccent,
+              padding: const EdgeInsets.symmetric(vertical: 18),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+            ),
+          ),
         ),
-        style: FilledButton.styleFrom(
-          backgroundColor: _enrolled ? AppColors.accentSuccess : AppColors.accentPrimary,
-          foregroundColor: AppColors.textOnAccent,
-          padding: const EdgeInsets.symmetric(vertical: 18),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        ),
-      ),
+        if (showRemove)
+          TextButton(
+            onPressed: _removeFromLearning,
+            child: const Text('Remove from My Learning'),
+          ),
+      ],
     ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.2, end: 0);
+  }
+
+  /// Compact progress summary matching the Figma course-detail treatment.
+  /// Values remain sourced from AppProvider rather than visual placeholders.
+  Widget _buildCourseProgressCard() {
+    final provider = context.read<AppProvider>();
+    final course = _course!;
+    final total = provider.totalLessonsFor(course.id);
+    final completed = provider.completedLessonsFor(course.id);
+    final progress = provider.courseProgress(course.id);
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.bgCard,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: _colors.first.withValues(alpha: 0.35)),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              _progressMetric(
+                'PROGRESS',
+                '${(progress * 100).round()}%',
+                _colors.first,
+              ),
+              Expanded(
+                child: _progressMetric(
+                  'LESSONS',
+                  '$completed/$total',
+                  AppColors.textPrimary,
+                  alignment: CrossAxisAlignment.center,
+                ),
+              ),
+              _progressMetric(
+                'XP EARNED',
+                '${completed * 25}',
+                AppColors.accentWarning,
+                alignment: CrossAxisAlignment.end,
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(99),
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: 7,
+              backgroundColor: AppColors.bgTertiary,
+              color: _colors.first,
+            ),
+          ),
+        ],
+      ),
+    ).animate().fadeIn(delay: 150.ms).slideY(begin: 0.1, end: 0);
+  }
+
+  Widget _progressMetric(
+    String label,
+    String value,
+    Color color, {
+    CrossAxisAlignment alignment = CrossAxisAlignment.start,
+  }) {
+    return Column(
+      crossAxisAlignment: alignment,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            color: AppColors.textMuted,
+            fontSize: 10,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.7,
+          ),
+        ),
+        const SizedBox(height: 3),
+        Text(
+          value,
+          style: TextStyle(
+            color: color,
+            fontSize: 20,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ],
+    );
   }
 
   Widget _buildLearningOutcomes() {
@@ -358,52 +530,57 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> with TickerProv
       children: [
         Text(
           'What you\'ll learn',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w700,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 16),
         ..._course!.learningOutcomes.asMap().entries.map((entry) {
           final index = entry.key;
           final outcome = entry.value;
           return Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  margin: const EdgeInsets.only(top: 4),
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: _colors[0].withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    Icons.check_rounded,
-                    color: _colors[0],
-                    size: 16,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    outcome,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppColors.textSecondary,
-                      height: 1.5,
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      margin: const EdgeInsets.only(top: 4),
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: _colors[0].withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        Icons.check_rounded,
+                        color: _colors[0],
+                        size: 16,
+                      ),
                     ),
-                  ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        outcome,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: AppColors.textSecondary,
+                          height: 1.5,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ).animate().fadeIn(delay: (300 + index * 50).ms).slideX(begin: 0.2, end: 0);
+              )
+              .animate()
+              .fadeIn(delay: (300 + index * 50).ms)
+              .slideX(begin: 0.2, end: 0);
         }),
       ],
     );
   }
 
   Widget _buildCurriculum() {
-    final lessonCount = _course!.lessonCount.clamp(8, 12);
+    final provider = context.read<AppProvider>();
+    final course = _course!;
+    final lessons = provider.lessonsFor(course.id);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -412,49 +589,43 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> with TickerProv
           children: [
             Text(
               'Course Curriculum',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
             ),
             const Spacer(),
             Text(
-              '$lessonCount lessons',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppColors.textMuted,
-              ),
+              '${lessons.length} lessons',
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: AppColors.textMuted),
             ),
           ],
         ),
         const SizedBox(height: 16),
-        ...List.generate(lessonCount, (index) {
-          final isLocked = index > 0 && !_enrolled;
+        if (lessons.isEmpty)
+          Text(
+            'Lessons for this course are coming soon.',
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
+          ),
+        ...List.generate(lessons.length, (index) {
+          final lesson = lessons[index];
           return _CurriculumItem(
-            number: index + 1,
-            title: _getLessonTitle(index),
-            duration: '8 min',
-            isLocked: isLocked,
-            isCompleted: index == 0 && _enrolled,
-            onTap: isLocked ? null : () => context.go('/lesson/${widget.courseId}?lesson=$index'),
-          ).animate().fadeIn(delay: (400 + index * 50).ms).slideY(begin: 0.1, end: 0);
+                number: index + 1,
+                title: lesson.title,
+                duration: '${lesson.estimatedMinutes} min',
+                isCompleted: provider.isLessonCompleted(course.id, lesson.id),
+                onTap: () =>
+                    context.push('/lesson/${course.id}?lesson=${lesson.id}'),
+              )
+              .animate()
+              .fadeIn(delay: (400 + index * 50).ms)
+              .slideY(begin: 0.1, end: 0);
         }),
       ],
     );
-  }
-
-  String _getLessonTitle(int index) {
-    const titles = [
-      'Introduction & Setup',
-      'Core Concepts',
-      'Hands-on Practice',
-      'Advanced Techniques',
-      'Real-world Project',
-      'Best Practices',
-      'Common Pitfalls',
-      'Final Project',
-      'Review & Next Steps',
-      'Bonus: Tips & Tricks',
-    ];
-    return index < titles.length ? titles[index] : 'Lesson ${index + 1}';
   }
 
   List<Color> _getCategoryColors(LearningCategory category) {
@@ -478,7 +649,6 @@ class _CurriculumItem extends StatelessWidget {
     required this.number,
     required this.title,
     required this.duration,
-    this.isLocked = false,
     this.isCompleted = false,
     this.onTap,
   });
@@ -486,7 +656,6 @@ class _CurriculumItem extends StatelessWidget {
   final int number;
   final String title;
   final String duration;
-  final bool isLocked;
   final bool isCompleted;
   final VoidCallback? onTap;
 
@@ -500,11 +669,9 @@ class _CurriculumItem extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: isLocked ? AppColors.bgTertiary : AppColors.bgCard,
+            color: AppColors.bgCard,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: isLocked ? AppColors.borderMuted : AppColors.borderDefault,
-            ),
+            border: Border.all(color: AppColors.borderDefault),
           ),
           child: Row(
             children: [
@@ -514,21 +681,23 @@ class _CurriculumItem extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: isCompleted
                       ? AppColors.accentSuccess
-                      : (isLocked ? AppColors.bgTertiary : AppColors.accentPrimarySoft),
+                      : AppColors.accentPrimarySoft,
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: isCompleted
-                    ? const Icon(Icons.check_rounded, color: Colors.white, size: 18)
-                    : isLocked
-                        ? Icon(Icons.lock_rounded, color: AppColors.textMuted, size: 18)
-                        : Text(
-                            number.toString(),
-                            style: TextStyle(
-                              color: isLocked ? AppColors.textMuted : AppColors.accentPrimary,
-                              fontWeight: FontWeight.w700,
-                              fontSize: 14,
-                            ),
-                          ),
+                    ? const Icon(
+                        Icons.check_rounded,
+                        color: Colors.white,
+                        size: 18,
+                      )
+                    : Text(
+                        number.toString(),
+                        style: TextStyle(
+                          color: AppColors.accentPrimary,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                        ),
+                      ),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -539,7 +708,7 @@ class _CurriculumItem extends StatelessWidget {
                       title,
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w600,
-                        color: isLocked ? AppColors.textMuted : AppColors.textPrimary,
+                        color: AppColors.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -552,12 +721,12 @@ class _CurriculumItem extends StatelessWidget {
                   ],
                 ),
               ),
-              if (!isLocked)
-                Icon(
-                  Icons.chevron_right_rounded,
-                  color: AppColors.textMuted,
-                  size: 20,
-                ),
+
+              Icon(
+                Icons.chevron_right_rounded,
+                color: AppColors.textMuted,
+                size: 20,
+              ),
             ],
           ),
         ),

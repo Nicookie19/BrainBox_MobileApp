@@ -82,6 +82,14 @@ class _LessonScreenState extends State<LessonScreen>
               (l) => l.id == widget.initialLessonId,
             );
             if (_currentLessonIndex == -1) _currentLessonIndex = 0;
+          } else {
+            final next = context.read<AppProvider>().nextLessonIdFor(
+              widget.courseId,
+            );
+            if (next != null) {
+              final i = _allLessons.indexWhere((l) => l.id == next);
+              if (i >= 0) _currentLessonIndex = i;
+            }
           }
 
           // Load progress
@@ -141,6 +149,8 @@ class _LessonScreenState extends State<LessonScreen>
 
   @override
   Widget build(BuildContext context) {
+    // Listen so the bookmark/progress state in the app bar stays current.
+    context.watch<AppProvider>();
     if (_courseNotFound) {
       return _buildErrorScreen(
         'Course Not Found',
@@ -274,6 +284,11 @@ class _LessonScreenState extends State<LessonScreen>
       ],
     );
 
+    final isDownloaded =
+        lesson != null &&
+        StorageService.getDownloadedContent().containsKey(
+          '${widget.courseId}:${lesson.id}',
+        );
     final isBookmarked =
         lesson != null &&
         context.read<AppProvider>().isBookmarked(
@@ -308,10 +323,16 @@ class _LessonScreenState extends State<LessonScreen>
           const SizedBox(width: 8),
           IconButton(
             onPressed: lesson == null ? null : _downloadCurrentLesson,
-            icon: const Icon(Icons.download_outlined),
+            icon: Icon(
+              isDownloaded
+                  ? Icons.download_done_rounded
+                  : Icons.download_outlined,
+            ),
             style: IconButton.styleFrom(
               backgroundColor: AppColors.bgCard,
-              foregroundColor: AppColors.textSecondary,
+              foregroundColor: isDownloaded
+                  ? AppColors.accentPrimary
+                  : AppColors.textSecondary,
             ),
           ),
         ],
@@ -865,9 +886,12 @@ class _LessonScreenState extends State<LessonScreen>
     final lesson = _getCurrentLesson();
     if (lesson == null) return;
 
-    // Mark lesson as completed
+    // Mark lesson as completed and drop its saved step progress so a replay
+    // starts clean.
+    LessonProgressRepository.clearProgress(widget.courseId, lesson.id);
     if (_currentLessonIndex < _allLessons.length - 1) {
       setState(() {
+        _answeredSteps = {};
         _currentLessonIndex++;
         _currentStepIndex = 0;
         _selectedAnswer = null;
@@ -894,18 +918,31 @@ class _LessonScreenState extends State<LessonScreen>
   Future<void> _downloadCurrentLesson() async {
     final lesson = _getCurrentLesson();
     if (lesson == null) return;
-    await StorageService.saveDownloadedContent(
-      '${widget.courseId}:${lesson.id}',
-      {
+    final key = '${widget.courseId}:${lesson.id}';
+    final alreadyDownloaded = StorageService.getDownloadedContent().containsKey(
+      key,
+    );
+    if (alreadyDownloaded) {
+      await StorageService.removeDownload(key);
+    } else {
+      await StorageService.saveDownloadedContent(key, {
         'courseId': widget.courseId,
         'lessonId': lesson.id,
         'title': lesson.title,
+        'courseTitle': _course?.title ?? '',
         'downloadedAt': DateTime.now().toIso8601String(),
-      },
-    );
+      });
+    }
     if (!mounted) return;
+    setState(() {});
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Lesson saved for offline access.')),
+      SnackBar(
+        content: Text(
+          alreadyDownloaded
+              ? 'Removed from downloads.'
+              : 'Lesson saved for offline access.',
+        ),
+      ),
     );
   }
 

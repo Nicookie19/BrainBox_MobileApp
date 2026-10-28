@@ -3,16 +3,25 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:brainbox/data/models/course_models.dart';
 import 'package:brainbox/data/models/learning_models.dart';
 import 'package:brainbox/core/constants/app_colors.dart';
+import 'package:brainbox/presentation/widgets/course_artwork.dart';
 
 class ContinueCard extends StatelessWidget {
   const ContinueCard({
     required this.course,
     required this.onTap,
+    this.progress = 0.0,
+    this.subtitle = '',
     super.key,
   });
 
   final Course? course;
   final VoidCallback onTap;
+
+  /// Fraction (0..1) of the course completed.
+  final double progress;
+
+  /// Line shown under the title, e.g. the next lesson.
+  final String subtitle;
 
   @override
   Widget build(BuildContext context) {
@@ -21,8 +30,6 @@ class ContinueCard extends StatelessWidget {
     }
 
     final c = course!;
-    // Calculate progress from storage or default
-    final progress = 0.42; // This would come from actual progress tracking
 
     return Material(
       color: Colors.transparent,
@@ -32,9 +39,18 @@ class ContinueCard extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: AppColors.bgCard,
+            gradient: LinearGradient(
+              colors: [
+                AppColors.bgCard,
+                AppColors.accentPrimarySoft.withValues(alpha: 0.82),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: AppColors.borderDefault),
+            border: Border.all(
+              color: AppColors.accentPrimary.withValues(alpha: 0.38),
+            ),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.2),
@@ -49,12 +65,14 @@ class ContinueCard extends StatelessWidget {
               Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(12),
+                    width: 54,
+                    height: 54,
+                    padding: const EdgeInsets.all(9),
                     decoration: BoxDecoration(
                       gradient: _getCategoryGradient(c.category),
                       borderRadius: BorderRadius.circular(14),
                     ),
-                    child: Icon(c.category.icon, color: Colors.white, size: 26),
+                    child: CourseArtwork(category: c.category, size: 34),
                   ),
                   const SizedBox(width: 14),
                   Expanded(
@@ -63,24 +81,29 @@ class ContinueCard extends StatelessWidget {
                       children: [
                         Text(
                           c.title,
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(fontWeight: FontWeight.w700),
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Lesson 7 · CSS Flexbox',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
+                          subtitle,
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(color: AppColors.textSecondary),
                         ),
                       ],
                     ),
                   ),
-                  Icon(
-                    Icons.arrow_forward_rounded,
-                    color: AppColors.textMuted,
-                    size: 24,
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.accentPrimary,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.arrow_forward_rounded,
+                      color: Colors.white,
+                      size: 18,
+                    ),
                   ),
                 ],
               ),
@@ -93,8 +116,8 @@ class ContinueCard extends StatelessWidget {
                       child: LinearProgressIndicator(
                         value: progress,
                         minHeight: 8,
-                        backgroundColor: AppColors.bgTertiary,
-                        color: AppColors.accentPrimary,
+                        backgroundColor: Colors.white.withValues(alpha: 0.1),
+                        color: AppColors.accentSecondary,
                       ),
                     ),
                   ),
@@ -118,7 +141,7 @@ class ContinueCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    '+25 XP on completion',
+                    '+25 XP per lesson',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: AppColors.textSecondary,
                       fontWeight: FontWeight.w500,
@@ -127,9 +150,9 @@ class ContinueCard extends StatelessWidget {
                   const Spacer(),
                   Text(
                     '${c.estimatedHours}h total',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppColors.textMuted,
-                    ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodySmall?.copyWith(color: AppColors.textMuted),
                   ),
                 ],
               ),
@@ -149,9 +172,16 @@ class ContinueCard extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: AppColors.bgCard,
+            gradient: LinearGradient(
+              colors: [
+                AppColors.accentPrimarySoft.withValues(alpha: 0.92),
+                AppColors.accentSecondarySoft.withValues(alpha: 0.75),
+              ],
+            ),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: AppColors.borderDefault),
+            border: Border.all(
+              color: AppColors.accentPrimary.withValues(alpha: 0.42),
+            ),
           ),
           child: Row(
             children: [
@@ -161,7 +191,11 @@ class ContinueCard extends StatelessWidget {
                   color: AppColors.accentPrimarySoft,
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: Icon(Icons.school_outlined, color: AppColors.accentPrimary, size: 26),
+                child: Icon(
+                  Icons.school_outlined,
+                  color: AppColors.accentPrimary,
+                  size: 26,
+                ),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -199,13 +233,21 @@ class ContinueCard extends StatelessWidget {
   LinearGradient _getCategoryGradient(LearningCategory category) {
     switch (category) {
       case LearningCategory.webDevelopment:
-        return const LinearGradient(colors: [Color(0xFF06B6D4), Color(0xFF0891B2)]);
+        return const LinearGradient(
+          colors: [Color(0xFF06B6D4), Color(0xFF0891B2)],
+        );
       case LearningCategory.mobileDevelopment:
-        return const LinearGradient(colors: [Color(0xFF8B5CF6), Color(0xFF7C3AED)]);
+        return const LinearGradient(
+          colors: [Color(0xFF8B5CF6), Color(0xFF7C3AED)],
+        );
       case LearningCategory.programmingLanguages:
-        return const LinearGradient(colors: [Color(0xFF10B981), Color(0xFF059669)]);
+        return const LinearGradient(
+          colors: [Color(0xFF10B981), Color(0xFF059669)],
+        );
       case LearningCategory.machineLearning:
-        return const LinearGradient(colors: [Color(0xFFF59E0B), Color(0xFFD97706)]);
+        return const LinearGradient(
+          colors: [Color(0xFFF59E0B), Color(0xFFD97706)],
+        );
       default:
         return AppColors.primaryGradient;
     }

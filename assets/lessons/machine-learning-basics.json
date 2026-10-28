@@ -1,0 +1,269 @@
+{
+  "courseId": "machine-learning-basics",
+  "modules": [
+    {
+      "id": "module_1",
+      "title": "Machine Learning Fundamentals",
+      "description": "Core ideas behind learning from data",
+      "order": 1,
+      "lessons": [
+        {
+          "id": "lesson_1",
+          "title": "What is Machine Learning?",
+          "steps": [
+            {
+              "type": "explanation",
+              "content": "Machine learning lets computers learn patterns from data instead of following hand-written rules. The three main families are supervised learning (labeled examples), unsupervised learning (finding structure in unlabeled data), and reinforcement learning (learning from rewards)."
+            },
+            {
+              "type": "explanation",
+              "content": "Inputs to a model are called features and the thing we want to predict is the label. We train on one portion of the data and keep a separate test set to check how the model performs on examples it has never seen."
+            },
+            {
+              "type": "multiple_choice",
+              "question": "Predicting the price of a house from its size and location is an example of:",
+              "options": [
+                "Regression",
+                "Clustering",
+                "Reinforcement learning",
+                "Compression"
+              ],
+              "correctAnswer": 0,
+              "explanation": "Predicting a continuous number is regression."
+            },
+            {
+              "type": "fill_in_blank",
+              "question": "The input variables fed to a model are called ______.",
+              "answer": "features",
+              "explanation": "Features are the measurable inputs; the label is the target."
+            },
+            {
+              "type": "code_ordering",
+              "question": "Order the typical machine learning workflow",
+              "snippets": [
+                "Collect data",
+                "Deploy the model",
+                "Train the model",
+                "Evaluate on test data",
+                "Clean and split the data"
+              ],
+              "correctOrder": [
+                0,
+                4,
+                2,
+                3,
+                1
+              ],
+              "explanation": "Data comes first, then training, then evaluation, then deployment."
+            },
+            {
+              "type": "multiple_choice",
+              "question": "Why do we keep a separate test set?",
+              "options": [
+                "To measure performance on unseen data",
+                "To make training faster",
+                "To increase the amount of training data",
+                "To remove outliers"
+              ],
+              "correctAnswer": 0,
+              "explanation": "A test set estimates how the model generalizes."
+            }
+          ],
+          "estimatedMinutes": 10,
+          "xpReward": 25
+        },
+        {
+          "id": "lesson_2",
+          "title": "Supervised Learning",
+          "steps": [
+            {
+              "type": "explanation",
+              "content": "Supervised learning learns from labeled examples. Classification predicts a category, such as spam or not spam. Regression predicts a number, such as a temperature."
+            },
+            {
+              "type": "explanation",
+              "content": "Linear regression fits a straight line by minimizing the squared difference between predictions and true values. k-nearest neighbors classifies a point by looking at the labels of its closest training examples, and decision trees split the data using a series of questions."
+            },
+            {
+              "type": "multiple_choice",
+              "question": "Which of these is a classification task?",
+              "options": [
+                "Deciding whether an email is spam",
+                "Predicting tomorrow's temperature",
+                "Estimating a car's resale price",
+                "Forecasting monthly sales"
+              ],
+              "correctAnswer": 0,
+              "explanation": "Spam detection outputs a category, so it is classification."
+            },
+            {
+              "type": "fill_in_blank",
+              "question": "Linear regression minimizes the squared ______ between predictions and true values.",
+              "answer": "error",
+              "explanation": "The fit that minimizes squared error is the least-squares line."
+            },
+            {
+              "type": "code_ordering",
+              "question": "Order these scikit-learn lines to train and use a model",
+              "snippets": [
+                "predictions = model.predict(X_test)",
+                "model.fit(X_train, y_train)",
+                "from sklearn.linear_model import LinearRegression",
+                "model = LinearRegression()"
+              ],
+              "correctOrder": [
+                2,
+                3,
+                1,
+                0
+              ],
+              "explanation": "Import, create, fit on training data, then predict."
+            },
+            {
+              "type": "multiple_choice",
+              "question": "With k = 3 in k-nearest neighbors, a new point is classified by:",
+              "options": [
+                "The majority label among its 3 nearest neighbors",
+                "The average of all labels",
+                "The label of the farthest neighbor",
+                "A random label"
+              ],
+              "correctAnswer": 0,
+              "explanation": "k-NN votes among the k closest examples."
+            }
+          ],
+          "estimatedMinutes": 12,
+          "xpReward": 25
+        },
+        {
+          "id": "lesson_3",
+          "title": "Overfitting & Evaluation",
+          "steps": [
+            {
+              "type": "explanation",
+              "content": "Overfitting happens when a model memorizes the training data, noise included, and performs poorly on new data. Underfitting is the opposite: the model is too simple to capture the pattern."
+            },
+            {
+              "type": "explanation",
+              "content": "Accuracy is the share of correct predictions. Precision asks how many predicted positives were truly positive, and recall asks how many true positives were found. Cross-validation repeats training and testing on different splits to get a more reliable estimate."
+            },
+            {
+              "type": "multiple_choice",
+              "question": "A model scores 99% on training data but 60% on test data. What is the most likely problem?",
+              "options": [
+                "Overfitting",
+                "Underfitting",
+                "Too much test data",
+                "A perfect model"
+              ],
+              "correctAnswer": 0,
+              "explanation": "A large gap between training and test performance signals overfitting."
+            },
+            {
+              "type": "fill_in_blank",
+              "question": "Evaluating a model by rotating through several data splits is called cross-______.",
+              "answer": "validation",
+              "explanation": "k-fold cross-validation averages results over k different splits."
+            },
+            {
+              "type": "code_ordering",
+              "question": "Order the steps of k-fold cross-validation",
+              "snippets": [
+                "Average the scores",
+                "Train on k-1 folds",
+                "Repeat so every fold is used once",
+                "Split the data into k folds",
+                "Validate on the remaining fold"
+              ],
+              "correctOrder": [
+                3,
+                1,
+                4,
+                2,
+                0
+              ],
+              "explanation": "Each fold takes a turn as the validation set."
+            },
+            {
+              "type": "multiple_choice",
+              "question": "Precision measures:",
+              "options": [
+                "Of the predicted positives, how many are truly positive",
+                "Of the true positives, how many were found",
+                "The share of all correct predictions",
+                "The size of the training set"
+              ],
+              "correctAnswer": 0,
+              "explanation": "Precision = true positives / predicted positives."
+            }
+          ],
+          "estimatedMinutes": 12,
+          "xpReward": 25
+        },
+        {
+          "id": "lesson_4",
+          "title": "Unsupervised Learning",
+          "steps": [
+            {
+              "type": "explanation",
+              "content": "Unsupervised learning finds structure in data that has no labels. Clustering groups similar items together, for example segmenting customers by their behavior."
+            },
+            {
+              "type": "explanation",
+              "content": "k-means is a popular clustering method. You choose K, the number of clusters, and the algorithm repeatedly assigns points to the nearest centroid and recomputes the centroids. Dimensionality reduction methods such as PCA compress many features into a few while keeping most of the variation."
+            },
+            {
+              "type": "multiple_choice",
+              "question": "Which task uses unlabeled data?",
+              "options": [
+                "Grouping customers by purchase behavior",
+                "Predicting house prices",
+                "Detecting spam with labeled emails",
+                "Classifying handwritten digits with labels"
+              ],
+              "correctAnswer": 0,
+              "explanation": "Clustering works without labels."
+            },
+            {
+              "type": "fill_in_blank",
+              "question": "In k-means, K is the number of ______ the algorithm looks for.",
+              "answer": "clusters",
+              "explanation": "You choose K, the number of clusters, before running the algorithm."
+            },
+            {
+              "type": "code_ordering",
+              "question": "Order the steps of the k-means algorithm",
+              "snippets": [
+                "Assign each point to the nearest centroid",
+                "Choose K and initial centroids",
+                "Recompute each centroid as its cluster mean",
+                "Repeat until assignments stop changing"
+              ],
+              "correctOrder": [
+                1,
+                0,
+                2,
+                3
+              ],
+              "explanation": "Assign, update, and repeat until it converges."
+            },
+            {
+              "type": "multiple_choice",
+              "question": "PCA is mainly used to:",
+              "options": [
+                "Reduce the number of features while keeping most of the variance",
+                "Increase the number of labels",
+                "Remove all noise from labels",
+                "Speed up the internet connection"
+              ],
+              "correctAnswer": 0,
+              "explanation": "PCA projects data onto fewer dimensions that capture the most variance."
+            }
+          ],
+          "estimatedMinutes": 15,
+          "xpReward": 25
+        }
+      ]
+    }
+  ]
+}

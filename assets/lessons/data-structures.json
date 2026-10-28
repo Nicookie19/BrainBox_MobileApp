@@ -22,7 +22,12 @@
             {
               "type": "multiple_choice",
               "question": "What is the time complexity to access an element by index in an array?",
-              "options": ["O(1)", "O(log n)", "O(n)", "O(n log n)"],
+              "options": [
+                "O(1)",
+                "O(log n)",
+                "O(n)",
+                "O(n log n)"
+              ],
               "correctAnswer": 0,
               "explanation": "Arrays provide constant-time O(1) random access because elements are stored contiguously - the memory address is base_address + index * element_size."
             },
@@ -37,17 +42,27 @@
               "question": "Order to create an array/list of first 5 squares in Python",
               "snippets": [
                 "squares = []",
-                "for i in range(1, 6):",
+                "print(squares)",
                 "    squares.append(i * i)",
-                "print(squares)"
+                "for i in range(1, 6):"
               ],
-              "correctOrder": [0, 1, 2, 3],
+              "correctOrder": [
+                0,
+                3,
+                2,
+                1
+              ],
               "explanation": "Initialize empty list, loop 1-5, append square, print result: [1, 4, 9, 16, 25]."
             },
             {
               "type": "multiple_choice",
               "question": "What is the cost of inserting at the beginning of a dynamic array of size n?",
-              "options": ["O(1)", "O(log n)", "O(n)", "O(n²)"],
+              "options": [
+                "O(1)",
+                "O(log n)",
+                "O(n)",
+                "O(n²)"
+              ],
               "correctAnswer": 2,
               "explanation": "Inserting at index 0 requires shifting all n existing elements right by one position, taking O(n) time."
             }
@@ -70,7 +85,12 @@
             {
               "type": "multiple_choice",
               "question": "What is the time complexity to access the k-th element in a singly linked list?",
-              "options": ["O(1)", "O(log n)", "O(k)", "O(n)"],
+              "options": [
+                "O(1)",
+                "O(log n)",
+                "O(k)",
+                "O(n)"
+              ],
               "correctAnswer": 2,
               "explanation": "Must traverse from head through k nodes. No random access - must follow next pointers sequentially."
             },
@@ -85,11 +105,16 @@
               "question": "Order to define a simple Node class for a singly linked list in Python",
               "snippets": [
                 "class Node:",
-                "    def __init__(self, data):",
+                "        self.next = None",
                 "        self.data = data",
-                "        self.next = None"
+                "    def __init__(self, data):"
               ],
-              "correctOrder": [0, 1, 2, 3],
+              "correctOrder": [
+                0,
+                3,
+                2,
+                1
+              ],
               "explanation": "Node stores data and a reference to the next node (initially None)."
             },
             {
@@ -123,7 +148,12 @@
             {
               "type": "multiple_choice",
               "question": "What order are elements removed from a stack?",
-              "options": ["FIFO", "LIFO", "Random", "Sorted"],
+              "options": [
+                "FIFO",
+                "LIFO",
+                "Random",
+                "Sorted"
+              ],
               "correctAnswer": 1,
               "explanation": "LIFO - Last In, First Out. The most recently added element is removed first."
             },
@@ -137,19 +167,30 @@
               "type": "code_ordering",
               "question": "Order to implement a stack using Python list",
               "snippets": [
+                "print(top)",
                 "stack = []",
-                "stack.append(1)  # push",
                 "stack.append(2)",
-                "top = stack.pop()  # pop returns 2",
-                "print(top)"
+                "stack.append(1)  # push",
+                "top = stack.pop()  # pop returns 2"
               ],
-              "correctOrder": [0, 1, 2, 3, 4],
+              "correctOrder": [
+                1,
+                3,
+                2,
+                4,
+                0
+              ],
               "explanation": "Python list append/pop at end = O(1) stack operations."
             },
             {
               "type": "multiple_choice",
               "question": "Which data structure is best for implementing BFS (Breadth-First Search)?",
-              "options": ["Stack", "Queue", "Array", "Linked List"],
+              "options": [
+                "Stack",
+                "Queue",
+                "Array",
+                "Linked List"
+              ],
               "correctAnswer": 1,
               "explanation": "BFS explores level by level - queue's FIFO order processes nodes in the order they're discovered."
             }
@@ -172,7 +213,12 @@
             {
               "type": "multiple_choice",
               "question": "What is the average time complexity for dictionary lookup in Python?",
-              "options": ["O(1)", "O(log n)", "O(n)", "O(n log n)"],
+              "options": [
+                "O(1)",
+                "O(log n)",
+                "O(n)",
+                "O(n log n)"
+              ],
               "correctAnswer": 0,
               "explanation": "Hash tables provide average O(1) lookup by computing hash(key) to find the bucket directly."
             },
@@ -186,18 +232,28 @@
               "type": "code_ordering",
               "question": "Order to count word frequencies in a list",
               "snippets": [
-                "counts = {}",
                 "for word in words:",
                 "    counts[word] = counts.get(word, 0) + 1",
-                "print(counts)"
+                "print(counts)",
+                "counts = {}"
               ],
-              "correctOrder": [0, 1, 2, 3],
+              "correctOrder": [
+                3,
+                0,
+                1,
+                2
+              ],
               "explanation": "get(key, default) returns 0 if key missing, enabling clean increment."
             },
             {
               "type": "multiple_choice",
               "question": "What happens when you access a missing key with dict[key]?",
-              "options": ["Returns None", "Returns empty string", "Raises KeyError", "Creates key with None"],
+              "options": [
+                "Returns None",
+                "Returns empty string",
+                "Raises KeyError",
+                "Creates key with None"
+              ],
               "correctAnswer": 2,
               "explanation": "dict[key] raises KeyError for missing keys. Use dict.get(key) or dict.get(key, default) for safe access."
             }

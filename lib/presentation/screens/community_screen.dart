@@ -66,14 +66,20 @@ class _CommunityScreenState extends State<CommunityScreen> {
                       ? SliverToBoxAdapter(child: _buildEmptyState(context))
                       : SliverList.separated(
                           itemCount: provider.posts.length,
-                          separatorBuilder: (_, _) => const SizedBox(height: 12),
+                          separatorBuilder: (_, _) =>
+                              const SizedBox(height: 12),
                           itemBuilder: (context, index) {
                             final post = provider.posts[index];
                             return CommunityPostWidget(
-                              post: post,
-                              onVote: (vote) => provider.toggleVote(post.id, vote),
-                              onReply: () => _showReplyDialog(context, post),
-                            ).animate().fadeIn(delay: (200 + index * 50).ms).slideY(begin: 0.2, end: 0);
+                                  post: post,
+                                  onVote: (vote) =>
+                                      provider.toggleVote(post.id, vote),
+                                  onReply: () =>
+                                      _showReplyDialog(context, post),
+                                )
+                                .animate()
+                                .fadeIn(delay: (200 + index * 50).ms)
+                                .slideY(begin: 0.2, end: 0);
                           },
                         ),
                 ),
@@ -99,9 +105,9 @@ class _CommunityScreenState extends State<CommunityScreen> {
         const SizedBox(height: 4),
         Text(
           'Learn better, together',
-          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-            color: AppColors.textSecondary,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyLarge?.copyWith(color: AppColors.textSecondary),
         ),
       ],
     ).animate().fadeIn().slideY(begin: 0.2, end: 0);
@@ -120,7 +126,9 @@ class _CommunityScreenState extends State<CommunityScreen> {
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.accentPrimary.withValues(alpha: 0.3)),
+        border: Border.all(
+          color: AppColors.accentPrimary.withValues(alpha: 0.3),
+        ),
       ),
       child: Row(
         children: [
@@ -130,7 +138,11 @@ class _CommunityScreenState extends State<CommunityScreen> {
               color: AppColors.accentPrimary,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(Icons.groups_rounded, color: Colors.white, size: 22),
+            child: const Icon(
+              Icons.groups_rounded,
+              color: Colors.white,
+              size: 22,
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -168,24 +180,20 @@ class _CommunityScreenState extends State<CommunityScreen> {
       ),
       child: Column(
         children: [
-          Icon(
-            Icons.forum_outlined,
-            size: 64,
-            color: AppColors.textMuted,
-          ),
+          Icon(Icons.forum_outlined, size: 64, color: AppColors.textMuted),
           const SizedBox(height: 16),
           Text(
             'No posts yet',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 8),
           Text(
             'Be the first to start a discussion!',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: AppColors.textSecondary,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
             textAlign: TextAlign.center,
           ),
         ],
@@ -193,21 +201,28 @@ class _CommunityScreenState extends State<CommunityScreen> {
     );
   }
 
-  Future<void> _showCreatePostDialog(BuildContext context, AppProvider provider) {
+  Future<void> _showCreatePostDialog(
+    BuildContext context,
+    AppProvider provider,
+  ) {
     return showDialog(
       context: context,
       builder: (context) => CreatePostDialog(
-        onSubmit: (title, content, type) => provider.createPost(title, content, type),
+        onSubmit: (title, content, type) =>
+            provider.createPost(title, content, type),
       ),
     );
   }
 
-  Future<void> _showReplyDialog(BuildContext context, CommunityPost post) async {
+  Future<void> _showReplyDialog(
+    BuildContext context,
+    CommunityPost post,
+  ) async {
     final provider = context.read<AppProvider>();
     final replies = await provider.getReplies(post.id);
-    
+
     if (!context.mounted) return;
-    
+
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -216,7 +231,11 @@ class _CommunityScreenState extends State<CommunityScreen> {
         post: post,
         replies: replies,
         onReply: (content) => provider.createReply(post.id, content),
-        onReplyToReply: (parentReplyId, content) => provider.createReply(post.id, content, parentReplyId: parentReplyId),
+        onReplyToReply: (parentReplyId, content) => provider.createReply(
+          post.id,
+          content,
+          parentReplyId: parentReplyId,
+        ),
       ),
     );
   }
@@ -226,7 +245,8 @@ class _ReplyBottomSheet extends StatefulWidget {
   final CommunityPost post;
   final List<PostReply> replies;
   final Future<void> Function(String content) onReply;
-  final Future<void> Function(String parentReplyId, String content) onReplyToReply;
+  final Future<void> Function(String parentReplyId, String content)
+  onReplyToReply;
 
   const _ReplyBottomSheet({
     required this.post,
@@ -320,7 +340,8 @@ class _ReplyBottomSheetState extends State<_ReplyBottomSheet> {
                     padding: const EdgeInsets.fromLTRB(20, 16, 20, 100),
                     itemCount: _replies.length,
                     separatorBuilder: (_, _) => const SizedBox(height: 16),
-                    itemBuilder: (context, index) => _buildReplyTile(_replies[index], 0),
+                    itemBuilder: (context, index) =>
+                        _buildReplyTile(_replies[index], 0),
                   ),
           ),
           _buildReplyInput(),
@@ -352,9 +373,9 @@ class _ReplyBottomSheetState extends State<_ReplyBottomSheet> {
               children: [
                 Text(
                   'Replies',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
                 ),
                 Text(
                   '${_replies.length} reply${_replies.length == 1 ? '' : 's'}',
@@ -368,9 +389,7 @@ class _ReplyBottomSheetState extends State<_ReplyBottomSheet> {
           IconButton(
             onPressed: () => Navigator.pop(context),
             icon: const Icon(Icons.close_rounded),
-            style: IconButton.styleFrom(
-              backgroundColor: AppColors.bgTertiary,
-            ),
+            style: IconButton.styleFrom(backgroundColor: AppColors.bgTertiary),
           ),
         ],
       ),
@@ -392,16 +411,16 @@ class _ReplyBottomSheetState extends State<_ReplyBottomSheet> {
             const SizedBox(height: 16),
             Text(
               'No replies yet',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 8),
             Text(
               'Be the first to respond!',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppColors.textSecondary,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
             ),
           ],
         ),
@@ -411,7 +430,7 @@ class _ReplyBottomSheetState extends State<_ReplyBottomSheet> {
 
   Widget _buildReplyTile(PostReply reply, int depth) {
     final isNested = depth > 0;
-    
+
     return Padding(
       padding: EdgeInsets.only(left: isNested ? 48.0 : 0),
       child: Column(
@@ -424,7 +443,8 @@ class _ReplyBottomSheetState extends State<_ReplyBottomSheet> {
                 radius: 16,
                 backgroundColor: AppColors.accentPrimarySoft,
                 child: Text(
-                  reply.authorName[0].toUpperCase(),
+                  (reply.authorName.isEmpty ? '?' : reply.authorName[0])
+                      .toUpperCase(),
                   style: TextStyle(
                     color: AppColors.accentPrimary,
                     fontWeight: FontWeight.w700,
@@ -441,14 +461,16 @@ class _ReplyBottomSheetState extends State<_ReplyBottomSheet> {
                       children: [
                         Text(
                           reply.authorName,
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(fontWeight: FontWeight.w600),
                         ),
                         if (reply.isAcceptedAnswer) ...[
                           const SizedBox(width: 8),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
                             decoration: BoxDecoration(
                               color: AppColors.accentSuccessSoft,
                               borderRadius: BorderRadius.circular(4),
@@ -478,15 +500,15 @@ class _ReplyBottomSheetState extends State<_ReplyBottomSheet> {
                       children: [
                         Text(
                           _formatTime(reply.createdAt),
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.textMuted,
-                          ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: AppColors.textMuted),
                         ),
                         const SizedBox(width: 16),
                         _buildVoteButton(reply),
                         const SizedBox(width: 8),
                         TextButton(
-                          onPressed: () => _startReply(reply.id, reply.authorName),
+                          onPressed: () =>
+                              _startReply(reply.id, reply.authorName),
                           style: TextButton.styleFrom(
                             padding: EdgeInsets.zero,
                             minimumSize: Size.zero,
@@ -510,7 +532,9 @@ class _ReplyBottomSheetState extends State<_ReplyBottomSheet> {
           ),
           if (reply.replies.isNotEmpty) ...[
             const SizedBox(height: 12),
-            ...reply.replies.map((nested) => _buildReplyTile(nested, depth + 1)),
+            ...reply.replies.map(
+              (nested) => _buildReplyTile(nested, depth + 1),
+            ),
           ],
         ],
       ),
@@ -520,13 +544,15 @@ class _ReplyBottomSheetState extends State<_ReplyBottomSheet> {
   Widget _buildVoteButton(PostReply reply) {
     final hasUpvoted = reply.hasUserUpvoted;
     final hasDownvoted = reply.hasUserDownvoted;
-    
+
     return Row(
       children: [
         IconButton(
           onPressed: () => _vote(reply.id, UserVote.upvote),
           icon: Icon(
-            hasUpvoted ? Icons.arrow_upward_rounded : Icons.arrow_upward_outlined,
+            hasUpvoted
+                ? Icons.arrow_upward_rounded
+                : Icons.arrow_upward_outlined,
             size: 18,
             color: hasUpvoted ? AppColors.accentSuccess : AppColors.textMuted,
           ),
@@ -540,13 +566,19 @@ class _ReplyBottomSheetState extends State<_ReplyBottomSheet> {
           '${reply.score}',
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
             fontWeight: FontWeight.w600,
-            color: hasUpvoted ? AppColors.accentSuccess : hasDownvoted ? AppColors.accentError : AppColors.textSecondary,
+            color: hasUpvoted
+                ? AppColors.accentSuccess
+                : hasDownvoted
+                ? AppColors.accentError
+                : AppColors.textSecondary,
           ),
         ),
         IconButton(
           onPressed: () => _vote(reply.id, UserVote.downvote),
           icon: Icon(
-            hasDownvoted ? Icons.arrow_downward_rounded : Icons.arrow_downward_outlined,
+            hasDownvoted
+                ? Icons.arrow_downward_rounded
+                : Icons.arrow_downward_outlined,
             size: 18,
             color: hasDownvoted ? AppColors.accentError : AppColors.textMuted,
           ),
@@ -592,14 +624,21 @@ class _ReplyBottomSheetState extends State<_ReplyBottomSheet> {
           children: [
             if (_replyingToId != null)
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.accentPrimarySoft,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.reply_rounded, size: 16, color: AppColors.accentPrimary),
+                    Icon(
+                      Icons.reply_rounded,
+                      size: 16,
+                      color: AppColors.accentPrimary,
+                    ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -613,7 +652,11 @@ class _ReplyBottomSheetState extends State<_ReplyBottomSheet> {
                     ),
                     GestureDetector(
                       onTap: _cancelReply,
-                      child: Icon(Icons.close_rounded, size: 18, color: AppColors.accentPrimary),
+                      child: Icon(
+                        Icons.close_rounded,
+                        size: 18,
+                        color: AppColors.accentPrimary,
+                      ),
                     ),
                   ],
                 ),
@@ -638,7 +681,9 @@ class _ReplyBottomSheetState extends State<_ReplyBottomSheet> {
                   child: TextField(
                     controller: _controller,
                     decoration: InputDecoration(
-                      hintText: _replyingToId != null ? 'Write your reply...' : 'Write a reply...',
+                      hintText: _replyingToId != null
+                          ? 'Write your reply...'
+                          : 'Write a reply...',
                       hintStyle: TextStyle(color: AppColors.textMuted),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(24),
@@ -646,7 +691,10 @@ class _ReplyBottomSheetState extends State<_ReplyBottomSheet> {
                       ),
                       filled: true,
                       fillColor: AppColors.bgTertiary,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
                     ),
                     style: Theme.of(context).textTheme.bodyMedium,
                     maxLines: null,
@@ -655,7 +703,9 @@ class _ReplyBottomSheetState extends State<_ReplyBottomSheet> {
                 ),
                 const SizedBox(width: 8),
                 IconButton(
-                  onPressed: _controller.text.trim().isNotEmpty ? _submitReply : null,
+                  onPressed: _controller.text.trim().isNotEmpty
+                      ? _submitReply
+                      : null,
                   icon: const Icon(Icons.send_rounded),
                   style: IconButton.styleFrom(
                     backgroundColor: AppColors.accentPrimary,
@@ -700,7 +750,8 @@ class _LoadingSkeleton extends StatelessWidget {
           sliver: SliverList.separated(
             itemCount: 5,
             separatorBuilder: (_, _) => const SizedBox(height: 12),
-            itemBuilder: (_, _) => _skeletonBox(width: double.infinity, height: 180),
+            itemBuilder: (_, _) =>
+                _skeletonBox(width: double.infinity, height: 180),
           ),
         ),
       ],

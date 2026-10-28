@@ -3,13 +3,15 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:brainbox/core/constants/app_colors.dart';
 
 class WeekActivity extends StatelessWidget {
-  const WeekActivity({super.key});
+  const WeekActivity({required this.activity, super.key});
+
+  /// Monday..Sunday flags; true when the learner was active that day.
+  final List<bool> activity;
 
   @override
   Widget build(BuildContext context) {
     const days = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-    // This would come from actual data
-    const activity = [true, true, true, true, true, false, false];
+    final activeDays = activity.where((a) => a).length;
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -31,7 +33,7 @@ class WeekActivity extends StatelessWidget {
               ),
               const Spacer(),
               Text(
-                '5/7 days',
+                '$activeDays/7 days',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: AppColors.accentPrimary,
                   fontWeight: FontWeight.w600,
@@ -43,7 +45,7 @@ class WeekActivity extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: List.generate(days.length, (index) {
-              final isActive = activity[index];
+              final isActive = index < activity.length && activity[index];
               return Column(
                 children: [
                   AnimatedContainer(

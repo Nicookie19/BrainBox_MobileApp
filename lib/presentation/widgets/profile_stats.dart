@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:brainbox/data/models/user_models.dart';
+import 'package:brainbox/presentation/providers/app_provider.dart';
 import 'package:brainbox/core/constants/app_colors.dart';
 
 class ProfileStats extends StatelessWidget {
@@ -20,7 +21,7 @@ class ProfileStats extends StatelessWidget {
         children: [
           Expanded(
             child: _StatItem(
-              value: '${profile.stats.currentStreakDays}',
+              value: '${AppProvider.effectiveStreak(profile)}',
               label: 'Day Streak',
               icon: Icons.local_fire_department_rounded,
               color: AppColors.accentWarning,

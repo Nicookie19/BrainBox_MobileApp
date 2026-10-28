@@ -1,5 +1,6 @@
 import 'package:brainbox/data/repositories/lesson_progress_repository.dart';
 import 'package:brainbox/data/repositories/lesson_repository.dart';
+import 'package:brainbox/data/services/storage_backend.dart';
 import 'package:brainbox/data/services/storage_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -13,6 +14,9 @@ void main() {
       'python-essentials',
       'data-structures',
       'sql-basics',
+      'flutter-from-zero',
+      'machine-learning-basics',
+      'networking-fundamentals',
     ]) {
       final course = await LessonRepository.getCourseLessons(courseId);
       expect(
@@ -36,10 +40,55 @@ void main() {
     }
   });
 
+  test('every sample course ships lessons', () {
+    for (final courseId in const [
+      'frontend-foundations',
+      'python-essentials',
+      'data-structures',
+      'sql-basics',
+      'flutter-from-zero',
+      'machine-learning-basics',
+      'networking-fundamentals',
+    ]) {
+      expect(LessonRepository.hasLessons(courseId), isTrue, reason: courseId);
+    }
+  });
+
+  test('code-ordering steps are valid and not already solved', () async {
+    for (final courseId in const [
+      'frontend-foundations',
+      'python-essentials',
+      'data-structures',
+      'sql-basics',
+      'flutter-from-zero',
+      'machine-learning-basics',
+      'networking-fundamentals',
+    ]) {
+      final course = await LessonRepository.getCourseLessons(courseId);
+      for (final lesson in course!.modules.expand((m) => m.lessons)) {
+        for (final step in lesson.steps) {
+          if (step.type != LessonStepType.codeOrdering) continue;
+          final order = step.correctOrder!;
+          final sorted = [...order]..sort();
+          expect(
+            sorted,
+            List<int>.generate(step.snippets!.length, (i) => i),
+            reason: '$courseId ${lesson.id}: correctOrder must be a permutation',
+          );
+          expect(
+            order,
+            isNot(List<int>.generate(order.length, (i) => i)),
+            reason: '$courseId ${lesson.id}: ordering is solved before the user starts',
+          );
+        }
+      }
+    }
+  });
+
   test('lesson progress saves and restores answer state', () async {
     SharedPreferences.setMockInitialValues({});
     StorageService.resetForTesting();
-    await StorageService.init();
+    await StorageService.init(backend: MemoryStorageBackend());
     await LessonProgressRepository.saveProgress(
       courseId: 'python-essentials',
       lessonId: 'lesson_1',

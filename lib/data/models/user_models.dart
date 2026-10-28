@@ -261,8 +261,10 @@ class UserLevel {
   }
 
   static UserLevel? getNextLevel(UserLevel current) {
-    final index = allLevels.indexOf(current);
-    if (index < allLevels.length - 1) {
+    // Match by number: a level restored from JSON is a different instance
+    // than the ones in [allLevels], so identity lookups would fail.
+    final index = allLevels.indexWhere((l) => l.number == current.number);
+    if (index >= 0 && index < allLevels.length - 1) {
       return allLevels[index + 1];
     }
     return null;

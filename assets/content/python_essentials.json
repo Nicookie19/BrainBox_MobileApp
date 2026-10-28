@@ -1,0 +1,265 @@
+{
+  "courseId": "python_essentials",
+  "learningPathId": "programming_fundamentals",
+  "version": 1,
+  "modules": [
+    {
+      "id": "module_1",
+      "title": "Python Basics",
+      "description": "Variables, data types, and control flow",
+      "order": 1,
+      "lessons": [
+        {
+          "id": "lesson_1",
+          "title": "Variables and Data Types",
+          "description": "Store and manipulate data in Python",
+          "order": 1,
+          "estimatedMinutes": 12,
+          "xpReward": 25,
+          "steps": [
+            {
+              "type": "explanation",
+              "content": "Python is dynamically typed - variables don't need explicit type declarations. The type is inferred from the value. Common types: int (integers), float (decimals), str (text), bool (True/False), list (ordered collection), dict (key-value pairs). Variables are created by assignment: name = value."
+            },
+            {
+              "type": "explanation",
+              "content": "Variable names must start with a letter or underscore, can contain letters, numbers, underscores. Python uses snake_case for variables by convention (PEP 8). Constants use UPPER_SNAKE_CASE. Multiple assignment: a, b = 1, 2. Type hints (optional): name: str = 'Alex'."
+            },
+            {
+              "type": "multiple_choice",
+              "question": "What is the output of: x = 5; x = 'hello'; print(type(x))?",
+              "options": ["<class 'int'>", "<class 'str'>", "<class 'float'>", "Error"],
+              "correctAnswer": 1,
+              "explanation": "Python is dynamically typed - variables can be reassigned to different types. The last assignment determines the current type.",
+              "hints": ["Variables can change type", "type() shows current type"]
+            },
+            {
+              "type": "fill_in_blank",
+              "question": "The Python convention for variable names is ______ case.",
+              "acceptedAnswers": ["snake"],
+              "explanation": "PEP 8 recommends snake_case for variable and function names (e.g., user_name, total_count).",
+              "hints": ["Think of a snake", "Words separated by underscores"]
+            },
+            {
+              "type": "code_ordering",
+              "question": "Order to create variables for a person's name, age, and student status",
+              "snippets": [
+                "name = 'Alex'",
+                "age = 25",
+                "is_student = True",
+                "print(name, age, is_student)"
+              ],
+              "correctOrder": [0, 1, 2, 3],
+              "explanation": "Assign variables first, then use them.",
+              "hints": ["Assignments first", "Print last"]
+            },
+            {
+              "type": "true_false",
+              "question": "In Python, 2name is a valid variable name.",
+              "correctAnswerBool": false,
+              "explanation": "Variable names cannot start with a number. They must start with a letter (a-z, A-Z) or underscore (_).",
+              "hints": ["Numbers can't be first", "Think of what makes a valid identifier"]
+            },
+            {
+              "type": "multiple_choice",
+              "question": "Which of these is a valid Python variable name?",
+              "options": ["2name", "user-name", "user_name", "class"],
+              "correctAnswer": 2,
+              "explanation": "user_name follows snake_case and doesn't start with a number or use reserved keywords.",
+              "hints": ["Keywords like 'class' are reserved", "Hyphens aren't allowed in identifiers"]
+            }
+          ]
+        },
+        {
+          "id": "lesson_2",
+          "title": "Control Flow - If/Else",
+          "description": "Make decisions in your code",
+          "order": 2,
+          "estimatedMinutes": 12,
+          "xpReward": 25,
+          "steps": [
+            {
+              "type": "explanation",
+              "content": "Python uses indentation to define code blocks (typically 4 spaces). if/elif/else control program flow based on conditions. Comparison operators: ==, !=, <, >, <=, >=. Logical operators: and, or, not. Parentheses for grouping."
+            },
+            {
+              "type": "explanation",
+              "content": "Truthiness: empty sequences (empty string, list, dict), 0, None, False are falsy. Everything else is truthy. This allows concise checks like 'if my_list:' instead of 'if len(my_list) > 0:'. The walrus operator := assigns and returns value (Python 3.8+)."
+            },
+            {
+              "type": "multiple_choice",
+              "question": "What prints for: x = 0; if x: print('yes') else: print('no')?",
+              "options": ["yes", "no", "Error", "Nothing"],
+              "correctAnswer": 1,
+              "explanation": "0 is falsy in Python, so the else branch executes.",
+              "hints": ["0 is falsy", "Only non-zero numbers are truthy"]
+            },
+            {
+              "type": "fill_in_blank",
+              "question": "The keyword for 'else if' in Python is ______.",
+              "acceptedAnswers": ["elif"],
+              "explanation": "elif is short for 'else if' - it allows checking multiple conditions in sequence.",
+              "hints": ["It's a contraction", "Short for 'else if'"]
+            },
+            {
+              "type": "code_ordering",
+              "question": "Order to check if a number is positive, negative, or zero",
+              "snippets": [
+                "if num > 0:",
+                "    print('positive')",
+                "elif num < 0:",
+                "    print('negative')",
+                "else:",
+                "    print('zero')"
+              ],
+              "correctOrder": [0, 1, 2, 3, 4, 5],
+              "explanation": "Check positive first, then negative, then zero as the fallback.",
+              "hints": ["Order matters - check specific cases first", "else catches everything else"]
+            },
+            {
+              "type": "true_false",
+              "question": "The condition 'if my_list:' is True for an empty list.",
+              "correctAnswerBool": false,
+              "explanation": "Empty lists are falsy, so 'if my_list:' is False for empty lists. Use 'if not my_list:' to check for empty.",
+              "hints": ["Empty = falsy", "Non-empty = truthy"]
+            },
+            {
+              "type": "multiple_choice",
+              "question": "Which condition is True for an empty list?",
+              "options": ["if my_list:", "if not my_list:", "if len(my_list):", "if my_list == True:"],
+              "correctAnswer": 1,
+              "explanation": "Empty lists are falsy, so 'not my_list' is True for empty lists.",
+              "hints": ["not flips truthiness", "Empty list is falsy"]
+            }
+          ]
+        },
+        {
+          "id": "lesson_3",
+          "title": "Loops - For and While",
+          "description": "Repeat actions efficiently",
+          "order": 3,
+          "estimatedMinutes": 12,
+          "xpReward": 25,
+          "steps": [
+            {
+              "type": "explanation",
+              "content": "for loops iterate over sequences (list, string, range, etc.). while loops repeat while a condition is True. range(n) generates 0 to n-1. range(start, stop, step) for custom ranges. enumerate() gives index and value. zip() pairs multiple iterables."
+            },
+            {
+              "type": "explanation",
+              "content": "Loop control: break exits the loop immediately. continue skips to the next iteration. else clause on loops runs when the loop completes normally (not broken). List comprehensions: [x*2 for x in range(5)] creates [0, 2, 4, 6, 8]. Dictionary/set comprehensions similar."
+            },
+            {
+              "type": "multiple_choice",
+              "question": "What does range(3) produce?",
+              "options": ["[1, 2, 3]", "[0, 1, 2]", "[3, 2, 1]", "[0, 1, 2, 3]"],
+              "correctAnswer": 1,
+              "explanation": "range(n) generates integers from 0 to n-1. range(3) = 0, 1, 2.",
+              "hints": ["Starts at 0", "Excludes the stop value"]
+            },
+            {
+              "type": "fill_in_blank",
+              "question": "The keyword to skip the current iteration and continue to the next is ______.",
+              "acceptedAnswers": ["continue"],
+              "explanation": "continue jumps to the next iteration of the loop, skipping remaining code in the current iteration.",
+              "hints": ["Think 'continue to next'", "Not 'skip' or 'next'"]
+            },
+            {
+              "type": "code_ordering",
+              "question": "Order to print numbers 1 to 5 using a for loop",
+              "snippets": [
+                "for i in range(1, 6):",
+                "    print(i)"
+              ],
+              "correctOrder": [0, 1],
+              "explanation": "range(1, 6) generates 1, 2, 3, 4, 5 (start=1, stop=6 exclusive).",
+              "hints": ["Start inclusive, stop exclusive", "6 is not included"]
+            },
+            {
+              "type": "true_false",
+              "question": "A for loop's else clause runs when the loop is terminated by break.",
+              "correctAnswerBool": false,
+              "explanation": "The else clause on a loop only runs if the loop completes without break. If break executes, else is skipped.",
+              "hints": ["else = 'no break'", "It's the 'nobreak' clause"]
+            },
+            {
+              "type": "multiple_choice",
+              "question": "What is the output of: for i in range(3): pass; else: print('done')?",
+              "options": ["nothing", "done", "error", "0 1 2"],
+              "correctAnswer": 1,
+              "explanation": "The loop completes normally (no break), so the else clause executes and prints 'done'.",
+              "hints": ["pass does nothing", "Loop completes normally"]
+            }
+          ]
+        },
+        {
+          "id": "lesson_4",
+          "title": "Functions",
+          "description": "Reusable, modular code blocks",
+          "order": 4,
+          "estimatedMinutes": 15,
+          "xpReward": 30,
+          "steps": [
+            {
+              "type": "explanation",
+              "content": "Functions are defined with 'def'. They can have parameters with default values. Return values with 'return' (implicit None if omitted). Docstrings (triple quotes) document the function. Type hints: def greet(name: str) -> str:."
+            },
+            {
+              "type": "explanation",
+              "content": "Scope: variables defined in a function are local. Use 'global' to modify global variables (avoid when possible). Functions are first-class objects - can be assigned to variables, passed as arguments, returned from other functions. Lambda: small anonymous functions: lambda x: x*2."
+            },
+            {
+              "type": "multiple_choice",
+              "question": "What is the output of: def greet(name='World'): return f'Hello, {name}'; print(greet())?",
+              "options": ["Hello, World", "Hello, ", "Error", "None"],
+              "correctAnswer": 0,
+              "explanation": "Default parameter 'World' is used when no argument is provided.",
+              "hints": ["Default parameters fill in", "f-strings for formatting"]
+            },
+            {
+              "type": "fill_in_blank",
+              "question": "The keyword to return a value from a function is ______.",
+              "acceptedAnswers": ["return"],
+              "explanation": "return exits the function and optionally provides a value to the caller.",
+              "hints": ["It's the same in most languages", "Without it, returns None"]
+            },
+            {
+              "type": "code_ordering",
+              "question": "Order to define a function that squares a number",
+              "snippets": [
+                "def square(n):",
+                "    return n * n",
+                "print(square(5))"
+              ],
+              "correctOrder": [0, 1, 2],
+              "explanation": "Define function with parameter, compute and return result, then call it.",
+              "hints": ["Define first", "Then call"]
+            },
+            {
+              "type": "true_false",
+              "question": "A function without a return statement returns None.",
+              "correctAnswerBool": true,
+              "explanation": "Functions implicitly return None if no return statement is executed or if return has no value.",
+              "hints": ["None is the default", "Not 0, not empty string"]
+            },
+            {
+              "type": "multiple_choice",
+              "question": "What does this return: def add(a, b=10): return a + b; print(add(5))?",
+              "options": ["5", "15", "Error", "None"],
+              "correctAnswer": 1,
+              "explanation": "Default parameter b=10, so add(5) = 5 + 10 = 15.",
+              "hints": ["Default fills in missing arg", "b=10 when not provided"]
+            },
+            {
+              "type": "fill_in_blank",
+              "question": "The syntax for a lambda function that doubles its input is ______.",
+              "acceptedAnswers": ["lambda x: x * 2"],
+              "explanation": "lambda parameters: expression. No def, no return keyword needed - expression result is returned.",
+              "hints": ["Starts with 'lambda'", "Colon separates params from expression"]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

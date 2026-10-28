@@ -1,0 +1,275 @@
+{
+  "courseId": "flutter-from-zero",
+  "modules": [
+    {
+      "id": "module_1",
+      "title": "Flutter Fundamentals",
+      "description": "Build your first Flutter screens",
+      "order": 1,
+      "lessons": [
+        {
+          "id": "lesson_1",
+          "title": "Widgets & the Widget Tree",
+          "steps": [
+            {
+              "type": "explanation",
+              "content": "In Flutter, everything you see is a widget: text, buttons, padding, even the app itself. Widgets are nested inside each other to form a widget tree, and the build() method of each widget describes the part of the UI it controls."
+            },
+            {
+              "type": "explanation",
+              "content": "A StatelessWidget never changes after it is built, like a logo or a label. A StatefulWidget owns a State object so it can change over time, like a counter or a form field. Prefer StatelessWidget whenever the data does not change."
+            },
+            {
+              "type": "multiple_choice",
+              "question": "Which class should you extend for UI that does not change after it is built?",
+              "options": [
+                "StatelessWidget",
+                "StatefulWidget",
+                "State",
+                "InheritedWidget"
+              ],
+              "correctAnswer": 0,
+              "explanation": "StatelessWidget is for UI that depends only on its constructor arguments."
+            },
+            {
+              "type": "fill_in_blank",
+              "question": "The method that describes a widget's UI is called ______.",
+              "answer": "build",
+              "explanation": "Every widget implements build(BuildContext context) and returns the widgets it is made of."
+            },
+            {
+              "type": "code_ordering",
+              "question": "Order these lines to create a simple stateless widget",
+              "snippets": [
+                "return const Text('Hi');",
+                "class Hello extends StatelessWidget {",
+                "Widget build(BuildContext context) {",
+                "// end of class",
+                "}"
+              ],
+              "correctOrder": [
+                1,
+                2,
+                0,
+                4,
+                3
+              ],
+              "explanation": "Declare the class, define build, then return a widget."
+            },
+            {
+              "type": "multiple_choice",
+              "question": "What does hot reload do?",
+              "options": [
+                "Injects updated code into the running app while keeping its state",
+                "Restarts the app from scratch",
+                "Builds a release APK",
+                "Clears all saved data"
+              ],
+              "correctAnswer": 0,
+              "explanation": "Hot reload patches the running Dart VM so you see changes in under a second."
+            }
+          ],
+          "estimatedMinutes": 10,
+          "xpReward": 25
+        },
+        {
+          "id": "lesson_2",
+          "title": "Layouts: Row, Column & Container",
+          "steps": [
+            {
+              "type": "explanation",
+              "content": "Row places children horizontally and Column places them vertically. Both take a list called children. The main axis runs in the direction of the layout, and the cross axis runs perpendicular to it."
+            },
+            {
+              "type": "explanation",
+              "content": "Use Padding to add space inside around a child, SizedBox for fixed gaps, and Container when you need decoration, size, or margin. Expanded makes a child fill the remaining space in a Row or Column."
+            },
+            {
+              "type": "multiple_choice",
+              "question": "Which widget lays its children out vertically?",
+              "options": [
+                "Column",
+                "Row",
+                "Stack",
+                "Wrap"
+              ],
+              "correctAnswer": 0,
+              "explanation": "Column arranges children from top to bottom."
+            },
+            {
+              "type": "fill_in_blank",
+              "question": "To add empty space around a child widget you can wrap it in a ______ widget.",
+              "answer": "Padding",
+              "explanation": "Padding adds inset space around its child."
+            },
+            {
+              "type": "code_ordering",
+              "question": "Order these lines to build a column with two text widgets",
+              "snippets": [
+                ")",
+                "children: [",
+                "Column(",
+                "],",
+                "Text('A'),",
+                "Text('B'),"
+              ],
+              "correctOrder": [
+                2,
+                1,
+                4,
+                5,
+                3,
+                0
+              ],
+              "explanation": "Open the Column, open the children list, add the items, then close both."
+            },
+            {
+              "type": "multiple_choice",
+              "question": "In a Row, which property controls how children are spaced along the horizontal axis?",
+              "options": [
+                "mainAxisAlignment",
+                "crossAxisAlignment",
+                "textAlign",
+                "fit"
+              ],
+              "correctAnswer": 0,
+              "explanation": "mainAxisAlignment controls spacing along the main axis, which is horizontal for a Row."
+            }
+          ],
+          "estimatedMinutes": 12,
+          "xpReward": 25
+        },
+        {
+          "id": "lesson_3",
+          "title": "State with setState",
+          "steps": [
+            {
+              "type": "explanation",
+              "content": "A StatefulWidget is split into two classes: the widget, which is immutable, and its State, which holds the mutable data. When data changes you must tell Flutter by calling setState(), which schedules a rebuild."
+            },
+            {
+              "type": "explanation",
+              "content": "The State object has a lifecycle. initState() runs once when it is created, build() runs on every rebuild, and dispose() runs when the widget is removed. Release controllers and subscriptions in dispose()."
+            },
+            {
+              "type": "multiple_choice",
+              "question": "What must you call so Flutter rebuilds the UI after changing state?",
+              "options": [
+                "setState()",
+                "build()",
+                "notify()",
+                "refresh()"
+              ],
+              "correctAnswer": 0,
+              "explanation": "setState(() { ... }) marks the State as dirty and schedules a rebuild."
+            },
+            {
+              "type": "fill_in_blank",
+              "question": "The method that runs once when a State object is created is ______.",
+              "answer": "initState",
+              "explanation": "initState() is the place for one-time setup."
+            },
+            {
+              "type": "code_ordering",
+              "question": "Order these lines to write a counter increment method",
+              "snippets": [
+                "setState(() {",
+                "void increment() {",
+                "});",
+                "}",
+                "count++;"
+              ],
+              "correctOrder": [
+                1,
+                0,
+                4,
+                2,
+                3
+              ],
+              "explanation": "Wrap the change in setState so the UI updates."
+            },
+            {
+              "type": "multiple_choice",
+              "question": "Where should you release a TextEditingController?",
+              "options": [
+                "dispose()",
+                "initState()",
+                "build()",
+                "setState()"
+              ],
+              "correctAnswer": 0,
+              "explanation": "dispose() is called when the State is permanently removed, so clean up there."
+            }
+          ],
+          "estimatedMinutes": 12,
+          "xpReward": 25
+        },
+        {
+          "id": "lesson_4",
+          "title": "Navigation with go_router",
+          "steps": [
+            {
+              "type": "explanation",
+              "content": "Flutter's Navigator manages a stack of pages. go_router builds on it with declarative routes: you list URL-like paths and the screen to build for each one."
+            },
+            {
+              "type": "explanation",
+              "content": "Routes can have parameters such as /course/:courseId. Use context.go to replace the current location and context.push to add a page on top so the back button returns to the previous one."
+            },
+            {
+              "type": "multiple_choice",
+              "question": "Which call adds a new page on top of the stack so the user can go back?",
+              "options": [
+                "context.push",
+                "context.go",
+                "context.replace",
+                "context.refresh"
+              ],
+              "correctAnswer": 0,
+              "explanation": "push keeps the previous page on the stack, while go replaces the location."
+            },
+            {
+              "type": "fill_in_blank",
+              "question": "In go_router, a route's URL pattern is set with its ______ argument.",
+              "answer": "path",
+              "explanation": "GoRoute(path: '/settings', builder: ...) maps a path to a screen."
+            },
+            {
+              "type": "code_ordering",
+              "question": "Order these lines to define a small router",
+              "snippets": [
+                ")",
+                "GoRoute(path: '/', builder: (c, s) => const Home()),",
+                "],",
+                "routes: [",
+                "GoRouter("
+              ],
+              "correctOrder": [
+                4,
+                3,
+                1,
+                2,
+                0
+              ],
+              "explanation": "Create the router, open the routes list, add routes, then close."
+            },
+            {
+              "type": "multiple_choice",
+              "question": "How do you read the :courseId parameter inside a builder?",
+              "options": [
+                "state.pathParameters['courseId']",
+                "context.courseId",
+                "state.query",
+                "Navigator.of(context).id"
+              ],
+              "correctAnswer": 0,
+              "explanation": "Path parameters are available on GoRouterState.pathParameters."
+            }
+          ],
+          "estimatedMinutes": 12,
+          "xpReward": 25
+        }
+      ]
+    }
+  ]
+}

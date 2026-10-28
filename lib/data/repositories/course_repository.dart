@@ -6,13 +6,18 @@ import 'package:brainbox/data/models/learning_models.dart';
 
 class CourseRepository {
   static const String _coursesKey = 'available_courses';
+  static const String _seedVersionKey = 'courses_seed_version';
 
-  // Initialize with sample data if no courses exist
+  /// Bump when the bundled sample courses change so existing installs refresh.
+  static const int _seedVersion = 2;
+
+  // Initialize with sample data if no courses exist or the seed is outdated
   static Future<void> initializeSampleCourses() async {
     final existingCourses = await getAllCourses();
-    if (existingCourses.isEmpty) {
-      final sampleCourses = _createSampleCourses();
-      await saveCourses(sampleCourses);
+    final isCurrent = StorageService.getInt(_seedVersionKey) == _seedVersion;
+    if (existingCourses.isEmpty || !isCurrent) {
+      await saveCourses(_createSampleCourses());
+      await StorageService.setInt(_seedVersionKey, _seedVersion);
     }
   }
 
@@ -55,10 +60,10 @@ class CourseRepository {
         category: LearningCategory.webDevelopment,
         difficulty: DifficultyLevel.beginner,
         thumbnailUrl: '',
-        estimatedHours: 4,
+        estimatedHours: 1,
         lessonCount: 4,
         quizCount: 4,
-        projectCount: 2,
+        projectCount: 0,
         prerequisites: [],
         learningOutcomes: [
           'Build responsive websites with HTML5 and CSS3',
@@ -81,10 +86,10 @@ class CourseRepository {
         category: LearningCategory.programmingLanguages,
         difficulty: DifficultyLevel.beginner,
         thumbnailUrl: '',
-        estimatedHours: 5,
+        estimatedHours: 1,
         lessonCount: 4,
         quizCount: 4,
-        projectCount: 3,
+        projectCount: 0,
         prerequisites: [],
         learningOutcomes: [
           'Write clean, efficient Python code',
@@ -107,10 +112,10 @@ class CourseRepository {
         category: LearningCategory.programmingLanguages,
         difficulty: DifficultyLevel.beginner,
         thumbnailUrl: '',
-        estimatedHours: 5,
+        estimatedHours: 1,
         lessonCount: 4,
         quizCount: 4,
-        projectCount: 2,
+        projectCount: 0,
         prerequisites: ['Programming basics'],
         learningOutcomes: [
           'Understand arrays, linked lists, stacks, queues, and hash maps',
@@ -133,10 +138,10 @@ class CourseRepository {
         category: LearningCategory.databases,
         difficulty: DifficultyLevel.beginner,
         thumbnailUrl: '',
-        estimatedHours: 4,
+        estimatedHours: 1,
         lessonCount: 4,
         quizCount: 4,
-        projectCount: 2,
+        projectCount: 0,
         prerequisites: [],
         learningOutcomes: [
           'Write SELECT queries with filtering and sorting',
@@ -159,15 +164,15 @@ class CourseRepository {
         category: LearningCategory.mobileDevelopment,
         difficulty: DifficultyLevel.intermediate,
         thumbnailUrl: '',
-        estimatedHours: 6,
-        lessonCount: 21,
-        quizCount: 6,
-        projectCount: 4,
+        estimatedHours: 1,
+        lessonCount: 4,
+        quizCount: 4,
+        projectCount: 0,
         prerequisites: ['Programming fundamentals'],
         learningOutcomes: [
-          'Build cross-platform mobile apps with Flutter',
-          'Create responsive UI layouts',
-          'Integrate with APIs and backend services'
+          'Compose screens from widgets',
+          'Lay out UIs with Row, Column and Container',
+          'Manage state and navigate between screens'
         ],
         tags: ['flutter', 'mobile', 'dart', 'ios', 'android'],
         isFeatured: true,
@@ -185,15 +190,15 @@ class CourseRepository {
         category: LearningCategory.machineLearning,
         difficulty: DifficultyLevel.intermediate,
         thumbnailUrl: '',
-        estimatedHours: 4,
-        lessonCount: 14,
+        estimatedHours: 1,
+        lessonCount: 4,
         quizCount: 4,
-        projectCount: 3,
+        projectCount: 0,
         prerequisites: ['Python programming', 'Basic statistics'],
         learningOutcomes: [
           'Understand supervised and unsupervised learning',
-          'Implement ML algorithms from scratch',
-          'Apply ML to real-world problems'
+          'Evaluate models and spot overfitting',
+          'Follow the end-to-end machine learning workflow'
         ],
         tags: ['machine-learning', 'python', 'ai', 'data-science'],
         isFeatured: true,
@@ -211,15 +216,15 @@ class CourseRepository {
         category: LearningCategory.networking,
         difficulty: DifficultyLevel.beginner,
         thumbnailUrl: '',
-        estimatedHours: 4,
-        lessonCount: 16,
-        quizCount: 3,
-        projectCount: 2,
+        estimatedHours: 1,
+        lessonCount: 4,
+        quizCount: 4,
+        projectCount: 0,
         prerequisites: [],
         learningOutcomes: [
-          'Understand TCP/IP networking model',
-          'Configure and troubleshoot network devices',
-          'Apply networking concepts to real scenarios'
+          'Understand the OSI and TCP/IP models',
+          'Read IP addresses and subnets',
+          'Explain how TCP, UDP, DNS and DHCP work'
         ],
         tags: ['networking', 'tcp-ip', 'ccna', 'it-fundamentals'],
         isFeatured: false,
