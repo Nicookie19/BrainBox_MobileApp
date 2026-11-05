@@ -22,16 +22,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
 
-  final List<String> _categories = [
-    'All',
-    'Web Development',
-    'Mobile Development',
-    'Programming',
-    'Machine Learning',
-    'Networking',
-    'Databases',
-    'DevOps',
-  ];
+  bool _availableOnly = false;
+  String _sort = 'Recommended';
 
   @override
   void dispose() {
@@ -47,7 +39,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
           return const _LoadingSkeleton();
         }
 
-        final filteredCourses = _filterCourses(provider.courses);
+        final filteredCourses = _filterCourses(provider);
 
         return CustomScrollView(
           slivers: [
@@ -57,15 +49,15 @@ class _ExploreScreenState extends State<ExploreScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildHeader(context),
+                    _buildHeader(context, provider),
                     const SizedBox(height: 24),
                     _buildSearchBar(context),
                     const SizedBox(height: 16),
                     _buildDifficultyFilter(context),
                     const SizedBox(height: 16),
-                    _buildCategoryFilter(context),
+                    _buildCategoryFilter(context, provider),
                     const SizedBox(height: 20),
-                    _buildResultsCount(context, filteredCourses.length),
+                    _buildCatalogControls(context, filteredCourses.length),
                     const SizedBox(height: 16),
                   ],
                 ),
@@ -73,17 +65,36 @@ class _ExploreScreenState extends State<ExploreScreen> {
             ),
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
-              sliver: SliverList.separated(
-                itemCount: filteredCourses.isEmpty ? 1 : filteredCourses.length,
-                separatorBuilder: (_, _) => const SizedBox(height: 12),
-                itemBuilder: (context, index) {
+              sliver: SliverLayoutBuilder(
+                builder: (context, constraints) {
                   if (filteredCourses.isEmpty) {
-                    return _buildEmptyState();
+                    return SliverToBoxAdapter(child: _buildEmptyState());
                   }
-                  return CourseCard(
-                    course: filteredCourses[index],
-                    onTap: () => context.push('/course/${filteredCourses[index].id}'),
-                  ).animate().fadeIn(delay: (100 + index * 50).ms).slideY(begin: 0.2, end: 0);
+                  final columns = constraints.crossAxisExtent >= 760 ? 2 : 1;
+                  return SliverList.separated(
+                    itemCount: (filteredCourses.length / columns).ceil(),
+                    separatorBuilder: (_, _) => const SizedBox(height: 12),
+                    itemBuilder: (context, row) => Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        for (var column = 0; column < columns; column++) ...[
+                          if (column > 0) const SizedBox(width: 16),
+                          Expanded(
+                            child:
+                                row * columns + column < filteredCourses.length
+                                ? CourseCard(
+                                    course:
+                                        filteredCourses[row * columns + column],
+                                    onTap: () => context.push(
+                                      '/course/${filteredCourses[row * columns + column].id}',
+                                    ),
+                                  )
+                                : const SizedBox.shrink(),
+                          ),
+                        ],
+                      ],
+                    ),
+                  );
                 },
               ),
             ),
@@ -93,7 +104,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
+  Widget _buildHeader(BuildContext context, AppProvider provider) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -107,10 +118,10 @@ class _ExploreScreenState extends State<ExploreScreen> {
         ),
         const SizedBox(height: 8),
         Text(
-          'Explore 50+ courses across 8 categories',
-          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-            color: AppColors.textSecondary,
-          ),
+          '${provider.courses.length} courses. One next step for your curiosity.',
+          style: Theme.of(
+            context,
+          ).textTheme.bodyLarge?.copyWith(color: AppColors.textSecondary),
         ),
       ],
     ).animate().fadeIn().slideY(begin: 0.2, end: 0);
@@ -127,6 +138,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
         prefixIcon: Icon(Icons.search_rounded, color: AppColors.textMuted),
         suffixIcon: _searchQuery.isNotEmpty
             ? IconButton(
+                tooltip: 'Clear search',
                 icon: Icon(Icons.clear_rounded, color: AppColors.textMuted),
                 onPressed: () {
                   _searchController.clear();
@@ -148,40 +160,122 @@ class _ExploreScreenState extends State<ExploreScreen> {
     ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.1, end: 0);
   }
 
-  Widget _buildCategoryFilter(BuildContext context) {
+  Widget _buildCategoryFilter(BuildContext context, AppProvider provider) {
     return FilterChips<String>(
       label: 'Category',
-      options: _categories,
+      options: [
+        'All',
+        ...provider.courses.map((c) => c.category.title).toSet().toList()
+          ..sort(),
+      ],
       selected: _selectedCategory,
       getLabel: (c) => c,
       onChanged: (value) => setState(() => _selectedCategory = value),
     ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.1, end: 0);
   }
 
-  Widget _buildResultsCount(BuildContext context, int count) {
-    return Text(
-      '$count learning path${count == 1 ? '' : 's'} found',
-      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-        fontWeight: FontWeight.w700,
-      ),
-    ).animate().fadeIn(delay: 500.ms);
+  void _resetFilters() {
+    _searchController.clear();
+    setState(() {
+      _searchQuery = '';
+      _selectedCategory = 'All';
+      _selectedDifficulty = null;
+      _availableOnly = false;
+      _sort = 'Recommended';
+    });
   }
 
-  List<Course> _filterCourses(List<Course> courses) {
-    return courses.where((course) {
-      final matchesSearch = _searchQuery.isEmpty ||
-          course.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          course.shortDescription.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          course.tags.any((tag) => tag.toLowerCase().contains(_searchQuery.toLowerCase()));
+  Widget _buildCatalogControls(BuildContext context, int count) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Wrap(
+          spacing: 12,
+          runSpacing: 8,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            FilterChip(
+              label: const Text('Ready to learn'),
+              avatar: const Icon(Icons.play_circle_outline, size: 18),
+              selected: _availableOnly,
+              onSelected: (value) => setState(() => _availableOnly = value),
+            ),
+            PopupMenuButton<String>(
+              tooltip: 'Sort courses',
+              initialValue: _sort,
+              onSelected: (value) => setState(() => _sort = value),
+              itemBuilder: (_) =>
+                  [
+                        'Recommended',
+                        'Highest rated',
+                        'Shortest first',
+                        'Title A–Z',
+                      ]
+                      .map(
+                        (value) =>
+                            PopupMenuItem(value: value, child: Text(value)),
+                      )
+                      .toList(),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.sort_rounded, size: 20),
+                    const SizedBox(width: 8),
+                    Text(_sort),
+                    const Icon(Icons.expand_more, size: 18),
+                  ],
+                ),
+              ),
+            ),
+            if (_searchQuery.isNotEmpty ||
+                _selectedCategory != 'All' ||
+                _selectedDifficulty != null ||
+                _availableOnly)
+              TextButton(
+                onPressed: _resetFilters,
+                child: const Text('Reset filters'),
+              ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Text(
+          '$count learning path${count == 1 ? '' : 's'} found',
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+      ],
+    );
+  }
 
-      final matchesCategory = _selectedCategory == 'All' ||
-          course.category.title == _selectedCategory;
-
-      final matchesDifficulty = _selectedDifficulty == null ||
-          course.difficulty == _selectedDifficulty;
-
-      return matchesSearch && matchesCategory && matchesDifficulty;
+  List<Course> _filterCourses(AppProvider provider) {
+    final query = _searchQuery.trim().toLowerCase();
+    final result = provider.courses.where((course) {
+      final matchesSearch =
+          query.isEmpty ||
+          [
+            course.title,
+            course.shortDescription,
+            course.category.title,
+            ...course.tags,
+          ].any((value) => value.toLowerCase().contains(query));
+      return matchesSearch &&
+          (_selectedCategory == 'All' ||
+              course.category.title == _selectedCategory) &&
+          (_selectedDifficulty == null ||
+              course.difficulty == _selectedDifficulty) &&
+          (!_availableOnly || provider.hasLessons(course.id));
     }).toList();
+    result.sort((a, b) {
+      final comparison = switch (_sort) {
+        'Highest rated' => b.rating.compareTo(a.rating),
+        'Shortest first' => a.estimatedHours.compareTo(b.estimatedHours),
+        'Title A–Z' => a.title.compareTo(b.title),
+        _ => (b.isFeatured ? 1 : 0).compareTo(a.isFeatured ? 1 : 0),
+      };
+      return comparison == 0 ? a.title.compareTo(b.title) : comparison;
+    });
+    return result;
   }
 
   Widget _buildEmptyState() {
@@ -194,25 +288,26 @@ class _ExploreScreenState extends State<ExploreScreen> {
       ),
       child: Column(
         children: [
-          Icon(
-            Icons.search_off_rounded,
-            size: 64,
-            color: AppColors.textMuted,
-          ),
+          Icon(Icons.search_off_rounded, size: 64, color: AppColors.textMuted),
           const SizedBox(height: 16),
           Text(
             'No courses match your filters',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 8),
           Text(
-            'Try adjusting your search or filters',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: AppColors.textSecondary,
-            ),
+            'Try another topic or start again with all courses.',
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
             textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+          FilledButton(
+            onPressed: _resetFilters,
+            child: const Text('Show all courses'),
           ),
         ],
       ),
@@ -253,7 +348,8 @@ class _LoadingSkeleton extends StatelessWidget {
           sliver: SliverList.separated(
             itemCount: 5,
             separatorBuilder: (_, _) => const SizedBox(height: 12),
-            itemBuilder: (_, _) => _skeletonBox(width: double.infinity, height: 140),
+            itemBuilder: (_, _) =>
+                _skeletonBox(width: double.infinity, height: 140),
           ),
         ),
       ],

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:brainbox/core/constants/app_colors.dart';
+import 'package:brainbox/core/constants/app_assets.dart';
+import 'package:brainbox/presentation/widgets/asset_icon.dart';
 
 class WeekActivity extends StatelessWidget {
   const WeekActivity({required this.activity, super.key});
@@ -25,13 +27,15 @@ class WeekActivity extends StatelessWidget {
         children: [
           Row(
             children: [
-              Text(
-                'This Week',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+              Expanded(
+                child: Text(
+                  'This Week',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
               ),
-              const Spacer(),
+              const SizedBox(width: 8),
               Text(
                 '$activeDays/7 days',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -46,57 +50,65 @@ class WeekActivity extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: List.generate(days.length, (index) {
               final isActive = index < activity.length && activity[index];
-              return Column(
-                    children: [
-                      AnimatedContainer(
-                        duration: const Duration(milliseconds: 300),
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          color: isActive
-                              ? AppColors.accentPrimary
-                              : AppColors.bgTertiary,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: isActive
-                                ? Colors.transparent
-                                : AppColors.borderDefault,
-                          ),
-                        ),
-                        child: isActive
-                            ? Padding(
-                                padding: const EdgeInsets.all(9),
-                                child: Image.asset(
-                                  'assets/ui/fire.png',
-                                  fit: BoxFit.contain,
+              return Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 2),
+                  child:
+                      Column(
+                            children: [
+                              AnimatedContainer(
+                                duration: const Duration(milliseconds: 300),
+                                width: 36,
+                                alignment: Alignment.center,
+                                height: 36,
+                                decoration: BoxDecoration(
+                                  color: isActive
+                                      ? AppColors.accentPrimary
+                                      : AppColors.bgTertiary,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: isActive
+                                        ? Colors.transparent
+                                        : AppColors.borderDefault,
+                                  ),
                                 ),
-                              )
-                            : Text(
-                                days[index],
-                                style: TextStyle(
-                                  color: AppColors.textMuted,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 12,
-                                ),
+                                child: isActive
+                                    ? Padding(
+                                        padding: const EdgeInsets.all(9),
+                                        child: const AssetIcon(
+                                          AppAssets.fire,
+                                          size: 18,
+                                        ),
+                                      )
+                                    : Text(
+                                        days[index],
+                                        style: TextStyle(
+                                          color: AppColors.textMuted,
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 12,
+                                        ),
+                                      ),
                               ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        days[index],
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: isActive
-                              ? AppColors.accentPrimary
-                              : AppColors.textMuted,
-                          fontWeight: isActive
-                              ? FontWeight.w600
-                              : FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  )
-                  .animate()
-                  .fadeIn(delay: (index * 50).ms)
-                  .scale(delay: (index * 50).ms);
+                              const SizedBox(height: 8),
+                              Text(
+                                days[index],
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(
+                                      color: isActive
+                                          ? AppColors.accentPrimary
+                                          : AppColors.textMuted,
+                                      fontWeight: isActive
+                                          ? FontWeight.w600
+                                          : FontWeight.w500,
+                                    ),
+                              ),
+                            ],
+                          )
+                          .animate()
+                          .fadeIn(delay: (index * 50).ms)
+                          .scale(delay: (index * 50).ms),
+                ),
+              );
             }),
           ),
         ],

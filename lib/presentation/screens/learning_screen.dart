@@ -11,9 +11,17 @@ import 'package:brainbox/presentation/widgets/achievement_style.dart';
 import 'package:brainbox/presentation/widgets/stat_summary.dart';
 import 'package:brainbox/data/models/course_models.dart';
 import 'package:brainbox/core/constants/app_colors.dart';
+import 'package:brainbox/core/constants/app_assets.dart';
 
-class LearningScreen extends StatelessWidget {
+class LearningScreen extends StatefulWidget {
   const LearningScreen({super.key});
+
+  @override
+  State<LearningScreen> createState() => _LearningScreenState();
+}
+
+class _LearningScreenState extends State<LearningScreen> {
+  String _sort = 'Most progress';
 
   @override
   Widget build(BuildContext context) {
@@ -35,17 +43,40 @@ class LearningScreen extends StatelessWidget {
                     const SizedBox(height: 24),
                     _buildStatsSummary(context, provider),
                     const SizedBox(height: 24),
-                    SectionHeading(
-                      title: 'In Progress',
-                      action: 'Sort',
-                      onPressed: () =>
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                'Courses are sorted by your progress.',
-                              ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'In Progress',
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                        ),
+                        PopupMenuButton<String>(
+                          tooltip: 'Sort learning courses',
+                          initialValue: _sort,
+                          onSelected: (value) => setState(() => _sort = value),
+                          itemBuilder: (_) =>
+                              ['Most progress', 'Least progress', 'Title A–Z']
+                                  .map(
+                                    (value) => PopupMenuItem(
+                                      value: value,
+                                      child: Text(value),
+                                    ),
+                                  )
+                                  .toList(),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(_sort),
+                                const SizedBox(width: 4),
+                                const Icon(Icons.sort, size: 20),
+                              ],
                             ),
                           ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 16),
                     _buildInProgressCourses(context, provider),
@@ -134,7 +165,7 @@ class LearningScreen extends StatelessWidget {
             child: StatSummary(
               value: _formatMinutes(provider.weeklyStudyMinutes),
               label: 'This Week',
-              asset: 'assets/ui/fire.png',
+              asset: AppAssets.fire,
               color: AppColors.accentSecondary,
             ),
           ),
@@ -143,7 +174,7 @@ class LearningScreen extends StatelessWidget {
             child: StatSummary(
               value: '${provider.profile?.stats.totalLessonsCompleted ?? 0}',
               label: 'Lessons Done',
-              asset: 'assets/ui/code_brackets.png',
+              asset: AppAssets.codeBrackets,
               color: AppColors.accentPrimary,
             ),
           ),
@@ -152,7 +183,7 @@ class LearningScreen extends StatelessWidget {
             child: StatSummary(
               value: '${provider.xp}',
               label: 'Total XP',
-              asset: 'assets/ui/bolt.png',
+              asset: AppAssets.bolt,
               color: AppColors.accentWarning,
             ),
           ),
@@ -163,6 +194,20 @@ class LearningScreen extends StatelessWidget {
 
   Widget _buildInProgressCourses(BuildContext context, AppProvider provider) {
     final courses = provider.inProgressCourses;
+    courses.sort((a, b) {
+      final comparison = switch (_sort) {
+        'Title A–Z' => a.title.compareTo(b.title),
+        'Least progress' =>
+          provider
+              .courseProgress(a.id)
+              .compareTo(provider.courseProgress(b.id)),
+        _ =>
+          provider
+              .courseProgress(b.id)
+              .compareTo(provider.courseProgress(a.id)),
+      };
+      return comparison == 0 ? a.title.compareTo(b.title) : comparison;
+    });
 
     if (courses.isEmpty) {
       return _buildEmptyInProgress(context);
@@ -222,11 +267,17 @@ class LearningScreen extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'Start a course from Explore to see it here',
+            'Find a topic you love and take the first step.',
             style: Theme.of(
               context,
             ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
             textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+          FilledButton.icon(
+            onPressed: () => context.go('/explore'),
+            icon: const Icon(Icons.explore_outlined),
+            label: const Text('Explore courses'),
           ),
         ],
       ),
@@ -286,6 +337,10 @@ class LearningScreen extends StatelessWidget {
             ),
             child: AchievementCard(
               icon: achievementIcon(achievement.iconAsset),
+              imageAsset: achievementImageAsset(achievement.iconAsset),
+              imageTint: achievement.iconAsset == 'menu_book'
+                  ? AppColors.accentWarning
+                  : null,
               title: achievement.title,
               subtitle: achievement.description,
               color: achievementColor(achievement.type),

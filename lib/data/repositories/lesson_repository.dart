@@ -51,7 +51,9 @@ class LessonRepository {
     int stepIndex,
   ) async {
     final lesson = await getLesson(courseId, lessonId);
-    if (lesson == null || stepIndex >= lesson.steps.length) return null;
+    if (lesson == null || stepIndex < 0 || stepIndex >= lesson.steps.length) {
+      return null;
+    }
     return lesson.steps[stepIndex];
   }
 }

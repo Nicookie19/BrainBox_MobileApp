@@ -7,12 +7,14 @@ class CommunityPostWidget extends StatelessWidget {
     required this.post,
     required this.onVote,
     required this.onReply,
+    required this.onReport,
     super.key,
   });
 
   final CommunityPost post;
   final ValueChanged<UserVote> onVote;
   final VoidCallback onReply;
+  final Future<void> Function() onReport;
 
   @override
   Widget build(BuildContext context) {
@@ -39,18 +41,15 @@ class CommunityPostWidget extends StatelessWidget {
   Widget _buildHeader(BuildContext context) {
     return Row(
       children: [
-        Container(
-          width: 36,
-          height: 36,
-          padding: const EdgeInsets.all(6),
-          decoration: BoxDecoration(
-            color: post.type.color.withValues(alpha: 0.2),
-            shape: BoxShape.circle,
-          ),
-          child: Image.asset(
-            'assets/ui/brand_brain.png',
-            fit: BoxFit.contain,
-            filterQuality: FilterQuality.high,
+        CircleAvatar(
+          radius: 18,
+          backgroundColor: const Color(0xFF40497B),
+          child: Text(
+            post.authorName.isEmpty ? '?' : post.authorName[0].toUpperCase(),
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ),
         const SizedBox(width: 10),
@@ -145,12 +144,21 @@ class CommunityPostWidget extends StatelessWidget {
   }
 
   Widget _buildActions(BuildContext context) {
-    return Row(
+    return Wrap(
+      spacing: 8,
+      runSpacing: 4,
+      crossAxisAlignment: WrapCrossAlignment.center,
       children: [
         _ActionButton(
-          icon: post.hasUserUpvoted
-              ? Icons.thumb_up_rounded
-              : Icons.thumb_up_outlined,
+          icon: Icon(
+            post.hasUserUpvoted
+                ? Icons.thumb_up_rounded
+                : Icons.thumb_up_outlined,
+            size: 18,
+            color: post.hasUserUpvoted
+                ? AppColors.accentPrimary
+                : AppColors.textMuted,
+          ),
           count: post.upvoteCount,
           color: post.hasUserUpvoted
               ? AppColors.accentPrimary
@@ -159,21 +167,25 @@ class CommunityPostWidget extends StatelessWidget {
         ),
         const SizedBox(width: 16),
         _ActionButton(
-          icon: Icons.chat_bubble_outline_rounded,
+          icon: const Icon(Icons.chat_bubble_outline_rounded, size: 18),
           count: post.replyCount,
           color: AppColors.textMuted,
           onTap: onReply,
         ),
         const SizedBox(width: 16),
         _ActionButton(
-          icon: Icons.favorite_border_rounded,
-          count: post.viewCount,
-          color: AppColors.textMuted,
-          onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Saved to your liked posts.')),
+          icon: Icon(
+            post.hasUserDownvoted
+                ? Icons.thumb_down_rounded
+                : Icons.thumb_down_outlined,
+            size: 18,
           ),
+          count: post.downvoteCount,
+          color: post.hasUserDownvoted
+              ? AppColors.accentPrimary
+              : AppColors.textMuted,
+          onTap: () => onVote(UserVote.downvote),
         ),
-        const Spacer(),
         if (!post.isLocked)
           IconButton(
             onPressed: () => showModalBottomSheet<void>(
@@ -181,15 +193,32 @@ class CommunityPostWidget extends StatelessWidget {
               builder: (sheetContext) => SafeArea(
                 child: ListTile(
                   leading: const Icon(Icons.flag_outlined),
-                  title: const Text('Report post'),
-                  onTap: () {
-                    Navigator.pop(sheetContext);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Thanks — the post has been reported.'),
-                      ),
-                    );
-                  },
+                  title: Text(
+                    post.isReported ? 'Reported on this device' : 'Report post',
+                  ),
+                  onTap: post.isReported
+                      ? null
+                      : () async {
+                          Navigator.pop(sheetContext);
+                          try {
+                            await onReport();
+                            if (!context.mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Report saved on this device.'),
+                              ),
+                            );
+                          } catch (_) {
+                            if (!context.mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'Could not save the report. Please try again.',
+                                ),
+                              ),
+                            );
+                          }
+                        },
                 ),
               ),
             ),
@@ -222,7 +251,7 @@ class _ActionButton extends StatelessWidget {
     required this.onTap,
   });
 
-  final IconData icon;
+  final Widget icon;
   final int count;
   final Color color;
   final VoidCallback onTap;
@@ -237,7 +266,7 @@ class _ActionButton extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 18, color: color),
+            icon,
             const SizedBox(width: 4),
             Text(
               count.toString(),

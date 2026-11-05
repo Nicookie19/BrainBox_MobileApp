@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:brainbox/core/constants/app_colors.dart';
+import 'package:brainbox/presentation/widgets/asset_icon.dart';
 
 class StatSummary extends StatelessWidget {
   const StatSummary({
@@ -28,7 +29,7 @@ class StatSummary extends StatelessWidget {
           ),
           child: SizedBox.square(
             dimension: 24,
-            child: Image.asset(asset, fit: BoxFit.contain),
+            child: AssetIcon(asset, size: 24),
           ),
         ).animate().scale(delay: 100.ms),
         const SizedBox(height: 12),

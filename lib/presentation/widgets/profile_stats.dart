@@ -3,6 +3,8 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:brainbox/data/models/user_models.dart';
 import 'package:brainbox/presentation/providers/app_provider.dart';
 import 'package:brainbox/core/constants/app_colors.dart';
+import 'package:brainbox/core/constants/app_assets.dart';
+import 'package:brainbox/presentation/widgets/asset_icon.dart';
 
 class ProfileStats extends StatelessWidget {
   const ProfileStats({required this.profile, super.key});
@@ -23,7 +25,7 @@ class ProfileStats extends StatelessWidget {
             child: _StatItem(
               value: '${AppProvider.effectiveStreak(profile)}',
               label: 'Day Streak',
-              asset: 'assets/ui/fire.png',
+              asset: AppAssets.fire,
               color: AppColors.accentWarning,
             ),
           ),
@@ -32,7 +34,7 @@ class ProfileStats extends StatelessWidget {
             child: _StatItem(
               value: '${profile.totalXp}',
               label: 'Total XP',
-              asset: 'assets/ui/bolt.png',
+              asset: AppAssets.bolt,
               color: AppColors.accentPrimary,
             ),
           ),
@@ -41,7 +43,7 @@ class ProfileStats extends StatelessWidget {
             child: _StatItem(
               value: '${profile.enrolledCourseIds.length}',
               label: 'Active Paths',
-              asset: 'assets/ui/nav_learn_active.png',
+              asset: AppAssets.navLearn,
               color: AppColors.accentSecondary,
             ),
           ),
@@ -50,7 +52,7 @@ class ProfileStats extends StatelessWidget {
             child: _StatItem(
               value: '${profile.stats.totalCoursesCompleted}',
               label: 'Completed',
-              asset: 'assets/ui/badge_gold.png',
+              asset: AppAssets.badgeGold,
               color: AppColors.accentSuccess,
             ),
           ),
@@ -85,7 +87,7 @@ class _StatItem extends StatelessWidget {
           ),
           child: SizedBox.square(
             dimension: 22,
-            child: Image.asset(asset, fit: BoxFit.contain),
+            child: AssetIcon(asset, size: 22),
           ),
         ),
         const SizedBox(height: 10),

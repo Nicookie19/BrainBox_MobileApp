@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:brainbox/core/constants/app_colors.dart';
 import 'package:brainbox/data/models/learning_models.dart';
 import 'package:brainbox/presentation/widgets/course_artwork.dart';
+import 'package:brainbox/presentation/widgets/course_icon.dart';
 
 class RecommendationTile extends StatelessWidget {
   const RecommendationTile({
@@ -11,6 +12,8 @@ class RecommendationTile extends StatelessWidget {
     required this.subtitle,
     required this.color,
     required this.onTap,
+    this.leading,
+    this.courseId,
     super.key,
   });
 
@@ -19,6 +22,8 @@ class RecommendationTile extends StatelessWidget {
   final String subtitle;
   final Color color;
   final VoidCallback onTap;
+  final Widget? leading;
+  final String? courseId;
 
   @override
   Widget build(BuildContext context) => Material(
@@ -41,7 +46,15 @@ class RecommendationTile extends StatelessWidget {
                 color: color.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: CourseArtwork(category: category, size: 24),
+                child: leading ??
+                  (courseId == null
+                    ? CourseArtwork(category: category, size: 24)
+                    : CourseIcon(
+                      courseId: courseId!,
+                      category: category,
+                      size: 24,
+                      fallback: CourseArtwork(category: category, size: 24),
+                    )),
             ),
             const SizedBox(width: 16),
             Expanded(

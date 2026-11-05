@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:brainbox/data/models/course_models.dart';
 import 'package:brainbox/data/models/learning_models.dart';
 import 'package:brainbox/presentation/widgets/course_artwork.dart';
+import 'package:brainbox/presentation/widgets/course_icon.dart';
 
 class PathCard extends StatelessWidget {
   const PathCard({required this.course, super.key});
@@ -18,7 +19,7 @@ class PathCard extends StatelessWidget {
       onTap: () => context.push('/course/${course.id}'),
       borderRadius: BorderRadius.circular(20),
       child: Container(
-        width: 170,
+        width: 210,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -47,7 +48,12 @@ class PathCard extends StatelessWidget {
                 color: Colors.white.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: CourseArtwork(category: course.category, size: 32),
+              child: CourseIcon(
+                courseId: course.id,
+                category: course.category,
+                size: 32,
+                fallback: CourseArtwork(category: course.category, size: 32),
+              ),
             ),
             const Spacer(),
             Text(
@@ -73,7 +79,8 @@ class PathCard extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(height: 12),
-            Row(
+            Wrap(
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 Icon(
                   Icons.menu_book_rounded,

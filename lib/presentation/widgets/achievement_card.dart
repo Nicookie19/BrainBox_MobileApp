@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:brainbox/core/constants/app_colors.dart';
+import 'package:brainbox/core/constants/app_assets.dart';
+import 'package:brainbox/presentation/widgets/asset_icon.dart';
 
 class AchievementCard extends StatelessWidget {
   const AchievementCard({
@@ -8,6 +10,8 @@ class AchievementCard extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.color,
+    this.imageAsset,
+    this.imageTint,
     this.isUnlocked = false,
     this.progress = 0,
     this.target = 1,
@@ -18,6 +22,8 @@ class AchievementCard extends StatelessWidget {
   final String title;
   final String subtitle;
   final Color color;
+  final String? imageAsset;
+  final Color? imageTint;
   final bool isUnlocked;
   final double progress;
   final double target;
@@ -51,12 +57,17 @@ class AchievementCard extends StatelessWidget {
                     : AppColors.bgTertiary,
                 borderRadius: BorderRadius.circular(14),
               ),
-              child: Image.asset(
-                _badgeAsset(),
-                fit: BoxFit.contain,
-                color: isUnlocked ? null : AppColors.textMuted,
-                colorBlendMode: isUnlocked ? null : BlendMode.srcIn,
-              ),
+              child: imageAsset == null
+                  ? AssetIcon(
+                      _badgeAsset(),
+                      size: 32,
+                      color: isUnlocked ? null : AppColors.textMuted,
+                    )
+                  : AssetIcon(
+                      imageAsset!,
+                      size: 32,
+                      color: imageTint ?? (isUnlocked ? null : AppColors.textMuted),
+                    ),
             ),
             const SizedBox(height: 12),
             Text(
@@ -135,11 +146,11 @@ class AchievementCard extends StatelessWidget {
 
   String _badgeAsset() {
     final text = '$title $subtitle'.toLowerCase();
-    if (text.contains('streak')) return 'assets/ui/fire.png';
+    if (text.contains('streak')) return AppAssets.fire;
     if (text.contains('course') || text.contains('starter')) {
-      return 'assets/ui/crown.png';
+      return AppAssets.crown;
     }
-    if (text.contains('lesson')) return 'assets/ui/code_brackets.png';
-    return 'assets/ui/badge_gold.png';
+    if (text.contains('lesson')) return AppAssets.codeBrackets;
+    return AppAssets.badgeGold;
   }
 }

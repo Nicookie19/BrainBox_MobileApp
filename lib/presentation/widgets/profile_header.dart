@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:brainbox/data/models/user_models.dart';
 import 'package:brainbox/core/constants/app_colors.dart';
+import 'package:brainbox/presentation/widgets/level_badge.dart';
 
 class ProfileHeader extends StatelessWidget {
   const ProfileHeader({required this.profile, super.key});
@@ -10,6 +11,15 @@ class ProfileHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final name = profile.displayName.trim();
+    final initials = name.isEmpty
+        ? 'B'
+        : name
+              .split(RegExp(r'\s+'))
+              .where((part) => part.isNotEmpty)
+              .take(2)
+              .map((part) => part.characters.first.toUpperCase())
+              .join();
     return Stack(
       children: [
         Column(
@@ -19,19 +29,31 @@ class ProfileHeader extends StatelessWidget {
               clipBehavior: Clip.none,
               children: [
                 Container(
-                  width: 82,
-                  height: 82,
+                  width: 86,
+                  height: 86,
                   decoration: BoxDecoration(
-                    gradient: AppColors.primaryGradient,
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF055CFF), Color(0xFFE6E90B)],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                    ),
                     shape: BoxShape.circle,
                     boxShadow: AppShadows.glow(AppColors.accentPrimary),
                   ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(13),
-                    child: Image.asset(
-                      'assets/ui/avatar.png',
-                      fit: BoxFit.contain,
-                      filterQuality: FilterQuality.high,
+                  padding: const EdgeInsets.all(2),
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      color: Color(0xFF40497B),
+                      shape: BoxShape.circle,
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      initials,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 26,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                   ),
                 ).animate().scale(delay: 100.ms),
@@ -49,9 +71,9 @@ class ProfileHeader extends StatelessWidget {
                     alignment: Alignment.center,
                     child: Padding(
                       padding: const EdgeInsets.all(5),
-                      child: Image.asset(
-                        'assets/ui/crown.png',
-                        fit: BoxFit.contain,
+                      child: LevelBadge(
+                        levelNumber: profile.level.number,
+                        size: 18,
                       ),
                     ),
                   ),
@@ -110,11 +132,16 @@ class ProfileHeader extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        Wrap(
+          spacing: 12,
+          runSpacing: 8,
+          alignment: WrapAlignment.spaceBetween,
           children: [
             Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
+                LevelBadge(levelNumber: profile.level.number, size: 20),
+                const SizedBox(width: 6),
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 8,

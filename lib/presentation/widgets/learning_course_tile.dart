@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:brainbox/presentation/providers/app_provider.dart';
 import 'package:brainbox/data/models/course_models.dart';
 import 'package:brainbox/data/models/learning_models.dart';
 import 'package:brainbox/core/constants/app_colors.dart';
 import 'package:brainbox/presentation/widgets/course_artwork.dart';
+import 'package:brainbox/presentation/widgets/course_icon.dart';
 
 class LearningCourseTile extends StatelessWidget {
   const LearningCourseTile({
@@ -21,6 +24,17 @@ class LearningCourseTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = _getCategoryColors(course.category);
+    final provider = context.watch<AppProvider>();
+    final lessons = provider.lessonsFor(course.id);
+    final nextId = provider.nextLessonIdFor(course.id);
+    final nextIndex = lessons.indexWhere((lesson) => lesson.id == nextId);
+    final subtitle = nextIndex >= 0
+        ? 'Lesson ${nextIndex + 1} · ${lessons[nextIndex].title}'
+        : 'No remaining lessons';
+    final totalXp = lessons.fold<int>(
+      0,
+      (sum, lesson) => sum + lesson.xpReward,
+    );
 
     return Material(
       color: Colors.transparent,
@@ -61,7 +75,15 @@ class LearningCourseTile extends StatelessWidget {
                         color: Colors.white,
                         size: 24,
                       )
-                    : CourseArtwork(category: course.category, size: 34),
+                    : CourseIcon(
+                        courseId: course.id,
+                        category: course.category,
+                        size: 34,
+                        fallback: CourseArtwork(
+                          category: course.category,
+                          size: 34,
+                        ),
+                      ),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -103,7 +125,7 @@ class LearningCourseTile extends StatelessWidget {
                     Text(
                       isCompleted
                           ? 'Completed · ${course.lessonCount} lessons'
-                          : 'Lesson ${(progress * course.lessonCount).ceil()} · ${_getCurrentLesson(course)}',
+                          : subtitle,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: AppColors.textSecondary,
                       ),
@@ -121,8 +143,9 @@ class LearningCourseTile extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    Wrap(
+                      spacing: 12,
+                      runSpacing: 4,
                       children: [
                         Text(
                           '${(progress * 100).round()}% complete',
@@ -134,7 +157,7 @@ class LearningCourseTile extends StatelessWidget {
                         ),
                         if (!isCompleted)
                           Text(
-                            '+${25 * course.lessonCount} XP total',
+                            '$totalXp XP total',
                             style: Theme.of(context).textTheme.bodySmall
                                 ?.copyWith(
                                   color: AppColors.accentPrimary,
@@ -156,11 +179,6 @@ class LearningCourseTile extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  String _getCurrentLesson(Course course) {
-    // This would come from actual progress
-    return 'CSS Flexbox';
   }
 
   List<Color> _getCategoryColors(LearningCategory category) {

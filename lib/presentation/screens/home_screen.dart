@@ -4,6 +4,9 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:brainbox/presentation/providers/app_provider.dart';
 import 'package:brainbox/presentation/widgets/continue_card.dart';
+import 'package:brainbox/core/constants/app_assets.dart';
+import 'package:brainbox/presentation/widgets/asset_icon.dart';
+import 'package:brainbox/presentation/widgets/level_badge.dart';
 import 'package:brainbox/presentation/widgets/daily_challenge_card.dart';
 import 'package:brainbox/presentation/widgets/path_card.dart';
 import 'package:brainbox/presentation/widgets/recommendation_tile.dart';
@@ -58,6 +61,10 @@ class HomeScreen extends StatelessWidget {
                           context.go('/explore');
                           return;
                         }
+                        if (!provider.hasLessons(course.id)) {
+                          context.push('/course/${course.id}');
+                          return;
+                        }
                         final next = provider.nextLessonIdFor(course.id);
                         context.push(
                           next == null
@@ -80,7 +87,7 @@ class HomeScreen extends StatelessWidget {
                       onPressed: () => context.go('/explore'),
                     ),
                     const SizedBox(height: 16),
-                    _buildPathCards(provider),
+                    _buildPathCards(context, provider),
                     const SizedBox(height: 28),
                     SectionHeading(
                       title: 'Recommended for You',
@@ -102,29 +109,31 @@ class HomeScreen extends StatelessWidget {
 
   Widget _buildWelcomePanel(BuildContext context, AppProvider provider) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(17, 13, 17, 15),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
             AppColors.bgCard,
             AppColors.bgCard,
-            AppColors.accentPrimary.withValues(alpha: 0.78),
+            AppColors.accentPrimarySoft,
           ],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppColors.borderDefault),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Wrap(
+            spacing: 12,
+            runSpacing: 8,
             children: [
               _welcomePill('DAILY PRACTICE'),
               _welcomePill(
                 '${provider.currentStreak} day${provider.currentStreak == 1 ? '' : 's'}',
-                icon: 'assets/ui/fire.png',
+                icon: AppAssets.fire,
                 accent: AppColors.accentWarningLight,
               ),
             ],
@@ -152,7 +161,7 @@ class HomeScreen extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (icon != null) ...[
-            Image.asset(icon, width: 13, height: 13),
+            AssetIcon(icon, size: 13),
             const SizedBox(width: 3),
           ],
           Text(
@@ -237,12 +246,19 @@ class HomeScreen extends StatelessWidget {
         children: [
           Row(
             children: [
-              _levelMetric(
-                context,
-                label: 'LEVEL',
-                value: '${level.number}',
-                color: AppColors.accentPrimaryLight,
-                alignment: CrossAxisAlignment.start,
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  LevelBadge(levelNumber: level.number, size: 24),
+                  const SizedBox(width: 6),
+                  _levelMetric(
+                    context,
+                    label: 'LEVEL',
+                    value: '${level.number}',
+                    color: AppColors.accentPrimaryLight,
+                    alignment: CrossAxisAlignment.start,
+                  ),
+                ],
               ),
               Expanded(
                 child: _levelMetric(
@@ -293,7 +309,7 @@ class HomeScreen extends StatelessWidget {
               Flexible(
                 child: Text(
                   nextXp > currentXp
-                      ? '$nextXp XP to next level'
+                      ? '${nextXp - currentXp} XP to next level'
                       : 'Top level reached',
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
                     color: AppColors.textMuted,
@@ -353,9 +369,9 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildPathCards(AppProvider provider) {
+  Widget _buildPathCards(BuildContext context, AppProvider provider) {
     return SizedBox(
-      height: 200,
+      height: 260 * MediaQuery.textScalerOf(context).scale(1).clamp(1.0, 2.0),
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -398,6 +414,7 @@ class HomeScreen extends StatelessWidget {
           if (i > 0) const SizedBox(height: 12),
           RecommendationTile(
             category: recommended[i].category,
+            courseId: recommended[i].id,
             title: recommended[i].title,
             subtitle:
                 '${recommended[i].lessonCount} lessons · ${recommended[i].difficulty.label}',

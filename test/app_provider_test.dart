@@ -1,4 +1,6 @@
 import 'package:brainbox/data/models/user_models.dart';
+import 'package:brainbox/data/models/course_models.dart';
+import 'package:brainbox/data/models/learning_models.dart';
 import 'package:brainbox/data/repositories/course_repository.dart';
 import 'package:brainbox/data/services/storage_backend.dart';
 import 'package:brainbox/data/services/storage_service.dart';
@@ -16,6 +18,30 @@ Future<AppProvider> _newProvider() async {
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  test(
+    'course categories and difficulty survive storage round trips',
+    () async {
+      final provider = await _newProvider();
+      final course = provider.courses.first;
+      for (final category in LearningCategory.values) {
+        for (final difficulty in DifficultyLevel.values) {
+          final original = course.copyWith(
+            category: category,
+            difficulty: difficulty,
+          );
+          final restored = Course.fromJson(original.toJson());
+          expect(restored.category, category);
+          expect(restored.difficulty, difficulty);
+          final legacy = original.toJson()
+            ..['category'] = category.name
+            ..['difficulty'] = difficulty.name;
+          expect(Course.fromJson(legacy).category, category);
+          expect(Course.fromJson(legacy).difficulty, difficulty);
+        }
+      }
+    },
+  );
 
   test('a new course starts at zero progress', () async {
     final provider = await _newProvider();
@@ -44,49 +70,61 @@ void main() {
     expect(provider.profile!.stats.totalLessonsCompleted, 1);
   });
 
-  test('finishing every lesson completes the course and pays rewards', () async {
-    final provider = await _newProvider();
-    final lessons = provider.lessonsFor('sql-basics');
-    expect(lessons, isNotEmpty);
+  test(
+    'finishing every lesson completes the course and pays rewards',
+    () async {
+      final provider = await _newProvider();
+      final lessons = provider.lessonsFor('sql-basics');
+      expect(lessons, isNotEmpty);
 
-    for (final lesson in lessons) {
-      await provider.completeLesson('sql-basics', lessonId: lesson.id);
-    }
+      for (final lesson in lessons) {
+        await provider.completeLesson('sql-basics', lessonId: lesson.id);
+      }
 
-    final profile = provider.profile!;
-    expect(provider.isCourseCompleted('sql-basics'), isTrue);
-    expect(provider.courseProgress('sql-basics'), 1.0);
-    expect(profile.stats.totalCoursesCompleted, 1);
-    expect(profile.stats.totalLessonsCompleted, lessons.length);
+      final profile = provider.profile!;
+      expect(provider.isCourseCompleted('sql-basics'), isTrue);
+      expect(provider.courseProgress('sql-basics'), 1.0);
+      expect(profile.stats.totalCoursesCompleted, 1);
+      expect(profile.stats.totalLessonsCompleted, lessons.length);
 
-    final starter = profile.achievements.firstWhere(
-      (a) => a.id == 'first_course',
-    );
-    expect(starter.isUnlocked, isTrue);
+      final starter = profile.achievements.firstWhere(
+        (a) => a.id == 'first_course',
+      );
+      expect(starter.isUnlocked, isTrue);
 
-    final lessonXp = lessons.fold<int>(0, (sum, l) => sum + l.xpReward);
-    expect(profile.totalXp, lessonXp + starter.xpReward);
-    expect(profile.level.number, UserLevel.getLevelForXp(profile.totalXp).number);
+      final lessonXp = lessons.fold<int>(0, (sum, l) => sum + l.xpReward);
+      expect(profile.totalXp, lessonXp + starter.xpReward);
+      expect(
+        profile.level.number,
+        UserLevel.getLevelForXp(profile.totalXp).number,
+      );
 
-    expect(provider.completedCourses.map((c) => c.id), contains('sql-basics'));
-    expect(
-      provider.recommendedCourses.map((c) => c.id),
-      isNot(contains('sql-basics')),
-    );
-  });
+      expect(
+        provider.completedCourses.map((c) => c.id),
+        contains('sql-basics'),
+      );
+      expect(
+        provider.recommendedCourses.map((c) => c.id),
+        isNot(contains('sql-basics')),
+      );
+    },
+  );
 
-  test('completing a challenge starts a streak and marks today active', () async {
-    final provider = await _newProvider();
-    await provider.completeChallenge();
+  test(
+    'completing a challenge starts a streak and marks today active',
+    () async {
+      final provider = await _newProvider();
+      await provider.completeChallenge();
 
-    expect(provider.profile!.xp, 50);
-    expect(provider.profile!.stats.currentStreakDays, 1);
-    expect(provider.currentStreak, 1);
+      expect(provider.profile!.xp, 50);
+      expect(provider.profile!.stats.currentStreakDays, 1);
+      expect(provider.currentStreak, 1);
 
-    final todayIndex = DateTime.now().toUtc().weekday - 1;
-    expect(provider.weekActivity[todayIndex], isTrue);
-    expect(provider.weeklyStudyMinutes, greaterThan(0));
-  });
+      final todayIndex = DateTime.now().toUtc().weekday - 1;
+      expect(provider.weekActivity[todayIndex], isTrue);
+      expect(provider.weeklyStudyMinutes, greaterThan(0));
+    },
+  );
 
   test('a streak lapses after a missed day', () async {
     final provider = await _newProvider();
@@ -127,7 +165,10 @@ void main() {
     final reloaded = AppProvider();
     await reloaded.initialize();
 
-    expect(reloaded.profile!.completedLessonIds, contains('sql-basics:lesson_1'));
+    expect(
+      reloaded.profile!.completedLessonIds,
+      contains('sql-basics:lesson_1'),
+    );
     expect(reloaded.courseProgress('sql-basics'), closeTo(0.25, 0.0001));
   });
 }

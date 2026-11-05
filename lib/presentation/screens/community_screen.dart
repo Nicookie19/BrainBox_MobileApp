@@ -72,6 +72,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
                             final post = provider.posts[index];
                             return CommunityPostWidget(
                                   post: post,
+                                  onReport: () => provider.reportPost(post.id),
                                   onVote: (vote) =>
                                       provider.toggleVote(post.id, vote),
                                   onReply: () =>
@@ -451,12 +452,12 @@ class _ReplyBottomSheetState extends State<_ReplyBottomSheet> {
             children: [
               CircleAvatar(
                 radius: 16,
-                backgroundColor: AppColors.accentPrimarySoft,
+                backgroundColor: const Color(0xFF383F67),
                 child: Text(
                   (reply.authorName.isEmpty ? '?' : reply.authorName[0])
                       .toUpperCase(),
-                  style: TextStyle(
-                    color: AppColors.accentPrimary,
+                  style: const TextStyle(
+                    color: Colors.white,
                     fontWeight: FontWeight.w700,
                     fontSize: 12,
                   ),

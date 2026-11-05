@@ -9,6 +9,8 @@ import 'package:brainbox/data/repositories/course_repository.dart';
 import 'package:brainbox/data/services/storage_service.dart';
 import 'package:brainbox/data/models/course_models.dart';
 import 'package:brainbox/core/constants/app_colors.dart';
+import 'package:brainbox/core/constants/app_assets.dart';
+import 'package:brainbox/presentation/widgets/asset_icon.dart';
 import 'package:brainbox/presentation/widgets/brand_mark.dart';
 
 class LessonScreen extends StatefulWidget {
@@ -30,6 +32,7 @@ class _LessonScreenState extends State<LessonScreen>
   int _currentStepIndex = 0;
   late AnimationController _progressController;
   bool _isCompleted = false;
+  bool _savingCompletion = false;
   bool _courseNotFound = false;
   bool _lessonNotFound = false;
 
@@ -72,7 +75,9 @@ class _LessonScreenState extends State<LessonScreen>
         _course = course;
         _lessonData = lessonData;
         _courseNotFound = course == null;
-        _lessonNotFound = lessonData == null || lessonData.modules.isEmpty;
+        _lessonNotFound =
+            lessonData == null ||
+            lessonData.modules.every((module) => module.lessons.isEmpty);
 
         if (course != null && lessonData != null) {
           _allLessons = lessonData.modules.expand((m) => m.lessons).toList();
@@ -101,25 +106,38 @@ class _LessonScreenState extends State<LessonScreen>
     }
   }
 
-  void _loadLessonProgress() async {
+  Future<void> _loadLessonProgress() async {
     final lesson = _getCurrentLesson();
-    if (lesson != null) {
-      final progress = await LessonProgressRepository.loadProgress(
-        widget.courseId,
-        lesson.id,
-      );
-      if (progress != null) {
-        setState(() {
-          _currentStepIndex = progress.currentStepIndex;
-          _answeredSteps = progress.answeredSteps;
-          // Restore answer state for current step
-          if (progress.answeredSteps.containsKey(_currentStepIndex)) {
-            _selectedAnswer = progress.answeredSteps[_currentStepIndex];
-            _stepAnswered = true;
-          }
-        });
-      }
+    if (lesson == null || lesson.steps.isEmpty) return;
+    final progress = await LessonProgressRepository.loadProgress(
+      widget.courseId,
+      lesson.id,
+    );
+    if (!mounted ||
+        _getCurrentLesson()?.id != lesson.id ||
+        progress == null ||
+        progress.isFinished) {
+      return;
     }
+    setState(() {
+      _currentStepIndex = progress.currentStepIndex.clamp(
+        0,
+        lesson.steps.length - 1,
+      );
+      _answeredSteps = Map.of(progress.answeredSteps);
+      final step = lesson.steps[_currentStepIndex];
+      final answer = _answeredSteps[_currentStepIndex];
+      // Older saves only retained correctness for text/ordering questions.
+      // Reattempt those steps rather than restoring an answer that was never saved.
+      if (step.type == lr.LessonStepType.multipleChoice &&
+          answer != null &&
+          answer >= 0 &&
+          answer < (step.options?.length ?? 0)) {
+        _selectedAnswer = answer;
+        _stepAnswered = true;
+        _stepCorrect = answer == step.correctAnswer;
+      }
+    });
   }
 
   lr.Lesson? _getCurrentLesson() {
@@ -400,10 +418,7 @@ class _LessonScreenState extends State<LessonScreen>
                 color: AppColors.accentSecondary.withValues(alpha: 0.35),
                 borderRadius: BorderRadius.circular(9),
               ),
-              child: Image.asset(
-                'assets/ui/code_brackets.png',
-                fit: BoxFit.contain,
-              ),
+              child: _buildStepTypeIcon(_getCurrentStep()?.type),
             ),
             const SizedBox(width: 10),
             Expanded(
@@ -441,6 +456,20 @@ class _LessonScreenState extends State<LessonScreen>
         return _buildFillInBlankStep(step);
       case lr.LessonStepType.codeOrdering:
         return _buildCodeOrderingStep(step);
+    }
+  }
+
+  Widget _buildStepTypeIcon(lr.LessonStepType? type) {
+    switch (type) {
+      case lr.LessonStepType.codeOrdering:
+        return const AssetIcon(AppAssets.codeBrackets, size: 20);
+      case lr.LessonStepType.explanation:
+        return const Icon(Icons.lightbulb_outline_rounded, color: Colors.white);
+      case lr.LessonStepType.fillInBlank:
+        return const Icon(Icons.edit_rounded, color: Colors.white);
+      case lr.LessonStepType.multipleChoice:
+      case null:
+        return const Icon(Icons.quiz_outlined, color: Colors.white);
     }
   }
 
@@ -866,7 +895,9 @@ class _LessonScreenState extends State<LessonScreen>
               ),
             const SizedBox(height: 12),
             FilledButton.icon(
-              onPressed: _stepAnswered || isExplanation ? _nextStep : null,
+              onPressed: !_savingCompletion && (_stepAnswered || isExplanation)
+                  ? _nextStep
+                  : null,
               icon: Icon(
                 isLastStep
                     ? Icons.check_circle_outline_rounded
@@ -921,37 +952,48 @@ class _LessonScreenState extends State<LessonScreen>
     }
   }
 
-  void _completeLesson() {
+  Future<void> _completeLesson() async {
     final lesson = _getCurrentLesson();
-    if (lesson == null) return;
-
-    // Mark lesson as completed and drop its saved step progress so a replay
-    // starts clean.
-    LessonProgressRepository.clearProgress(widget.courseId, lesson.id);
-    if (_currentLessonIndex < _allLessons.length - 1) {
-      setState(() {
-        _answeredSteps = {};
-        _currentLessonIndex++;
-        _currentStepIndex = 0;
-        _selectedAnswer = null;
-        _fillInBlankAnswer = null;
-        _answerController.clear();
-        _codeOrderAnswer = null;
-        _stepAnswered = false;
-        _stepCorrect = false;
-      });
-      _progressController.forward(from: 0);
-      _awardXp(lesson.id);
-    } else {
-      setState(() => _isCompleted = true);
-      _awardXp(lesson.id);
-      _showCompletionDialog();
-    }
-  }
-
-  Future<void> _awardXp(String lessonId) async {
+    if (lesson == null || _savingCompletion) return;
     final provider = context.read<AppProvider>();
-    await provider.completeLesson(widget.courseId, lessonId: lessonId);
+    final previousXp = provider.xp;
+    setState(() => _savingCompletion = true);
+    try {
+      await provider.completeLesson(widget.courseId, lessonId: lesson.id);
+      await LessonProgressRepository.clearProgress(widget.courseId, lesson.id);
+      if (!mounted) return;
+      if (_currentLessonIndex < _allLessons.length - 1) {
+        setState(() {
+          _answeredSteps = {};
+          _currentLessonIndex++;
+          _currentStepIndex = 0;
+          _selectedAnswer = null;
+          _fillInBlankAnswer = null;
+          _answerController.clear();
+          _codeOrderAnswer = null;
+          _stepAnswered = false;
+          _stepCorrect = false;
+        });
+        await _loadLessonProgress();
+        if (mounted) _progressController.forward(from: 0);
+      } else {
+        setState(() => _isCompleted = true);
+        _showCompletionDialog(
+          provider.xp - previousXp,
+          provider.isCourseCompleted(widget.courseId),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Could not save your progress. Please try again.'),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _savingCompletion = false);
+    }
   }
 
   Future<void> _downloadCurrentLesson() async {
@@ -998,7 +1040,7 @@ class _LessonScreenState extends State<LessonScreen>
     );
   }
 
-  void _showCompletionDialog() {
+  void _showCompletionDialog(int earnedXp, bool courseComplete) {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -1020,14 +1062,18 @@ class _LessonScreenState extends State<LessonScreen>
               ),
             ),
             const SizedBox(width: 12),
-            const Expanded(child: Text('Course Complete!')),
+            Expanded(
+              child: Text(
+                courseComplete ? 'Course Complete!' : 'Lesson Complete!',
+              ),
+            ),
           ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              '+${_allLessons.fold(0, (sum, l) => sum + l.xpReward)} XP earned',
+              '+$earnedXp XP earned',
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                 color: AppColors.accentPrimary,
                 fontWeight: FontWeight.w700,
@@ -1035,7 +1081,9 @@ class _LessonScreenState extends State<LessonScreen>
             ),
             const SizedBox(height: 8),
             Text(
-              'You\'ve completed all lessons in ${_course!.title}!',
+              courseComplete
+                  ? 'You have completed all lessons in ${_course!.title}!'
+                  : 'Lesson saved. Continue the remaining lessons from your course.',
               style: Theme.of(
                 context,
               ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),

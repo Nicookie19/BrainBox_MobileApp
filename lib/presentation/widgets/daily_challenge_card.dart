@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:brainbox/core/constants/app_colors.dart';
+import 'package:brainbox/core/constants/app_assets.dart';
+import 'package:brainbox/presentation/widgets/asset_icon.dart';
 
 class DailyChallengeCard extends StatelessWidget {
   const DailyChallengeCard({
@@ -65,10 +67,7 @@ class DailyChallengeCard extends StatelessWidget {
                       )
                     : SizedBox.square(
                         dimension: 28,
-                        child: Image.asset(
-                          'assets/ui/bolt.png',
-                          fit: BoxFit.contain,
-                        ),
+                        child: const AssetIcon(AppAssets.bolt, size: 28),
                       ),
               ),
               const SizedBox(width: 16),

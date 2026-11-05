@@ -87,6 +87,8 @@ void main() {
     // Verify completion screen
     expect(find.text('Challenge Complete!'), findsOneWidget);
     expect(find.text('+50 XP'), findsOneWidget);
+    expect(DailyChallengeRepository.isCompletedForDate(fixedDate), isTrue);
+    expect(DailyChallengeRepository.getScoreForDate(fixedDate), 5);
   });
 
   testWidgets('Home screen renders without crash', (WidgetTester tester) async {

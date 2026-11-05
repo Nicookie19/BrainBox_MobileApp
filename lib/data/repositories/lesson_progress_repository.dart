@@ -41,8 +41,15 @@ class LessonProgressRepository {
       final answers = Map<String, dynamic>.from(
         data['answeredSteps'] as Map? ?? {},
       );
+      final step = data['currentStepIndex'] as int? ?? 0;
+      if (step < 0 ||
+          answers.entries.any(
+            (entry) => int.parse(entry.key) < 0 || (entry.value as int) < 0,
+          )) {
+        return null;
+      }
       return LessonProgress(
-        currentStepIndex: data['currentStepIndex'] as int? ?? 0,
+        currentStepIndex: step,
         answeredSteps: answers.map(
           (key, value) => MapEntry(int.parse(key), value as int),
         ),
