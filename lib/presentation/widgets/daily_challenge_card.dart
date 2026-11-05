@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:brainbox/core/constants/app_colors.dart';
+import 'package:brainbox/core/constants/app_assets.dart';
+import 'package:brainbox/presentation/widgets/asset_icon.dart';
 
 class DailyChallengeCard extends StatelessWidget {
   const DailyChallengeCard({
@@ -57,11 +59,16 @@ class DailyChallengeCard extends StatelessWidget {
                       : AppColors.accentWarning,
                   borderRadius: BorderRadius.circular(16),
                 ),
-                child: Icon(
-                  isCompleted ? Icons.check_rounded : Icons.bolt_rounded,
-                  color: Colors.white,
-                  size: 28,
-                ),
+                child: isCompleted
+                    ? const Icon(
+                        Icons.check_rounded,
+                        color: Colors.white,
+                        size: 28,
+                      )
+                    : SizedBox.square(
+                        dimension: 28,
+                        child: const AssetIcon(AppAssets.bolt, size: 28),
+                      ),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -88,7 +95,10 @@ class DailyChallengeCard extends StatelessWidget {
               ),
               if (!isCompleted)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.accentWarning,
                     borderRadius: BorderRadius.circular(20),
@@ -103,10 +113,7 @@ class DailyChallengeCard extends StatelessWidget {
                   ),
                 )
               else
-                Icon(
-                  Icons.chevron_right_rounded,
-                  color: AppColors.textMuted,
-                ),
+                Icon(Icons.chevron_right_rounded, color: AppColors.textMuted),
             ],
           ),
         ),

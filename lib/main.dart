@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'core/constants/app_colors.dart';
 import 'core/theme/app_theme.dart';
 import 'data/repositories/course_repository.dart';
 import 'data/services/storage_service.dart';
@@ -19,9 +19,21 @@ import 'presentation/screens/lesson_screen.dart';
 import 'presentation/screens/profile_screen.dart';
 import 'presentation/screens/settings_screen.dart';
 import 'presentation/widgets/app_shell.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
+  const supabaseKey = String.fromEnvironment('SUPABASE_PUBLISHABLE_KEY');
+  if (supabaseUrl.isNotEmpty || supabaseKey.isNotEmpty) {
+    if (supabaseUrl.isEmpty || supabaseKey.isEmpty) {
+      throw StateError(
+        'Provide both SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY.',
+      );
+    }
+    await Supabase.initialize(url: supabaseUrl, publishableKey: supabaseKey);
+  }
+
   await StorageService.init();
   await CourseRepository.initializeSampleCourses();
   runApp(const BrainBoxApp());
@@ -38,45 +50,7 @@ class BrainBoxApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.darkTheme,
       routerConfig: _router,
-      builder: (context, child) =>
-          _MobileAppFrame(child: child ?? const SizedBox.shrink()),
     ),
-  );
-}
-
-/// Keeps the web and desktop previews faithful to the phone-first product.
-/// On actual phones the app remains full screen; wider viewports receive a
-/// centered handset canvas instead of a stretched tablet/desktop layout.
-class _MobileAppFrame extends StatelessWidget {
-  const _MobileAppFrame({required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) => LayoutBuilder(
-    builder: (context, constraints) {
-      if (constraints.maxWidth <= 600) return child;
-      return ColoredBox(
-        color: AppColors.bgPrimary,
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 430, maxHeight: 900),
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: AppColors.bgPrimary,
-                borderRadius: BorderRadius.circular(32),
-                border: Border.all(color: AppColors.borderDefault),
-                boxShadow: AppShadows.cardElevated,
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(32),
-                child: child,
-              ),
-            ),
-          ),
-        ),
-      );
-    },
   );
 }
 

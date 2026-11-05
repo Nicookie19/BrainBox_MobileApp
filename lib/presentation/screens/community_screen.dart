@@ -72,6 +72,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
                             final post = provider.posts[index];
                             return CommunityPostWidget(
                                   post: post,
+                                  onReport: () => provider.reportPost(post.id),
                                   onVote: (vote) =>
                                       provider.toggleVote(post.id, vote),
                                   onReply: () =>
@@ -138,10 +139,12 @@ class _CommunityScreenState extends State<CommunityScreen> {
               color: AppColors.accentPrimary,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(
-              Icons.groups_rounded,
-              color: Colors.white,
-              size: 22,
+            child: SizedBox.square(
+              dimension: 22,
+              child: Image.asset(
+                'assets/ui/nav_community.png',
+                fit: BoxFit.contain,
+              ),
             ),
           ),
           const SizedBox(width: 12),
@@ -180,7 +183,15 @@ class _CommunityScreenState extends State<CommunityScreen> {
       ),
       child: Column(
         children: [
-          Icon(Icons.forum_outlined, size: 64, color: AppColors.textMuted),
+          SizedBox.square(
+            dimension: 64,
+            child: Image.asset(
+              'assets/ui/character.png',
+              fit: BoxFit.contain,
+              color: AppColors.textMuted,
+              colorBlendMode: BlendMode.srcIn,
+            ),
+          ),
           const SizedBox(height: 16),
           Text(
             'No posts yet',
@@ -441,12 +452,12 @@ class _ReplyBottomSheetState extends State<_ReplyBottomSheet> {
             children: [
               CircleAvatar(
                 radius: 16,
-                backgroundColor: AppColors.accentPrimarySoft,
+                backgroundColor: const Color(0xFF383F67),
                 child: Text(
                   (reply.authorName.isEmpty ? '?' : reply.authorName[0])
                       .toUpperCase(),
-                  style: TextStyle(
-                    color: AppColors.accentPrimary,
+                  style: const TextStyle(
+                    color: Colors.white,
                     fontWeight: FontWeight.w700,
                     fontSize: 12,
                   ),

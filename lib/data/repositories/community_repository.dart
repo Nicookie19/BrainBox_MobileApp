@@ -63,7 +63,7 @@ class CommunityRepository {
     final post = CommunityPost(
       id: 'local_${now.microsecondsSinceEpoch}',
       authorId: 'current_user',
-      authorName: 'Alex Rivera',
+      authorName: StorageService.getUserProfile()?.displayName ?? 'Learner',
       title: trimmedTitle,
       content: trimmedContent,
       type: type,
@@ -154,19 +154,26 @@ class CommunityRepository {
       throw const FormatException('Reply must be at least 3 characters.');
     }
 
+    final posts = await getPosts();
+    final postIndex = posts.indexWhere((p) => p.id == postId);
+    if (postIndex == -1) throw StateError('Post not found: $postId');
+    final replies = await getReplies(postId);
+    if (parentReplyId != null &&
+        _findReplyById(replies, parentReplyId) == null) {
+      throw StateError('Parent reply not found: $parentReplyId');
+    }
     final now = DateTime.now();
     final reply = PostReply(
       id: 'reply_${now.microsecondsSinceEpoch}',
       postId: postId,
       authorId: 'current_user',
-      authorName: 'Alex Rivera',
+      authorName: StorageService.getUserProfile()?.displayName ?? 'Learner',
       content: trimmedContent,
       parentReplyId: parentReplyId,
       createdAt: now,
       updatedAt: now,
     );
 
-    final replies = await getReplies(postId);
     if (parentReplyId != null) {
       // Find parent and add as nested reply
       final updatedReplies = _addNestedReply(replies, parentReplyId, reply);
@@ -177,8 +184,6 @@ class CommunityRepository {
     }
 
     // Update post reply count
-    final posts = await getPosts();
-    final postIndex = posts.indexWhere((p) => p.id == postId);
     if (postIndex != -1) {
       final updatedPost = posts[postIndex].copyWith(
         replyCount: posts[postIndex].replyCount + 1,

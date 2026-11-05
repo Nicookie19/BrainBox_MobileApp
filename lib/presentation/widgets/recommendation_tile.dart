@@ -1,22 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:brainbox/core/constants/app_colors.dart';
+import 'package:brainbox/data/models/learning_models.dart';
+import 'package:brainbox/presentation/widgets/course_artwork.dart';
+import 'package:brainbox/presentation/widgets/course_icon.dart';
 
 class RecommendationTile extends StatelessWidget {
   const RecommendationTile({
-    required this.icon,
+    required this.category,
     required this.title,
     required this.subtitle,
     required this.color,
     required this.onTap,
+    this.leading,
+    this.courseId,
     super.key,
   });
 
-  final IconData icon;
+  final LearningCategory category;
   final String title;
   final String subtitle;
   final Color color;
   final VoidCallback onTap;
+  final Widget? leading;
+  final String? courseId;
 
   @override
   Widget build(BuildContext context) => Material(
@@ -39,7 +46,15 @@ class RecommendationTile extends StatelessWidget {
                 color: color.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(icon, color: color, size: 24),
+                child: leading ??
+                  (courseId == null
+                    ? CourseArtwork(category: category, size: 24)
+                    : CourseIcon(
+                      courseId: courseId!,
+                      category: category,
+                      size: 24,
+                      fallback: CourseArtwork(category: category, size: 24),
+                    )),
             ),
             const SizedBox(width: 16),
             Expanded(

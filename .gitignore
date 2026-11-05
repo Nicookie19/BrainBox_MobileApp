@@ -45,5 +45,7 @@ app.*.map.json
 /android/app/release
 
 # Local backend configuration. Pass values at build time instead:
-# --dart-define=SUPABASE_URL=... --dart-define=SUPABASE_ANON_KEY=...
+# --dart-define=SUPABASE_URL=... --dart-define=SUPABASE_PUBLISHABLE_KEY=...
 .env
+
+/config/*.local.json

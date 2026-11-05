@@ -3,6 +3,8 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:brainbox/data/models/user_models.dart';
 import 'package:brainbox/presentation/providers/app_provider.dart';
 import 'package:brainbox/core/constants/app_colors.dart';
+import 'package:brainbox/core/constants/app_assets.dart';
+import 'package:brainbox/presentation/widgets/asset_icon.dart';
 
 class ProfileStats extends StatelessWidget {
   const ProfileStats({required this.profile, super.key});
@@ -23,7 +25,7 @@ class ProfileStats extends StatelessWidget {
             child: _StatItem(
               value: '${AppProvider.effectiveStreak(profile)}',
               label: 'Day Streak',
-              icon: Icons.local_fire_department_rounded,
+              asset: AppAssets.fire,
               color: AppColors.accentWarning,
             ),
           ),
@@ -32,7 +34,7 @@ class ProfileStats extends StatelessWidget {
             child: _StatItem(
               value: '${profile.totalXp}',
               label: 'Total XP',
-              icon: Icons.bolt_rounded,
+              asset: AppAssets.bolt,
               color: AppColors.accentPrimary,
             ),
           ),
@@ -41,7 +43,7 @@ class ProfileStats extends StatelessWidget {
             child: _StatItem(
               value: '${profile.enrolledCourseIds.length}',
               label: 'Active Paths',
-              icon: Icons.school_rounded,
+              asset: AppAssets.navLearn,
               color: AppColors.accentSecondary,
             ),
           ),
@@ -50,7 +52,7 @@ class ProfileStats extends StatelessWidget {
             child: _StatItem(
               value: '${profile.stats.totalCoursesCompleted}',
               label: 'Completed',
-              icon: Icons.check_circle_rounded,
+              asset: AppAssets.badgeGold,
               color: AppColors.accentSuccess,
             ),
           ),
@@ -64,13 +66,13 @@ class _StatItem extends StatelessWidget {
   const _StatItem({
     required this.value,
     required this.label,
-    required this.icon,
+    required this.asset,
     required this.color,
   });
 
   final String value;
   final String label;
-  final IconData icon;
+  final String asset;
   final Color color;
 
   @override
@@ -83,21 +85,24 @@ class _StatItem extends StatelessWidget {
             color: color.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Icon(icon, color: color, size: 22),
+          child: SizedBox.square(
+            dimension: 22,
+            child: AssetIcon(asset, size: 22),
+          ),
         ),
         const SizedBox(height: 10),
         Text(
           value,
-          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.w700,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 2),
         Text(
           label,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: AppColors.textMuted,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: AppColors.textMuted),
           textAlign: TextAlign.center,
         ),
       ],

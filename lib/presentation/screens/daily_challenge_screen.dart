@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import 'package:brainbox/presentation/providers/app_provider.dart';
 import 'package:brainbox/data/repositories/daily_challenge_repository.dart';
 import 'package:brainbox/core/constants/app_colors.dart';
+import 'package:brainbox/core/constants/app_assets.dart';
+import 'package:brainbox/presentation/widgets/asset_icon.dart';
 
 class DailyChallengeScreen extends StatefulWidget {
   final DateTime? fixedDate;
@@ -23,6 +25,8 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen>
   bool _answered = false;
   bool _finished = false;
   bool _alreadyCompleted = false;
+  bool _saving = false;
+  late final DateTime _challengeDate;
   late AnimationController _progressController;
 
   @override
@@ -32,6 +36,7 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen>
       duration: const Duration(milliseconds: 400),
       vsync: this,
     );
+    _challengeDate = widget.fixedDate ?? DateTime.now();
     _loadDailyChallenge();
   }
 
@@ -42,7 +47,7 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen>
   }
 
   Future<void> _loadDailyChallenge() async {
-    final today = widget.fixedDate ?? DateTime.now();
+    final today = _challengeDate;
     _questions = DailyChallengeRepository.getDailyQuestions(today);
     _alreadyCompleted = DailyChallengeRepository.isCompletedForDate(today);
 
@@ -123,7 +128,7 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen>
   }
 
   Widget _buildAlreadyCompletedScreen() {
-    final score = DailyChallengeRepository.getScoreForDate(DateTime.now());
+    final score = DailyChallengeRepository.getScoreForDate(_challengeDate);
     return Scaffold(
       backgroundColor: AppColors.bgPrimary,
       appBar: AppBar(
@@ -206,11 +211,7 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen>
                   color: AppColors.accentWarningSoft,
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(
-                  Icons.bolt_rounded,
-                  color: AppColors.accentWarning,
-                  size: 20,
-                ),
+                child: const AssetIcon(AppAssets.bolt, size: 20),
               ),
               const SizedBox(width: 12),
               Text(
@@ -455,7 +456,7 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen>
       child: SafeArea(
         top: false,
         child: FilledButton(
-          onPressed: _answered ? _nextQuestion : null,
+          onPressed: _answered && !_saving ? _nextQuestion : null,
           style: FilledButton.styleFrom(
             backgroundColor: AppColors.accentWarning,
             foregroundColor: AppColors.textOnAccent,
@@ -488,14 +489,7 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen>
       child: SafeArea(
         top: false,
         child: FilledButton(
-          onPressed: () async {
-            final today = widget.fixedDate ?? DateTime.now();
-            await DailyChallengeRepository.markCompletedForDate(today, _score);
-            if (!mounted) return;
-            context.read<AppProvider>().completeChallenge();
-            if (!mounted) return;
-            context.pop();
-          },
+          onPressed: () => context.pop(),
           style: FilledButton.styleFrom(
             backgroundColor: AppColors.accentPrimary,
             foregroundColor: AppColors.textOnAccent,
@@ -522,10 +516,30 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen>
     });
   }
 
-  void _nextQuestion() {
+  Future<void> _nextQuestion() async {
+    if (_saving || !_answered) return;
     if (_currentIndex == _questions.length - 1) {
-      setState(() => _finished = true);
-      _progressController.forward();
+      setState(() => _saving = true);
+      try {
+        final provider = context.read<AppProvider?>();
+        await provider?.completeChallenge(date: _challengeDate);
+        await DailyChallengeRepository.markCompletedForDate(
+          _challengeDate,
+          _score,
+        );
+        if (!mounted) return;
+        setState(() => _finished = true);
+        _progressController.forward();
+      } catch (_) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Could not save the challenge. Please try again.'),
+          ),
+        );
+      } finally {
+        if (mounted) setState(() => _saving = false);
+      }
     } else {
       setState(() {
         _currentIndex++;

@@ -1,128 +1,114 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
-import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
-import 'package:brainbox/presentation/providers/app_provider.dart';
 import 'package:brainbox/core/constants/app_colors.dart';
 import 'package:brainbox/presentation/widgets/brand_mark.dart';
 
-class AppShell extends StatefulWidget {
+class AppShell extends StatelessWidget {
+  const AppShell({required this.child, super.key});
   final Widget child;
-
-  const AppShell({super.key, required this.child});
-
-  @override
-  State<AppShell> createState() => _AppShellState();
-}
-
-class _AppShellState extends State<AppShell> with TickerProviderStateMixin {
-  late AnimationController _navController;
-
   static const _routes = ['/', '/explore', '/learn', '/community', '/profile'];
-
-  static const List<NavigationDestination> _destinations = [
-    NavigationDestination(
-      icon: Icon(Icons.home_outlined),
-      selectedIcon: Icon(Icons.home_rounded),
-      label: 'Today',
-    ),
-    NavigationDestination(
-      icon: Icon(Icons.explore_outlined),
-      selectedIcon: Icon(Icons.explore_rounded),
-      label: 'Explore',
-    ),
-    NavigationDestination(
-      icon: Icon(Icons.school_outlined),
-      selectedIcon: Icon(Icons.school_rounded),
-      label: 'Learn',
-    ),
-    NavigationDestination(
-      icon: Icon(Icons.forum_outlined),
-      selectedIcon: Icon(Icons.forum_rounded),
-      label: 'Community',
-    ),
-    NavigationDestination(
-      icon: Icon(Icons.person_outline),
-      selectedIcon: Icon(Icons.person_rounded),
-      label: 'Profile',
-    ),
+  static const _labels = ['Today', 'Explore', 'Learn', 'Community', 'Profile'];
+  static const _icons = [
+    Icons.home_outlined,
+    Icons.explore_outlined,
+    Icons.auto_stories_outlined,
+    Icons.forum_outlined,
+    Icons.person_outline_rounded,
   ];
 
   @override
-  void initState() {
-    super.initState();
-    _navController = AnimationController(
-      duration: const Duration(milliseconds: 300),
-      vsync: this,
-    );
-  }
-
-  @override
-  void dispose() {
-    _navController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final currentPath = GoRouterState.of(context).uri.path;
-    final selectedIndex = _routes.indexWhere((route) => currentPath == route);
-    return Consumer<AppProvider>(
-      builder: (context, provider, _) => Scaffold(
-        body: Column(
-          children: [
-            Container(
-              height: 76,
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 18),
-              alignment: Alignment.centerLeft,
-              decoration: const BoxDecoration(
-                color: AppColors.bgSecondary,
-                border: Border(
-                  bottom: BorderSide(color: AppColors.borderDefault),
+    final index = _routes.indexOf(GoRouterState.of(context).uri.path);
+    final selected = index < 0 ? 0 : index;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final wide = constraints.maxWidth >= 900;
+        return Scaffold(
+          appBar: AppBar(
+            title: Row(
+              children: [
+                const BrandMark(size: 32),
+                const SizedBox(width: 10),
+                Flexible(
+                  child: Text(
+                    'BrainBox',
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
                 ),
-              ),
-              child: const BrandMark(size: 38),
+              ],
             ),
-            Expanded(child: widget.child),
-          ],
-        ),
-        bottomNavigationBar: Container(
-          decoration: BoxDecoration(
-            color: AppColors.bgCard,
-            border: Border(top: BorderSide(color: AppColors.borderDefault)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.3),
-                blurRadius: 20,
-                offset: const Offset(0, -4),
+            actions: [
+              IconButton(
+                tooltip: 'Saved lessons',
+                icon: const Icon(Icons.bookmarks_outlined),
+                onPressed: () => context.push('/bookmarks'),
               ),
+              IconButton(
+                tooltip: 'Downloads',
+                icon: const Icon(Icons.download_outlined),
+                onPressed: () => context.push('/downloads'),
+              ),
+              const SizedBox(width: 8),
             ],
           ),
-          child: SafeArea(
+          body: SafeArea(
             top: false,
-            child:
-                NavigationBar(
-                      selectedIndex: selectedIndex == -1 ? 0 : selectedIndex,
-                      onDestinationSelected: (index) {
-                        _navController.forward(from: 0);
-                        context.go(_routes[index]);
-                      },
-                      height: 72,
-                      backgroundColor: Colors.transparent,
-                      surfaceTintColor: Colors.transparent,
-                      indicatorColor: AppColors.accentPrimarySoft,
-                      labelBehavior:
-                          NavigationDestinationLabelBehavior.onlyShowSelected,
-                      animationDuration: const Duration(milliseconds: 300),
-                      destinations: _destinations,
-                    )
-                    .animate(controller: _navController)
-                    .fadeIn(duration: 300.ms)
-                    .slideY(begin: 1, end: 0),
+            child: Row(
+              children: [
+                if (wide) ...[
+                  NavigationRail(
+                    extended: constraints.maxWidth >= 1200,
+                    backgroundColor: AppColors.bgPrimary,
+                    selectedIndex: selected,
+                    onDestinationSelected: (i) => context.go(_routes[i]),
+                    labelType: constraints.maxWidth >= 1200
+                        ? NavigationRailLabelType.none
+                        : NavigationRailLabelType.all,
+                    destinations: List.generate(
+                      _routes.length,
+                      (i) => NavigationRailDestination(
+                        icon: Icon(_icons[i]),
+                        label: Text(_labels[i]),
+                      ),
+                    ),
+                    trailing: Padding(
+                      padding: const EdgeInsets.only(top: 24),
+                      child: IconButton(
+                        tooltip: 'Settings',
+                        icon: const Icon(Icons.settings_outlined),
+                        onPressed: () => context.push('/settings'),
+                      ),
+                    ),
+                  ),
+                  const VerticalDivider(width: 1),
+                ],
+                Expanded(
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 960),
+                      child: child,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-      ),
+          bottomNavigationBar: wide
+              ? null
+              : NavigationBar(
+                  selectedIndex: selected,
+                  onDestinationSelected: (i) => context.go(_routes[i]),
+                  destinations: List.generate(
+                    _routes.length,
+                    (i) => NavigationDestination(
+                      icon: Icon(_icons[i]),
+                      label: _labels[i],
+                    ),
+                  ),
+                ),
+        );
+      },
     );
   }
 }

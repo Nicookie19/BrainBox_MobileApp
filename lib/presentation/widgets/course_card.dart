@@ -3,6 +3,8 @@ import 'package:brainbox/data/models/course_models.dart';
 import 'package:brainbox/data/models/learning_models.dart';
 import 'package:brainbox/core/constants/app_colors.dart';
 import 'package:brainbox/presentation/widgets/course_artwork.dart';
+import 'package:brainbox/presentation/widgets/course_icon.dart';
+import 'package:brainbox/presentation/widgets/dot_separator.dart';
 
 class CourseCard extends StatelessWidget {
   const CourseCard({required this.course, required this.onTap, super.key});
@@ -44,7 +46,12 @@ class CourseCard extends StatelessWidget {
                     ).colors.first.withValues(alpha: 0.32),
                   ),
                 ),
-                child: CourseArtwork(category: course.category, size: 38),
+                child: CourseIcon(
+                  courseId: course.id,
+                  category: course.category,
+                  size: 38,
+                  fallback: CourseArtwork(category: course.category, size: 38),
+                ),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -69,21 +76,28 @@ class CourseCard extends StatelessWidget {
                               vertical: 3,
                             ),
                             decoration: BoxDecoration(
-                              color: AppColors.accentPrimarySoft,
-                              borderRadius: BorderRadius.circular(7),
+                              color: const Color(0x66A728F0),
+                              borderRadius: BorderRadius.circular(5),
                               border: Border.all(
                                 color: AppColors.accentPrimary.withValues(
                                   alpha: 0.35,
                                 ),
                               ),
                             ),
-                            child: Text(
-                              'NEW',
-                              style: TextStyle(
-                                color: AppColors.accentPrimaryLight,
-                                fontSize: 10,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: 0.5,
+                            child: ConstrainedBox(
+                              constraints: const BoxConstraints(
+                                minWidth: 44,
+                                minHeight: 18,
+                              ),
+                              child: const Center(
+                                child: Text(
+                                  'NEW',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
                               ),
                             ),
                           ),
@@ -108,21 +122,31 @@ class CourseCard extends StatelessWidget {
                           Icons.menu_book_rounded,
                           '${course.lessonCount} lessons',
                         ),
+                        const DotSeparator(),
                         _buildMetaItem(
                           context,
                           Icons.schedule_rounded,
                           '${course.estimatedHours}h',
                         ),
-                        _buildMetaItem(
-                          context,
-                          Icons.bar_chart_rounded,
-                          course.difficulty.label,
+                        const DotSeparator(),
+                        _difficultyPill(
+                          label: course.difficulty.label,
                           color: course.difficulty.color,
                         ),
+                        _TagPill(text: course.category.title, small: true),
+                        if (course.difficulty == DifficultyLevel.beginner)
+                          Icon(
+                            Icons.bar_chart_rounded,
+                            size: 13,
+                            color: course.difficulty.color,
+                          ),
                       ],
                     ),
                     const SizedBox(height: 10),
-                    Row(
+                    Wrap(
+                      spacing: 4,
+                      runSpacing: 4,
+                      crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
                         Icon(
                           Icons.star_rounded,
@@ -180,6 +204,9 @@ class CourseCard extends StatelessWidget {
     );
   }
 
+  Widget _difficultyPill({required String label, required Color color}) =>
+      _TagPill(text: label, small: true, textColor: color);
+
   LinearGradient _getCategoryGradient(LearningCategory category) {
     switch (category) {
       case LearningCategory.webDevelopment:
@@ -223,4 +250,36 @@ class CourseCard extends StatelessWidget {
     }
     return number.toString();
   }
+}
+
+class _TagPill extends StatelessWidget {
+  const _TagPill({required this.text, this.small = false, this.textColor});
+
+  final String text;
+  final bool small;
+  final Color? textColor;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    constraints: BoxConstraints(
+      minWidth: small ? 39 : 44,
+      minHeight: small ? 15 : 18,
+    ),
+    padding: EdgeInsets.symmetric(horizontal: small ? 5 : 6, vertical: 1),
+    decoration: BoxDecoration(
+      color: const Color(0x66A728F0),
+      borderRadius: BorderRadius.circular(5),
+    ),
+    alignment: Alignment.center,
+    child: Text(
+      text,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: TextStyle(
+        color: textColor ?? Colors.white,
+        fontSize: small ? 8 : 9,
+        fontWeight: FontWeight.w800,
+      ),
+    ),
+  );
 }

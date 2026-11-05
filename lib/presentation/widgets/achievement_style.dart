@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:brainbox/core/constants/app_colors.dart';
+import 'package:brainbox/core/constants/app_assets.dart';
 import 'package:brainbox/data/models/user_models.dart';
 
 /// Icon for an achievement's `iconAsset` name.
@@ -16,6 +17,19 @@ IconData achievementIcon(String iconAsset) {
   }
 }
 
+String? achievementImageAsset(String iconAsset) {
+  switch (iconAsset) {
+    case 'local_fire_department':
+      return AppAssets.fire;
+    case 'rocket_launch':
+      return AppAssets.badgeGold;
+    case 'menu_book':
+      return AppAssets.navLearn;
+    default:
+      return null;
+  }
+}
+
 /// Accent color for an achievement type.
 Color achievementColor(AchievementType type) {
   switch (type) {
@@ -24,7 +38,7 @@ Color achievementColor(AchievementType type) {
     case AchievementType.coursesCompleted:
       return AppColors.accentPrimary;
     case AchievementType.lessonsCompleted:
-      return AppColors.accentSecondary;
+      return AppColors.accentWarning;
     default:
       return AppColors.accentPrimary;
   }

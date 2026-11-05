@@ -12,8 +12,6 @@ class AppProvider extends ChangeNotifier {
   static const String _minutesKeyPrefix = 'study_minutes_';
   static const int _challengeXp = 50;
   static const int _challengeMinutes = 5;
-  static const int _defaultLessonXp = 25;
-  static const int _defaultLessonMinutes = 10;
 
   UserProfile? _profile;
   List<Course> _courses = [];
@@ -39,6 +37,7 @@ class AppProvider extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
+    await CourseRepository.initializeSampleCourses();
     _profile = await _loadOrCreateProfile();
     _courses = await CourseRepository.getAllCourses();
     _lessonsByCourse = await _loadLessons(_courses);
@@ -62,12 +61,14 @@ class AppProvider extends ChangeNotifier {
 
   Future<UserProfile> _loadOrCreateProfile() async {
     final existing = StorageService.getUserProfile();
-    if (existing != null) return existing;
+    if (existing != null) {
+      return existing;
+    }
 
     final newProfile = UserProfile(
       id: 'current_user',
       email: 'user@brainbox.app',
-      displayName: 'Alex Rivera',
+      displayName: 'Nico Mahipus',
       bio: 'Aspiring Frontend Developer',
       level: UserLevel.getLevelForXp(0),
       xp: 0,
@@ -198,9 +199,7 @@ class AppProvider extends ChangeNotifier {
     final list = _courses
         .where((c) => isEnrolled(c.id) && !isCourseCompleted(c.id))
         .toList();
-    list.sort(
-      (a, b) => courseProgress(b.id).compareTo(courseProgress(a.id)),
-    );
+    list.sort((a, b) => courseProgress(b.id).compareTo(courseProgress(a.id)));
     return list;
   }
 
@@ -224,17 +223,13 @@ class AppProvider extends ChangeNotifier {
     final fresh = _courses
         .where(
           (c) =>
-              !isCourseCompleted(c.id) &&
-              !isEnrolled(c.id) &&
-              hasLessons(c.id),
+              !isCourseCompleted(c.id) && !isEnrolled(c.id) && hasLessons(c.id),
         )
         .toList();
     final others = _courses
         .where(
           (c) =>
-              !isCourseCompleted(c.id) &&
-              isEnrolled(c.id) &&
-              hasLessons(c.id),
+              !isCourseCompleted(c.id) && isEnrolled(c.id) && hasLessons(c.id),
         )
         .toList();
     return [...fresh, ...others].take(3).toList();
@@ -263,18 +258,21 @@ class AppProvider extends ChangeNotifier {
     final profile = _profile;
     if (profile == null) return;
 
-    final lessonKey = lessonId != null ? '$courseId:$lessonId' : null;
-    if (lessonKey != null && profile.completedLessonIds.contains(lessonKey)) {
+    final lessonDef = _findLesson(courseId, lessonId);
+    if (lessonDef == null) {
+      throw ArgumentError('Unknown lesson: $courseId:$lessonId');
+    }
+    final lessonKey = '$courseId:$lessonId';
+    if (profile.completedLessonIds.contains(lessonKey)) {
       return; // Already completed, don't award XP again
     }
 
     final now = DateTime.now();
-    final lessonDef = _findLesson(courseId, lessonId);
-    final xpGain = lessonDef?.xpReward ?? _defaultLessonXp;
-    final minutes = lessonDef?.estimatedMinutes ?? _defaultLessonMinutes;
+    final xpGain = lessonDef.xpReward;
+    final minutes = lessonDef.estimatedMinutes;
 
     final completedLessonIds = List<String>.from(profile.completedLessonIds);
-    if (lessonKey != null) completedLessonIds.add(lessonKey);
+    completedLessonIds.add(lessonKey);
 
     final enrolledIds = List<String>.from(profile.enrolledCourseIds);
     if (!enrolledIds.contains(courseId)) enrolledIds.add(courseId);
@@ -339,21 +337,55 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> completeChallenge() async {
+  final Set<String> _pendingChallengeRewards = {};
+
+  /// Each local calendar day's challenge can award XP only once.
+  Future<void> completeChallenge({DateTime? date}) async {
     final profile = _profile;
     if (profile == null) return;
+    final now = date ?? DateTime.now();
+    final key = 'challenge_reward_${now.year}-${now.month}-${now.day}';
+    if (StorageService.getBool(key) || !_pendingChallengeRewards.add(key)) {
+      return;
+    }
+    try {
+      final updatedProfile = _applyActivity(
+        profile,
+        xpGain: _challengeXp,
+        now: now,
+        minutesDelta: _challengeMinutes,
+      );
+      _profile = updatedProfile;
+      await _recordActivity(now, minutes: _challengeMinutes);
+      await StorageService.saveUserProfile(updatedProfile);
+      await StorageService.setBool(key, true);
+      notifyListeners();
+    } finally {
+      _pendingChallengeRewards.remove(key);
+    }
+  }
 
-    final now = DateTime.now();
-    final updatedProfile = _applyActivity(
-      profile,
-      xpGain: _challengeXp,
-      now: now,
-      minutesDelta: _challengeMinutes,
-    );
-
-    _profile = updatedProfile;
-    await _recordActivity(now, minutes: _challengeMinutes);
-    await StorageService.saveUserProfile(updatedProfile);
+  Future<void> resetLearningProgress() async {
+    final profile = _profile;
+    if (profile == null) return;
+    await StorageService.clearLearningProgress();
+    // Reconstruct through JSON to explicitly clear the nullable activity date.
+    final data =
+        profile
+            .copyWith(
+              xp: 0,
+              totalXp: 0,
+              level: UserLevel.getLevelForXp(0),
+              completedCourseIds: [],
+              enrolledCourseIds: [],
+              completedLessonIds: [],
+              achievements: _defaultAchievements(),
+              stats: UserStats.empty(),
+            )
+            .toJson()
+          ..['lastLessonCompletedAt'] = null;
+    _profile = UserProfile.fromJson(data);
+    await StorageService.saveUserProfile(_profile!);
     notifyListeners();
   }
 
@@ -547,6 +579,13 @@ class AppProvider extends ChangeNotifier {
       type: type,
     );
     _posts.insert(0, post);
+    notifyListeners();
+  }
+
+  Future<void> reportPost(String postId) async {
+    final updated = await CommunityRepository.reportPost(postId);
+    final index = _posts.indexWhere((post) => post.id == postId);
+    if (index >= 0) _posts[index] = updated;
     notifyListeners();
   }
 

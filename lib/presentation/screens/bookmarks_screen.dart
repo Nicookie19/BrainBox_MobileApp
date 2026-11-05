@@ -5,6 +5,11 @@ import 'package:go_router/go_router.dart';
 import 'package:brainbox/presentation/providers/app_provider.dart';
 import 'package:brainbox/data/repositories/lesson_repository.dart' as lr;
 import 'package:brainbox/core/constants/app_colors.dart';
+import 'package:brainbox/core/constants/app_assets.dart';
+import 'package:brainbox/data/models/learning_models.dart';
+import 'package:brainbox/presentation/widgets/asset_icon.dart';
+import 'package:brainbox/presentation/widgets/course_artwork.dart';
+import 'package:brainbox/presentation/widgets/course_icon.dart';
 
 class BookmarksScreen extends StatelessWidget {
   const BookmarksScreen({super.key});
@@ -63,6 +68,7 @@ class BookmarksScreen extends StatelessWidget {
                               return _BookmarkLessonTile(
                                     lesson: lesson,
                                     courseTitle: lesson.courseTitle,
+                                category: lesson.category,
                                     onTap: () => context.push(
                                       '/lesson/${lesson.courseId}?lesson=${lesson.lessonId}',
                                     ),
@@ -160,6 +166,7 @@ class BookmarksScreen extends StatelessWidget {
               _BookmarkedLesson(
                 courseId: course.id,
                 courseTitle: course.title,
+                category: course.category,
                 lessonId: lesson.id,
                 lessonTitle: lesson.title,
                 lessonDescription: '',
@@ -179,6 +186,7 @@ class BookmarksScreen extends StatelessWidget {
 class _BookmarkedLesson {
   final String courseId;
   final String courseTitle;
+  final LearningCategory category;
   final String lessonId;
   final String lessonTitle;
   final String lessonDescription;
@@ -188,6 +196,7 @@ class _BookmarkedLesson {
   _BookmarkedLesson({
     required this.courseId,
     required this.courseTitle,
+    required this.category,
     required this.lessonId,
     required this.lessonTitle,
     required this.lessonDescription,
@@ -199,12 +208,14 @@ class _BookmarkedLesson {
 class _BookmarkLessonTile extends StatelessWidget {
   final _BookmarkedLesson lesson;
   final String courseTitle;
+  final LearningCategory category;
   final VoidCallback onTap;
   final VoidCallback onRemove;
 
   const _BookmarkLessonTile({
     required this.lesson,
     required this.courseTitle,
+    required this.category,
     required this.onTap,
     required this.onRemove,
   });
@@ -232,10 +243,11 @@ class _BookmarkLessonTile extends StatelessWidget {
                   color: AppColors.accentPrimarySoft,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(
-                  Icons.menu_book_rounded,
-                  color: AppColors.accentPrimary,
-                  size: 24,
+                child: CourseIcon(
+                  courseId: lesson.courseId,
+                  category: category,
+                  size: 30,
+                  fallback: CourseArtwork(category: category, size: 30),
                 ),
               ),
               const SizedBox(width: 16),
@@ -275,11 +287,7 @@ class _BookmarkLessonTile extends StatelessWidget {
                               ?.copyWith(color: AppColors.textMuted),
                         ),
                         const SizedBox(width: 12),
-                        Icon(
-                          Icons.bolt_rounded,
-                          size: 14,
-                          color: AppColors.accentWarning,
-                        ),
+                        const AssetIcon(AppAssets.bolt, size: 14),
                         const SizedBox(width: 4),
                         Text(
                           '${lesson.xpReward} XP',

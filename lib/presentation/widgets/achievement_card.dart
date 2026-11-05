@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:brainbox/core/constants/app_colors.dart';
+import 'package:brainbox/core/constants/app_assets.dart';
+import 'package:brainbox/presentation/widgets/asset_icon.dart';
 
 class AchievementCard extends StatelessWidget {
   const AchievementCard({
@@ -8,6 +10,8 @@ class AchievementCard extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.color,
+    this.imageAsset,
+    this.imageTint,
     this.isUnlocked = false,
     this.progress = 0,
     this.target = 1,
@@ -18,22 +22,24 @@ class AchievementCard extends StatelessWidget {
   final String title;
   final String subtitle;
   final Color color;
+  final String? imageAsset;
+  final Color? imageTint;
   final bool isUnlocked;
   final double progress;
   final double target;
 
   @override
   Widget build(BuildContext context) {
-    final progressPercent = target > 0 ? (progress / target).clamp(0.0, 1.0) : 0.0;
+    final progressPercent = target > 0
+        ? (progress / target).clamp(0.0, 1.0)
+        : 0.0;
 
     return Material(
       color: Colors.transparent,
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isUnlocked
-              ? color.withValues(alpha: 0.1)
-              : AppColors.bgCard,
+          color: isUnlocked ? color.withValues(alpha: 0.1) : AppColors.bgCard,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isUnlocked
@@ -51,11 +57,17 @@ class AchievementCard extends StatelessWidget {
                     : AppColors.bgTertiary,
                 borderRadius: BorderRadius.circular(14),
               ),
-              child: Icon(
-                icon,
-                color: isUnlocked ? color : AppColors.textMuted,
-                size: 28,
-              ),
+              child: imageAsset == null
+                  ? AssetIcon(
+                      _badgeAsset(),
+                      size: 32,
+                      color: isUnlocked ? null : AppColors.textMuted,
+                    )
+                  : AssetIcon(
+                      imageAsset!,
+                      size: 32,
+                      color: imageTint ?? (isUnlocked ? null : AppColors.textMuted),
+                    ),
             ),
             const SizedBox(height: 12),
             Text(
@@ -69,9 +81,9 @@ class AchievementCard extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               subtitle,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppColors.textMuted,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: AppColors.textMuted),
               textAlign: TextAlign.center,
             ),
             if (!isUnlocked) ...[
@@ -97,7 +109,10 @@ class AchievementCard extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(top: 12),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.accentSuccessSoft,
                     borderRadius: BorderRadius.circular(20),
@@ -105,7 +120,11 @@ class AchievementCard extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.check_rounded, size: 12, color: AppColors.accentSuccess),
+                      Icon(
+                        Icons.check_rounded,
+                        size: 12,
+                        color: AppColors.accentSuccess,
+                      ),
                       const SizedBox(width: 4),
                       Text(
                         'Unlocked',
@@ -123,5 +142,15 @@ class AchievementCard extends StatelessWidget {
         ),
       ),
     ).animate().fadeIn().slideY(begin: 0.2, end: 0);
+  }
+
+  String _badgeAsset() {
+    final text = '$title $subtitle'.toLowerCase();
+    if (text.contains('streak')) return AppAssets.fire;
+    if (text.contains('course') || text.contains('starter')) {
+      return AppAssets.crown;
+    }
+    if (text.contains('lesson')) return AppAssets.codeBrackets;
+    return AppAssets.badgeGold;
   }
 }

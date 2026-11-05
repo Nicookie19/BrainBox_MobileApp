@@ -4,6 +4,7 @@ import 'package:brainbox/data/models/course_models.dart';
 import 'package:brainbox/data/models/learning_models.dart';
 import 'package:brainbox/core/constants/app_colors.dart';
 import 'package:brainbox/presentation/widgets/course_artwork.dart';
+import 'package:brainbox/presentation/widgets/course_icon.dart';
 
 class ContinueCard extends StatelessWidget {
   const ContinueCard({
@@ -72,7 +73,12 @@ class ContinueCard extends StatelessWidget {
                       gradient: _getCategoryGradient(c.category),
                       borderRadius: BorderRadius.circular(14),
                     ),
-                    child: CourseArtwork(category: c.category, size: 34),
+                    child: CourseIcon(
+                      courseId: c.id,
+                      category: c.category,
+                      size: 34,
+                      fallback: CourseArtwork(category: c.category, size: 34),
+                    ),
                   ),
                   const SizedBox(width: 14),
                   Expanded(
@@ -132,29 +138,11 @@ class ContinueCard extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 12),
-              Row(
-                children: [
-                  Icon(
-                    Icons.bolt_rounded,
-                    size: 14,
-                    color: AppColors.accentWarning,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    '+25 XP per lesson',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppColors.textSecondary,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const Spacer(),
-                  Text(
-                    '${c.estimatedHours}h total',
-                    style: Theme.of(
-                      context,
-                    ).textTheme.bodySmall?.copyWith(color: AppColors.textMuted),
-                  ),
-                ],
+              Text(
+                '${c.lessonCount} lessons · ${c.estimatedHours}h total',
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
               ),
             ],
           ),
@@ -191,9 +179,8 @@ class ContinueCard extends StatelessWidget {
                   color: AppColors.accentPrimarySoft,
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: Icon(
-                  Icons.school_outlined,
-                  color: AppColors.accentPrimary,
+                child: CourseArtwork(
+                  category: LearningCategory.webDevelopment,
                   size: 26,
                 ),
               ),

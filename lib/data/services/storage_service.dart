@@ -70,6 +70,16 @@ class StorageService {
     return _data[key];
   }
 
+  /// A portable snapshot of local data; no storage mutation is performed.
+  static String exportJson() {
+    _store;
+    return const JsonEncoder.withIndent('  ').convert({
+      'schemaVersion': 1,
+      'exportedAt': DateTime.now().toUtc().toIso8601String(),
+      'data': _data,
+    });
+  }
+
   // User Profile
   static Future<void> saveUserProfile(UserProfile profile) async {
     await _put(_userProfileKey, jsonEncode(profile.toJson()));
@@ -217,6 +227,23 @@ class StorageService {
     final store = _store;
     _data.remove(key);
     await store.delete(key);
+  }
+
+  /// Reset learning history without removing identity, catalog, or saved content.
+  static Future<void> clearLearningProgress() async {
+    const prefixes = [
+      'course_progress_',
+      'lesson_progress_',
+      'study_minutes_',
+      'daily_challenge_',
+      'challenge_reward_',
+    ];
+    final keys = _data.keys
+        .where((key) => key == 'activity_days' || prefixes.any(key.startsWith))
+        .toList();
+    for (final key in keys) {
+      await remove(key);
+    }
   }
 
   static Future<void> clearAll() async {

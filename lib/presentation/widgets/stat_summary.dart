@@ -1,19 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:brainbox/core/constants/app_colors.dart';
+import 'package:brainbox/presentation/widgets/asset_icon.dart';
 
 class StatSummary extends StatelessWidget {
   const StatSummary({
     required this.value,
     required this.label,
-    required this.icon,
+    required this.asset,
     required this.color,
     super.key,
   });
 
   final String value;
   final String label;
-  final IconData icon;
+  final String asset;
   final Color color;
 
   @override
@@ -26,7 +27,10 @@ class StatSummary extends StatelessWidget {
             color: color.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(14),
           ),
-          child: Icon(icon, color: color, size: 24),
+          child: SizedBox.square(
+            dimension: 24,
+            child: AssetIcon(asset, size: 24),
+          ),
         ).animate().scale(delay: 100.ms),
         const SizedBox(height: 12),
         Text(
@@ -39,9 +43,9 @@ class StatSummary extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           label,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: AppColors.textMuted,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: AppColors.textMuted),
           textAlign: TextAlign.center,
         ).animate().fadeIn(delay: 300.ms),
       ],

@@ -82,6 +82,10 @@ class ProfileScreen extends StatelessWidget {
             ),
             child: AchievementCard(
               icon: achievementIcon(achievement.iconAsset),
+                imageAsset: achievementImageAsset(achievement.iconAsset),
+                imageTint: achievement.iconAsset == 'menu_book'
+                  ? AppColors.accentWarning
+                  : null,
               title: achievement.title,
               subtitle: achievement.description,
               color: achievementColor(achievement.type),
